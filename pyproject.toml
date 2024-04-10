@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "noncon"
+version = "0.0.1"
+description = "Wrapper for unsupervised one-class anomaly estimators implemented in PyOD for treshold-free, non-parametric and uncertainty-quantified anomaly detection."
+authors = [
+  { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.12"
+dependencies = [
+  "requests>2",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/pypa/sampleproject"
+"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
