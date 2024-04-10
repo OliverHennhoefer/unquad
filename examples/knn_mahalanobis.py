@@ -1,4 +1,6 @@
-from pyod.models.pca import PCA
+import numpy as np
+
+from pyod.models.knn import KNN
 from pyod.utils import generate_data
 
 from noncon.enums.adjustment import Adjustment
@@ -17,10 +19,11 @@ if __name__ == "__main__":
     )
 
     x_train = x_train[y_train == 0]
+    X_train_cov = np.cov(x_train, rowvar=False)
 
     ce = ConformalEstimator(
-        detector=PCA(),
-        method=Method.CV_PLUS,
+        detector=KNN(algorithm='auto', metric='mahalanobis', metric_params={'V': X_train_cov}),
+        method=Method.CV,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         random_state=2,

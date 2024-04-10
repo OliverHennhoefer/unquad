@@ -1,4 +1,4 @@
-from pyod.models.pca import PCA
+from pyod.models.ocsvm import OCSVM
 from pyod.utils import generate_data
 
 from noncon.enums.adjustment import Adjustment
@@ -19,12 +19,12 @@ if __name__ == "__main__":
     x_train = x_train[y_train == 0]
 
     ce = ConformalEstimator(
-        detector=PCA(),
-        method=Method.CV_PLUS,
+        detector=OCSVM(),
+        method=Method.CV,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         random_state=2,
-        split=100,
+        split=5,
     )
 
     ce.fit(x_train)
@@ -32,3 +32,4 @@ if __name__ == "__main__":
 
     print(false_discovery_rate(y=y_test, y_hat=estimates))
     print(statistical_power(y=y_test, y_hat=estimates))
+    

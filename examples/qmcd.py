@@ -1,4 +1,4 @@
-from pyod.models.pca import PCA
+from pyod.models.qmcd import QMCD
 from pyod.utils import generate_data
 
 from noncon.enums.adjustment import Adjustment
@@ -7,7 +7,6 @@ from noncon.enums.method import Method
 from noncon.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-
     x_train, x_test, y_train, y_test = generate_data(
         n_train=1_000,
         n_test=1_000,
@@ -19,12 +18,12 @@ if __name__ == "__main__":
     x_train = x_train[y_train == 0]
 
     ce = ConformalEstimator(
-        detector=PCA(),
-        method=Method.CV_PLUS,
+        detector=QMCD(),
+        method=Method.CV,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         random_state=2,
-        split=100,
+        split=5,
     )
 
     ce.fit(x_train)

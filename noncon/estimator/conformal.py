@@ -2,14 +2,20 @@ import sys
 import numpy as np
 
 from copy import copy
-from tqdm import tqdm
 from scipy import stats
 
+from tqdm import tqdm
+from pyod.models.alad import ALAD
+from pyod.models.cblof import CBLOF
+from pyod.models.cof import COF
+from pyod.models.deep_svdd import DeepSVDD
+from pyod.models.mo_gaal import MO_GAAL
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
 from noncon.enums.adjustment import Adjustment
 from noncon.enums.method import Method
+from noncon.errors.forbidden_model_error import ForbiddenModelError
 
 
 class ConformalEstimator:
@@ -42,8 +48,8 @@ class ConformalEstimator:
     def fit(self, x) -> None:
         """
         Fits the given estimator on (non-anomalous) training data.
-        :param x:
-        :return:
+        :param x: Numpy Array,
+        :return: None
         """
 
         if self.method.value in ["SC"]:
@@ -115,9 +121,9 @@ class ConformalEstimator:
         pval = self.marginal_pval(estimates)
 
         if raw:
-            return self.correction(pval)
+            return self.correction(pval)  # scores
         else:
-            return self.correction(pval) <= self.alpha
+            return self.correction(pval) <= self.alpha  # labels
 
     def marginal_pval(self, scores: np.array) -> np.array:
         """
@@ -161,10 +167,16 @@ class ConformalEstimator:
     ) -> None:
         """
         Set parameters at run-time depending on passed model object.
+        Filters models unsuitable for one-class classification
         :param random_iteration: Boolean, whether parameters are set during cross-validation
         :param iteration: Integer, iteration within cross-validation for seed randomization
         :return: None
         """
+
+        if self.detector.__class__ in [ALAD, CBLOF, COF, DeepSVDD, MO_GAAL]:
+            raise ForbiddenModelError(
+                f"{self.detector.__class__.__name__} is not supported for one-class classification."
+            )
 
         if "contamination" in self.detector.get_params().keys():
             self.detector.set_params(
