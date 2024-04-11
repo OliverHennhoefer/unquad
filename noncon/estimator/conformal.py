@@ -31,7 +31,7 @@ class ConformalEstimator:
         split: float = None,
         alpha: float = 0.05,
         random_state: int = 0,
-        verbose: bool = True,
+        silent: bool = False,
     ):
         self.detector = detector
         self.method = method
@@ -40,7 +40,7 @@ class ConformalEstimator:
         self.split = split
         self.alpha = alpha
         self.random_state = random_state
-        self.verbose = verbose
+        self.silent = silent
 
         self.calibration_set = np.array([], dtype=np.float16)
         self.detector_set = []
@@ -82,7 +82,7 @@ class ConformalEstimator:
         n_folds = folds.get_n_splits()
         i = None
         for i, (train_idx, calib_idx) in enumerate(
-            tqdm(folds.split(x), total=n_folds, desc="Training", disable=self.verbose)
+            tqdm(folds.split(x), total=n_folds, desc="Training", disable=self.silent)
         ):
 
             self._set_params(random_iteration=True, iteration=i)
@@ -122,7 +122,7 @@ class ConformalEstimator:
                         self.detector_set,
                         total=len(self.detector_set),
                         desc="Inference",
-                        disable=self.verbose,
+                        disable=self.silent,
                     )
                 ],
                 axis=0,

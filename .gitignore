@@ -4,6 +4,7 @@ __pycache__/
 # Root directories
 /.env/
 /.idea/
+/venv/
 /dist/
 
 # Auto-generated during builds
