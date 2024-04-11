@@ -31,6 +31,7 @@ class ConformalEstimator:
         split: float = None,
         alpha: float = 0.05,
         random_state: int = 0,
+        verbose: bool = True,
     ):
         self.detector = detector
         self.method = method
@@ -39,6 +40,7 @@ class ConformalEstimator:
         self.split = split
         self.alpha = alpha
         self.random_state = random_state
+        self.verbose = verbose
 
         self.calibration_set = np.array([], dtype=np.float16)
         self.detector_set = []
@@ -79,7 +81,9 @@ class ConformalEstimator:
 
         n_folds = folds.get_n_splits()
         i = None
-        for i, (train_idx, calib_idx) in enumerate(tqdm(folds.split(x), total=n_folds)):
+        for i, (train_idx, calib_idx) in enumerate(
+            tqdm(folds.split(x), total=n_folds, desc="Training", disable=self.verbose)
+        ):
 
             self._set_params(random_iteration=True, iteration=i)
 
@@ -104,15 +108,24 @@ class ConformalEstimator:
 
     def predict(self, x: np.array, raw=False) -> np.array:
         """
-
-        :param x: Set of test data for uncertainty-quantified anomaly estimation.
+        Performs anomaly estimates with fitted conformal anomaly estimators.
+        :param x: Numpy Array, set of test data for uncertainty-quantified anomaly estimation.
         :param raw: Boolean, whether the raw scores should be return or the anomaly labels.
         :return: Numpy Array, set of anomaly estimates obtained from the conformal anomaly estimators.
         """
 
         if self.method.value in ["CV+", "J+", "J+aB"]:
             scores_array = np.stack(
-                [model.decision_function(x) for model in self.detector_set], axis=0
+                [
+                    model.decision_function(x)
+                    for model in tqdm(
+                        self.detector_set,
+                        total=len(self.detector_set),
+                        desc="Inference",
+                        disable=self.verbose,
+                    )
+                ],
+                axis=0,
             )
             estimates = np.median(scores_array, axis=0)
         else:

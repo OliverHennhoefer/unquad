@@ -22,7 +22,9 @@ if __name__ == "__main__":
     X_train_cov = np.cov(x_train, rowvar=False)
 
     ce = ConformalEstimator(
-        detector=KNN(algorithm='auto', metric='mahalanobis', metric_params={'V': X_train_cov}),
+        detector=KNN(
+            algorithm="auto", metric="mahalanobis", metric_params={"V": X_train_cov}
+        ),
         method=Method.CV,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,

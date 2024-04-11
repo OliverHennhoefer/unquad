@@ -1,0 +1,10 @@
+# Global directories
+__pycache__/
+
+# Root directories
+/.env/
+/.idea/
+/dist/
+
+# Auto-generated during builds
+/src/hatch/_version.py

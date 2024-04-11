@@ -9,8 +9,8 @@ from noncon.evaluation.metrics import false_discovery_rate, statistical_power
 if __name__ == "__main__":
 
     x_train, x_test, y_train, y_test = generate_data(
-        n_train=1_000,
-        n_test=1_000,
+        n_train=5_000,
+        n_test=10_000,
         n_features=10,
         contamination=0.1,
         random_state=1,
@@ -20,11 +20,11 @@ if __name__ == "__main__":
 
     ce = ConformalEstimator(
         detector=OCSVM(),
-        method=Method.CV,
+        method=Method.CV_PLUS,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         random_state=2,
-        split=5,
+        split=2,
     )
 
     ce.fit(x_train)
@@ -32,4 +32,3 @@ if __name__ == "__main__":
 
     print(false_discovery_rate(y=y_test, y_hat=estimates))
     print(statistical_power(y=y_test, y_hat=estimates))
-    
