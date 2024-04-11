@@ -10,6 +10,11 @@ from pyod.models.cblof import CBLOF
 from pyod.models.cof import COF
 from pyod.models.deep_svdd import DeepSVDD
 from pyod.models.mo_gaal import MO_GAAL
+from pyod.models.rgraph import RGraph
+from pyod.models.sampling import Sampling
+from pyod.models.so_gaal import SO_GAAL
+from pyod.models.sos import SOS
+from pyod.models.vae import VAE
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
@@ -186,9 +191,20 @@ class ConformalEstimator:
         :return: None
         """
 
-        if self.detector.__class__ in [ALAD, CBLOF, COF, DeepSVDD, MO_GAAL]:
+        if self.detector.__class__ in [
+            ALAD,
+            CBLOF,
+            COF,
+            DeepSVDD,
+            MO_GAAL,
+            RGraph,
+            Sampling,
+            SO_GAAL,
+            SOS,
+            VAE
+        ]:
             raise ForbiddenModelError(
-                f"{self.detector.__class__.__name__} is not supported for one-class classification."
+                f"{self.detector.__class__.__name__} is not supported."
             )
 
         if "contamination" in self.detector.get_params().keys():

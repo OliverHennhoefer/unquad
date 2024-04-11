@@ -1,12 +1,12 @@
 # *noncon*
 
-Tired of *alarm fatique*? :rotating_light:
+Tired of *alarm fatique*?
 
 **noncon** is a wrapper for [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
 based on one-class classification.
 
-* :envelope: Wraps an untrained anomaly detector\
-* :telescope: Fits and calibrates given anomaly detectors to provide marginal FDR-control
+* Wraps an untrained anomaly detector
+* Fits and calibrates given anomaly detector to control the ***marginal* FDR**
 
 ## What is *Conformal Anomaly Detection*?
 
@@ -19,13 +19,14 @@ it's **statistical power**.
 CAD assumes ***exchangability*** of training and future test data. *Exchangability* is closely related to the statistical
 term of *independent and identically distributed random variables* (*IID*). IID implies both, independence <ins>and</ins> 
 exchangability. Exchangability defines a joint probability distribution that remains the same under permutations
-of the variables.
+of the variables. With that, exchangability is a very practicable as it is weaker a assumption than IID.
 
 ### Limitations
-Since CAD controls the FDR by adjustment procedures in context of multiple testing, trained conformal detectors currently
-only work for batch-wise anomaly detection.\
-CAD also offers methods for CAD on dynamic time-series data suitable also under co-variate shift in online settings.
-Currently, this kind of online detector is not implemented but is planned to be added in future releases.
+Since CAD controls the FDR by adjustment procedures in context of **multiple testing**, trained conformal detectors currently
+only work for ordinary (batch-wise) anomaly detection on static data.\
+Generally, CAD also offers methods for the online setting when working with dynamic time-series data under potential
+co-variate shift.\
+Currently, this kind of online detector is not implemented. It is planned to be added in future releases.
 
 ## Getting started
 
@@ -33,7 +34,7 @@ Currently, this kind of online detector is not implemented but is planned to be 
 pip install noncon
 ```
 
-## Usage
+### Usage
 
 ```python
 from pyod.models.iforest import IForest  # Isolation Forest (sklearn-based)
@@ -41,7 +42,7 @@ from pyod.utils import generate_data  # Example Data (PyOD built-in)
 
 from noncon.estimator.conformal import ConformalEstimator  # Model Wrapper
 from noncon.enums.adjustment import Adjustment  # Multiple Testing Adjustment Procedures
-from noncon.enums.method import Method  # (Cross-)Conformal Method
+from noncon.enums.method import Method  # (Cross-)Conformal Methods
 from noncon.evaluation.metrics import false_discovery_rate, statistical_power  # Evaluation Metrics
 
 x_train, x_test, y_train, y_test = generate_data(
@@ -75,3 +76,39 @@ Output:
 0.099 (False Discovery Rate; FDR)
 0.901 (Statistical Power)
 ```
+
+### Supported Detectors
+
+The package currently supports detectors that are suitable for unsupervised one-class classification. As respective
+detectors are therefore exclusively fitted on *normal* (non-anomalous) data, parameters like *threshold* are set to the
+smallest possible values.\
+Models that are currently support include:
+
+* Angle-Based Outlier Detection (**ABOD**)\
+* Autoencoder (**AE**)
+* Cook's Distance (**CD**)
+* Copula-based Outlier Detector (**COPOD**)
+* Deep Isolation Forest (**DIF**)
+* Empirical-Cumulative-distribution-based Outlier Detection (**ECOD**)
+* Gaussian Mixture Model (**GMM**)
+* Histogram-based Outlier Detection (**HBOS**)
+* Isolation-based Anomaly Detection using Nearest-Neighbor Ensembles (**INNE**)
+* Isolation Forest (**IForest**)
+* Kernel Density Estimation (**KDE**)
+* *k*NN
+* *k*NN (Mahalanobis)
+* Kernel Principal Component Analysis (**KPCA**)
+* Linear Model Deviation-base Outlier Detection (**LMDD**)
+* Local Outlier Factor (**LOF**)
+* Local Correlation Integral (**LOCI**)
+* Lightweight Online Detector of Anomalies (**LODA**)
+* Locally Selective Combination of Parallel Outlier Ensembles (**LSCP**)
+* GNN-based Anomaly Detection Method (**LUNAR**)
+* Median Absolute Deviation (**MAD**)
+* Minimum Covariance Determinant (**MCD**)
+* One-Class SVM (**OCSVM**)
+* Principal Component Analysis (**PCA**)
+* Quasi-Monte Carlo Discrepancy Outlier Detection (**QMCD**)
+* Rotation-based Outlier Detection (**ROD**)
+* Subspace Outlier Detection (**SOD**)
+* Scalable Unsupervised Outlier Detection (**SUOD**)
