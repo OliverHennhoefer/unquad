@@ -5,7 +5,7 @@ Tired of *alarm fatique*? :rotating_light:
 **noncon** is a wrapper for [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
 based on one-class classification.
 
-:envelope: Wraps an untrained anomaly detector
+:envelope: Wraps an untrained anomaly detector\
 :telescope: Fits and calibrates given anomaly detectors to provide marginal FDR-control
 
 ## What is *Conformal Anomaly Detection*?
