@@ -1,6 +1,10 @@
 # Global directories
 __pycache__/
 
+# Local
+__pycache__
+*.py[cdo]
+
 # Root directories
 /.env/
 /.idea/
