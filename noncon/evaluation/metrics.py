@@ -15,8 +15,9 @@ def false_discovery_rate(y: np.array, y_hat: np.array, dec: int = 3) -> float:
 
     false_positives = sum(y_hat & ~y)
     true_positives = sum(y_hat & y)
+    total_positives = false_positives + true_positives
 
-    fdr = false_positives / (false_positives + true_positives)
+    fdr = (false_positives / total_positives) if total_positives != 0 else 0
     return round(fdr, dec)
 
 

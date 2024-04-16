@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noncon"
-version = "0.0.1"
-description = "Conformal anomaly detection with 'PyOD' detectors."
+version = "0.0.4"
+description = "Conformal Anomaly Detection with 'PyOD'-Detectors."
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
 ]
@@ -18,7 +18,7 @@ classifiers = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "numpy ~=1.26.4",
+    "numpy ~=1.26.0",
     "pandas ~=2.2.1",
     "pyod ~=1.1.3",
     "scipy ~=1.13.0",

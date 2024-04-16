@@ -136,14 +136,14 @@ class ConformalEstimator:
         else:
             estimates = self.detector.decision_function(x)
 
-        pval = self.marginal_pval(estimates)
+        p_val = self.marginal_p_val(estimates)
 
         if raw:
-            return self.correction(pval)  # scores
+            return self.correction(p_val)  # scores
         else:
-            return self.correction(pval) <= self.alpha  # labels
+            return self.correction(p_val) <= self.alpha  # labels
 
-    def marginal_pval(self, scores: np.array) -> np.array:
+    def marginal_p_val(self, scores: np.array) -> np.array:
         """
         Calculates marginal p-values given the test scores on test data.
         The p-values are determined by comparing the obtained set of calibration scores from calling '.fit()'.
@@ -151,22 +151,22 @@ class ConformalEstimator:
         :return: Numpy Array, Set of marginal p-values
         """
 
-        pval = np.sum(self.calibration_set >= scores[:, np.newaxis], axis=1)
-        return (1.0 + pval) / (1.0 + len(self.calibration_set))
+        p_val = np.sum(self.calibration_set >= scores[:, np.newaxis], axis=1)
+        return (1.0 + p_val) / (1.0 + len(self.calibration_set))
 
-    def correction(self, pval: np.array) -> np.array:
+    def correction(self, p_val: np.array) -> np.array:
         """
         Performs adjustments in regard to multiple testing in order to control the marginal FDR.
-        :param pval: Numpy Array, a set of p-values to be adjusted.
+        :param p_val: Numpy Array, a set of p-values to be adjusted.
         :return: Numpy Array, a set of adjusted p-values
         """
 
         if self.procedure.value == "bh":
-            pval = stats.false_discovery_control(pval, method="bh")
+            p_val = stats.false_discovery_control(p_val, method="bh")
         if self.procedure.value == "by":
-            pval = stats.false_discovery_control(pval, method="by")
+            p_val = stats.false_discovery_control(p_val, method="by")
 
-        return pval
+        return p_val
 
     def _get_split(self, x: np.array, n: int) -> int:
         """
@@ -201,7 +201,7 @@ class ConformalEstimator:
             Sampling,
             SO_GAAL,
             SOS,
-            VAE
+            VAE,
         ]:
             raise ForbiddenModelError(
                 f"{self.detector.__class__.__name__} is not supported."

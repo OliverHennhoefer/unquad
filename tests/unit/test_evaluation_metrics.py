@@ -8,6 +8,7 @@ class TestEvaluationMetrics(unittest.TestCase):
 
     # Anomaly Estimates
     EST1 = np.array([1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1])
+    EST2 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     # Ground Truth
     ACT1 = np.array([1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1])
@@ -27,7 +28,7 @@ class TestEvaluationMetrics(unittest.TestCase):
         Some estimates correct.
         """
         fdr = false_discovery_rate(self.ACT2, self.EST1)
-        self.assertEqual(fdr, 0.4444444444444444)
+        self.assertEqual(fdr, 0.444)
 
     def test_metric_false_discovery_rate3(self):
         """
@@ -35,6 +36,13 @@ class TestEvaluationMetrics(unittest.TestCase):
         """
         fdr = false_discovery_rate(self.ACT3, self.EST1)
         self.assertEqual(fdr, 1.0)
+
+    def test_metric_false_discovery_rate4(self):
+        """
+        No outlier found.
+        """
+        fdr = false_discovery_rate(self.ACT3, self.EST2)
+        self.assertEqual(fdr, 0.0)
 
     # Power Calculation
     def test_metric_statistical_power1(self):
@@ -49,7 +57,7 @@ class TestEvaluationMetrics(unittest.TestCase):
         Some estimates correct.
         """
         power = statistical_power(self.ACT2, self.EST1)
-        self.assertEqual(power, 0.5555555555555556)
+        self.assertEqual(power, 0.556)
 
     def test_metric_statistical_power3(self):
         """

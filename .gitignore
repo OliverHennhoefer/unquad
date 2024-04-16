@@ -4,6 +4,7 @@ __pycache__/
 # Local
 __pycache__
 *.py[cdo]
+*.pyc
 
 # Root directories
 /.env/
