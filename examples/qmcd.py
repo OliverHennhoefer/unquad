@@ -7,6 +7,7 @@ from noncon.enums.method import Method
 from noncon.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
+
     x_train, x_test, y_train, y_test = generate_data(
         n_train=1_000,
         n_test=1_000,

@@ -1,13 +1,16 @@
-import sys
-from typing import Union
+import os
 
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
+
+import sys
 import numpy as np
 import pandas as pd
 
+from typing import Union
 from copy import copy
 from scipy import stats
-
 from tqdm import tqdm
+
 from pyod.models.alad import ALAD
 from pyod.models.cblof import CBLOF
 from pyod.models.cof import COF
@@ -19,6 +22,8 @@ from pyod.models.so_gaal import SO_GAAL
 from pyod.models.sos import SOS
 from pyod.models.vae import VAE
 from pyod.models.base import BaseDetector
+
+from sklearn.utils import check_array
 from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
 from noncon.enums.adjustment import Adjustment
@@ -28,7 +33,45 @@ from noncon.errors.forbidden_model_error import ForbiddenModelError
 
 class ConformalEstimator:
     """
-    Objects of the ConformalEstimator class wrap a 'PyOD' detector to perform conformal anomaly detection (CAD).
+    Wrapper class for 'PyOD' anomaly estimators.
+    ConformalEstimator allows to fit a model by applying a conformal calibration scheme.
+    Conformal anomaly detection translates anomaly scores into statistical p-values
+    by comparing anomaly estimates of test data to a set of calibration scores obtained
+    on normal data (see One-Class Classification). Obtained p-values instead of the usual
+    anomaly estimates allow for statistical FDR-control by procedures like Benjamini-Hochberg.
+    Conformal anomaly detection is based on the principles of conformal prediction.
+
+    Parameters
+    ----------
+    detector : BaseDetector
+        A 'PyOD' anomaly estimator as derived from the BaseDetector class.
+
+    method : enum:Method
+        The conformal calibration scheme to be applied during training.
+
+    adjustment: enum:Adjustment
+        Statistical adjustment procedure to account for multiple testing.
+
+    split: float or integer (optional, fallback depending on 'method' parameter)
+        The number of splits to be performed regarding estimator calibration.
+        Has no effect for the 'split-conformal' calibration.
+        Fallback values are defined, in case no parameter definition was set.
+        In case the parameter value is <1.0, the split will be performed based
+        on relative proportions (see sklearn::train_test_split())
+
+    bootstrap: float (optional, default=30)
+        The number of bootstraps to define regarding estimator calibration.
+        Only has an effect for calibration procedures based on the 'bootstrap'.
+        Fallback values are defined, in case no parameter definition was set.
+
+    alpha: float (optional, default=0.1)
+        Nominal FDR level to be controlled for.
+
+    random_state: integer (optional, default=None)
+        Random state to fix outcomes for determinism.
+
+    silent: boolean (optional, default=False)
+        Whether to show the progress regarding model training, calibration and inference.
     """
 
     def __init__(
@@ -38,8 +81,8 @@ class ConformalEstimator:
         adjustment: Adjustment,
         split: float = None,
         bootstrap: float = 0.2,
-        alpha: float = 0.05,
-        random_state: int = 0,
+        alpha: float = 0.1,
+        random_state: int = None,
         silent: bool = False,
     ):
         self.detector = detector
@@ -65,6 +108,7 @@ class ConformalEstimator:
         """
 
         x = self._check_x(x)
+        x = check_array(x)
 
         if self.method.value in ["SC"]:
             split = min(1_000.0, len(x) // 3) if self.split is None else self.split
@@ -86,7 +130,7 @@ class ConformalEstimator:
             split = self._get_split(x, fallback=30)
             folds = ShuffleSplit(
                 n_splits=split,
-                test_size=(1 - self.bootstrap),
+                train_size=self.bootstrap,
                 random_state=self.random_state,
             )
         else:
@@ -122,12 +166,13 @@ class ConformalEstimator:
     def predict(self, x: Union[pd.DataFrame, np.ndarray], raw=False) -> np.array:
         """
         Performs anomaly estimates with fitted conformal anomaly estimators.
-        :param x: Numpy Array, set of test data for uncertainty-quantified anomaly estimation.
+        :param x: Numpy Array or Pandas DataFrame, set of test data for anomaly estimation.
         :param raw: Boolean, whether the raw scores should be return or the anomaly labels.
         :return: Numpy Array, set of anomaly estimates obtained from the conformal anomaly estimators.
         """
 
         x = self._check_x(x)
+        x = check_array(x)
 
         if self.method.value in ["CV+", "J+", "J+aB"]:
             scores_array = np.stack(
@@ -180,7 +225,7 @@ class ConformalEstimator:
 
     def _get_split(self, x: np.array, fallback: int) -> int:
         """
-        Get number of splits to be performed on training data.
+        Returns number of splits to be performed on training data.
         :param x: Numpy Array, the training data
         :param fallback: Integer, fallback number of splits when undefined
         :return: Integer, number of splits
@@ -198,7 +243,7 @@ class ConformalEstimator:
         self, random_iteration: bool = False, iteration: int = None
     ) -> None:
         """
-        Set parameters at run-time, depending on passed model object.
+        Sets parameters at run-time, depending on passed model object.
         Filters models unsuitable for one-class classification or otherwise unsupported.
         :param random_iteration: Boolean, whether parameters are set during cross-validation procedure.
         :param iteration: Integer, iteration within cross-validation procedure for seed randomization.
