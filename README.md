@@ -2,11 +2,16 @@
 
 Tired of *alarm fatique*?
 
-**noncon** is a wrapper for [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
-based on one-class classification.
+**noncon** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
+based on one-class classification and the principles of **conformal inference**.
 
-* Wraps an untrained anomaly detector
-* Fits and calibrates given anomaly detector to control the ***marginal* FDR**
+* ***noncon*** wraps almost any 'PyOD' anomaly estimator (see [Supported Detectors](#supported-detectors)).
+* ***noncon*** fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
+
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+[![HitCount](https://hits.dwyl.com/OliverHennhoefer/nonocon.svg?style=flat-square)](http://hits.dwyl.com/OliverHennhoefer/nonocon)
+[![start with why](https://img.shields.io/badge/start%20with-why%3F-brightgreen.svg?style=flat)](https://arxiv.org/abs/2107.07511)
 
 ## What is *Conformal Anomaly Detection*?
 
@@ -25,8 +30,7 @@ of the variables. With that, exchangability is a very practicable as it is weake
 Since CAD controls the FDR by adjustment procedures in context of **multiple testing**, trained conformal detectors currently
 only work for ordinary (batch-wise) anomaly detection on static data.\
 Generally, CAD also offers methods for the online setting when working with dynamic time-series data under potential
-co-variate shift.\
-Currently, this kind of online detector is not implemented. It is planned to be added in future releases.
+co-variate shift. Currently, this kind of online detector is not implemented. It is planned to be added in future releases.
 
 ## Getting started
 
@@ -79,12 +83,13 @@ Output:
 
 ### Supported Detectors
 
-The package currently supports detectors that are suitable for unsupervised one-class classification. As respective
-detectors are therefore exclusively fitted on *normal* (non-anomalous) data, parameters like *threshold* are set to the
-smallest possible values.\
-Models that are currently support include:
+The package currently supports anomaly estimators that are suitable for unsupervised one-class classification. As respective
+detectors are therefore exclusively fitted on *normal* (or *non-anomalous*) data, parameters like *threshold* are set to the
+smallest possible values.
 
-* Angle-Based Outlier Detection (**ABOD**)\
+Models that are **currently support** include:
+
+* Angle-Based Outlier Detection (**ABOD**)
 * Autoencoder (**AE**)
 * Cook's Distance (**CD**)
 * Copula-based Outlier Detector (**COPOD**)
@@ -95,8 +100,8 @@ Models that are currently support include:
 * Isolation-based Anomaly Detection using Nearest-Neighbor Ensembles (**INNE**)
 * Isolation Forest (**IForest**)
 * Kernel Density Estimation (**KDE**)
-* *k*NN
-* *k*NN (Mahalanobis)
+* ****k*NN***
+* ****k*NN*** (*Mahalanobis*)
 * Kernel Principal Component Analysis (**KPCA**)
 * Linear Model Deviation-base Outlier Detection (**LMDD**)
 * Local Outlier Factor (**LOF**)
