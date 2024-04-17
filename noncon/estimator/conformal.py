@@ -1,5 +1,8 @@
 import sys
+from typing import Union
+
 import numpy as np
+import pandas as pd
 
 from copy import copy
 from scipy import stats
@@ -34,6 +37,7 @@ class ConformalEstimator:
         method: Method,
         adjustment: Adjustment,
         split: float = None,
+        bootstrap: float = 0.2,
         alpha: float = 0.05,
         random_state: int = 0,
         silent: bool = False,
@@ -43,6 +47,7 @@ class ConformalEstimator:
         self.procedure = adjustment
 
         self.split = split
+        self.bootstrap = bootstrap
         self.alpha = alpha
         self.random_state = random_state
         self.silent = silent
@@ -52,12 +57,14 @@ class ConformalEstimator:
 
         self._set_params()
 
-    def fit(self, x) -> None:
+    def fit(self, x: Union[pd.DataFrame, np.ndarray]) -> None:
         """
         Fits the given estimator on (non-anomalous) training data.
-        :param x: Numpy Array,
+        :param x: Numpy Array or Pandas DataFrame, set of (non-anomalous) training data.
         :return: None
         """
+
+        x = self._check_x(x)
 
         if self.method.value in ["SC"]:
             split = min(1_000.0, len(x) // 3) if self.split is None else self.split
@@ -72,14 +79,15 @@ class ConformalEstimator:
 
         if self.method.value in ["CV", "CV+", "J", "J+"]:
 
-            split = self._get_split(x, 10)
+            split = self._get_split(x, fallback=10)
             folds = KFold(n_splits=split, shuffle=True, random_state=self.random_state)
 
         elif self.method.value in ["JaB", "J+aB"]:
-            split = self._get_split(x, 30)
-            calib = min(1_000.0, len(x) // 3)
+            split = self._get_split(x, fallback=30)
             folds = ShuffleSplit(
-                n_splits=split, test_size=calib, random_state=self.random_state
+                n_splits=split,
+                test_size=(1 - self.bootstrap),
+                random_state=self.random_state,
             )
         else:
             folds = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
@@ -111,13 +119,15 @@ class ConformalEstimator:
 
         return
 
-    def predict(self, x: np.array, raw=False) -> np.array:
+    def predict(self, x: Union[pd.DataFrame, np.ndarray], raw=False) -> np.array:
         """
         Performs anomaly estimates with fitted conformal anomaly estimators.
         :param x: Numpy Array, set of test data for uncertainty-quantified anomaly estimation.
         :param raw: Boolean, whether the raw scores should be return or the anomaly labels.
         :return: Numpy Array, set of anomaly estimates obtained from the conformal anomaly estimators.
         """
+
+        x = self._check_x(x)
 
         if self.method.value in ["CV+", "J+", "J+aB"]:
             scores_array = np.stack(
@@ -168,26 +178,30 @@ class ConformalEstimator:
 
         return p_val
 
-    def _get_split(self, x: np.array, n: int) -> int:
+    def _get_split(self, x: np.array, fallback: int) -> int:
         """
         Get number of splits to be performed on training data.
         :param x: Numpy Array, the training data
-        :param n: Integer, fallback number of splits when undefined
+        :param fallback: Integer, fallback number of splits when undefined
         :return: Integer, number of splits
         """
-        split = n if self.split is None else self.split
+        split = fallback if self.split is None else self.split
         if self.method.value in ["J", "J+"]:
-            split = len(x)
+            split = np.shape(x)[0]
         return split
+
+    @staticmethod
+    def _check_x(x):
+        return x if isinstance(x, np.ndarray) else x.to_numpy()
 
     def _set_params(
         self, random_iteration: bool = False, iteration: int = None
     ) -> None:
         """
-        Set parameters at run-time depending on passed model object.
-        Filters models unsuitable for one-class classification
-        :param random_iteration: Boolean, whether parameters are set during cross-validation
-        :param iteration: Integer, iteration within cross-validation for seed randomization
+        Set parameters at run-time, depending on passed model object.
+        Filters models unsuitable for one-class classification or otherwise unsupported.
+        :param random_iteration: Boolean, whether parameters are set during cross-validation procedure.
+        :param iteration: Integer, iteration within cross-validation procedure for seed randomization.
         :return: None
         """
 

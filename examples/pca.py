@@ -19,7 +19,7 @@ if __name__ == "__main__":
     x_train = x_train[y_train == 0]
 
     ce = ConformalEstimator(
-        detector=PCA(),
+        detector=PCA(n_components=5),
         method=Method.CV_PLUS,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noncon"
-version = "0.0.4"
+version = "0.0.5"
 description = "Conformal Anomaly Detection with 'PyOD'-Detectors."
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
