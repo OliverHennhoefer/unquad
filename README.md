@@ -10,7 +10,7 @@ based on one-class classification and the principles of **conformal inference**.
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
-[![HitCount](https://hits.dwyl.com/OliverHennhoefer/nonocon.svg?style=flat-square)](http://hits.dwyl.com/OliverHennhoefer/nonocon)
+[![HitCount](https://hits.dwyl.com/OliverHennhoefer/noncon.svg?style=flat-square&show=unique)](http://hits.dwyl.com/OliverHennhoefer/noncon)
 [![start with why](https://img.shields.io/badge/start%20with-why%3F-brightgreen.svg?style=flat)](https://arxiv.org/abs/2107.07511)
 
 ## What is *Conformal Anomaly Detection*?
