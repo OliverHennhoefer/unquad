@@ -23,6 +23,7 @@ from pyod.models.sos import SOS
 from pyod.models.vae import VAE
 from pyod.models.base import BaseDetector
 
+from scipy.stats import gaussian_kde
 from sklearn.utils import check_array
 from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
@@ -67,6 +68,18 @@ class ConformalEstimator:
     alpha: float (optional, default=0.1)
         Nominal FDR level to be controlled for.
 
+    kde_sampling: integer (optional, default=None)
+        For the default setting, only the calibration set as obtained from respective
+        calibration methods will be used. For a given integer, the calibration set will be
+        modeled by the kernel density function that will subsequently be sampled by the given
+        number. This allows to increase the calibration set in order to obtain smaller
+        p-values than what would be possible given only the calibration set. With that, higher
+        certainty towards particular observations will be possible for the conformal estimator
+        to represent, resulting in higher FDR/Power.
+        This may particularly be interesting for very small sets of data or when the batch-size
+        during inference will be large (>1,000). In these cases, multiple testing correction
+        may be too strict so that no outliers may be found.
+
     random_state: integer (optional, default=None)
         Random state to fix outcomes for determinism.
 
@@ -82,6 +95,7 @@ class ConformalEstimator:
         split: float = None,
         bootstrap: float = 0.2,
         alpha: float = 0.1,
+        kde_sampling: int = None,
         random_state: int = None,
         silent: bool = False,
     ):
@@ -92,6 +106,7 @@ class ConformalEstimator:
         self.split = split
         self.bootstrap = bootstrap
         self.alpha = alpha
+        self.kde_sampling = kde_sampling
         self.random_state = random_state
         self.silent = silent
 
@@ -119,6 +134,7 @@ class ConformalEstimator:
             self.detector.fit(x_train)
             self.calibration_set = self.detector.decision_function(x_calib)
 
+            self.sample_kde() if self.kde_sampling is not None else None
             return
 
         if self.method.value in ["CV", "CV+", "J", "J+"]:
@@ -161,7 +177,16 @@ class ConformalEstimator:
             model.fit(x)
             self.detector = copy(model)
 
+        self.sample_kde() if self.kde_sampling is not None else None
         return
+
+    def sample_kde(self) -> None:
+        # May help especially for small datasets or large batches with multiple testing correction.
+        kde = gaussian_kde(self.calibration_set)
+        kde_sample = kde.resample(self.kde_sampling)[0]
+        self.calibration_set = np.concatenate(
+            (self.calibration_set, kde_sample), axis=0
+        )
 
     def predict(self, x: Union[pd.DataFrame, np.ndarray], raw=False) -> np.array:
         """
