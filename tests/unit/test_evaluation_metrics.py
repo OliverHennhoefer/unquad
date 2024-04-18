@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from noncon.evaluation.metrics import false_discovery_rate, statistical_power
+from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 
 class TestEvaluationMetrics(unittest.TestCase):

@@ -26,9 +26,9 @@ from pyod.models.base import BaseDetector
 from sklearn.utils import check_array
 from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
-from noncon.enums.adjustment import Adjustment
-from noncon.enums.method import Method
-from noncon.errors.forbidden_model_error import ForbiddenModelError
+from unquad.enums.adjustment import Adjustment
+from unquad.enums.method import Method
+from unquad.errors.forbidden_model_error import ForbiddenModelError
 
 
 class ConformalEstimator:

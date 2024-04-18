@@ -1,10 +1,10 @@
 from pyod.models.kde import KDE
 from pyod.utils import generate_data
 
-from noncon.enums.adjustment import Adjustment
-from noncon.estimator.conformal import ConformalEstimator
-from noncon.enums.method import Method
-from noncon.evaluation.metrics import false_discovery_rate, statistical_power
+from unquad.enums.adjustment import Adjustment
+from unquad.estimator.conformal import ConformalEstimator
+from unquad.enums.method import Method
+from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
 

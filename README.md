@@ -1,16 +1,16 @@
-# *noncon*
+# *unquad*
 
 Tired of *alarm fatique*?
 
-**noncon** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
+**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
 based on one-class classification and the principles of **conformal inference**.
 
-* ***noncon*** wraps almost any 'PyOD' anomaly estimator (see [Supported Detectors](#supported-detectors)).
-* ***noncon*** fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
+* ***unquad*** wraps almost any 'PyOD' anomaly estimator (see [Supported Detectors](#supported-detectors)).
+* ***unquad*** fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
-[![HitCount](https://hits.dwyl.com/OliverHennhoefer/noncon.svg?style=flat-square&show=unique)](http://hits.dwyl.com/OliverHennhoefer/noncon)
+[![HitCount](https://hits.dwyl.com/OliverHennhoefer/unquad.svg?style=flat-square&show=unique)](http://hits.dwyl.com/OliverHennhoefer/unquad)
 [![start with why](https://img.shields.io/badge/start%20with-why%3F-brightgreen.svg?style=flat)](https://arxiv.org/abs/2107.07511)
 
 ## What is *Conformal Anomaly Detection*?
@@ -37,7 +37,7 @@ co-variate shift. Currently, this kind of online detector is not implemented. It
 ***(Not yet available. Will briefly be published.)***
 
 ```sh
-pip install noncon
+pip install unquad
 ```
 
 ### Usage
@@ -46,10 +46,10 @@ pip install noncon
 from pyod.models.iforest import IForest  # Isolation Forest (sklearn-based)
 from pyod.utils import generate_data  # Example Data (PyOD built-in)
 
-from noncon.estimator.conformal import ConformalEstimator  # Model Wrapper
-from noncon.enums.adjustment import Adjustment  # Multiple Testing Adjustment Procedures
-from noncon.enums.method import Method  # (Cross-)Conformal Methods
-from noncon.evaluation.metrics import false_discovery_rate, statistical_power  # Evaluation Metrics
+from unquad.estimator.conformal import ConformalEstimator  # Model Wrapper
+from unquad.enums.adjustment import Adjustment  # Multiple Testing Adjustment Procedures
+from unquad.enums.method import Method  # Conformal Methods
+from unquad.evaluation.metrics import false_discovery_rate, statistical_power  # Evaluation Metrics
 
 x_train, x_test, y_train, y_test = generate_data(
         n_train=1_000,

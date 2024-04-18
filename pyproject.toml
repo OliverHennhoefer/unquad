@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "noncon"
-version = "0.0.5"
-description = "Conformal Anomaly Detection with 'PyOD'-Detectors."
+name = "unquad"
+version = "0.0.1"
+description = "Uncertainty quantified anomaly detection for 'PyOD'-detectors based on conformal inference."
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
 ]
@@ -29,5 +29,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/OliverHennhoefer/noncon"
-"Bugs" = "https://github.com/OliverHennhoefer/noncon/issues"
+"Homepage" = "https://github.com/OliverHennhoefer/unquad"
+"Bugs" = "https://github.com/OliverHennhoefer/unquad/issues"
