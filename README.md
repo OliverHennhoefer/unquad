@@ -2,10 +2,10 @@
 
 Tired of *alarm fatique*?
 
-**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (*scikit-learn*-based) for **uncertainty quantified anomaly detection**
+**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors for **uncertainty quantified anomaly detection**
 based on one-class classification and the principles of **conformal inference**.
 
-* ***unquad*** wraps almost any 'PyOD' anomaly estimator (see [Supported Detectors](#supported-detectors)).
+* ***unquad*** wraps almost any '[*PyOD*](https://pyod.readthedocs.io/en/latest/)' anomaly estimator (see [Supported Estimators](#supported-estimators)).
 * ***unquad*** fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -15,22 +15,29 @@ based on one-class classification and the principles of **conformal inference**.
 
 ## What is *Conformal Anomaly Detection*?
 
-Conformal anomaly detection (CAD) is based on the model-agnostic and non-parametric framework of conformal prediction (CP).
-While CP aims to produce statistically valid prediction regions for any given point predictor, CAD aims to control the
-**false discovery rate** (FDR) for any given anomaly detector, suitable for one-class classification, without compromising
-it's **statistical power**.
+[*Conformal anomaly detection*](https://www.diva-portal.org/smash/get/diva2:690997/FULLTEXT02.pdf) (CAD) is based on the
+model-agnostic and non-parametric framework of [*conformal prediction*](https://en.wikipedia.org/wiki/Conformal_prediction#:~:text=Conformal%20prediction%20(CP)%20is%20a,assuming%20exchangeability%20of%20the%20data.) (CP).
+While CP aims to produce statistically valid prediction regions (*prediction intervals* or *prediction sets*) for any
+given point predictor or classifier, CAD aims to control the [*false discovery rate*](https://en.wikipedia.org/wiki/False_discovery_rate)
+(FDR) for any given anomaly detector, suitable for one-class classification, without compromising its
+[*statistical power*](https://en.wikipedia.org/wiki/Power_of_a_test).
+
+***CAD translates anomaly scores into statistical p-values by comparing anomaly scores observed on test data to a retained set of calibration
+scores as previously on normal data during model training*** (see [*One-Class Classification*](https://en.wikipedia.org/wiki/One-class_classification#:~:text=In%20machine%20learning%2C%20one%2Dclass,of%20one%2Dclass%20classifiers%20where)).
+The larger the discrepancy between *normal* scores and observed test scores, the lower the obtained (and statistically valid) p-value.
+The p-values, instead of the usual anomaly estimates, allow for FDR-control by statistical procedures like *Benjamini-Hochberg*.
 
 ### Assumption
 CAD assumes ***exchangability*** of training and future test data. *Exchangability* is closely related to the statistical
 term of *independent and identically distributed random variables* (*IID*). IID implies both, independence <ins>and</ins> 
 exchangability. Exchangability defines a joint probability distribution that remains the same under permutations
-of the variables. With that, exchangability is a very practicable as it is weaker a assumption than IID.
+of the variables. With that, exchangability is a very practicable as it is a weaker assumption than IID.
 
 ### Limitations
 Since CAD controls the FDR by adjustment procedures in context of **multiple testing**, trained conformal detectors currently
-only work for ordinary (batch-wise) anomaly detection on static data.\
-Generally, CAD also offers methods for the online setting when working with dynamic time-series data under potential
-co-variate shift. Currently, this kind of online detector is not implemented. It is planned to be added in future releases.
+only work for *batch-wise* anomaly detection (on static data).\
+Generally, CAD also offers a range of methods for the online setting when working with dynamic time-series data under potential
+co-variate shift. Currently, this kind of online detector is not implemented. It is planned to add respective methods in future releases.
 
 ## Getting started
 
@@ -47,7 +54,7 @@ from pyod.models.iforest import IForest  # Isolation Forest (sklearn-based)
 from pyod.utils import generate_data  # Example Data (PyOD built-in)
 
 from unquad.estimator.conformal import ConformalEstimator  # Model Wrapper
-from unquad.enums.adjustment import Adjustment  # Multiple Testing Adjustment Procedures
+from unquad.enums.adjustment import Adjustment  # Multiple Testing Adjustments
 from unquad.enums.method import Method  # Conformal Methods
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power  # Evaluation Metrics
 
@@ -83,13 +90,13 @@ Output:
 0.901 (Statistical Power)
 ```
 
-### Supported Detectors
+### Supported Estimators
 
 The package currently supports anomaly estimators that are suitable for unsupervised one-class classification. As respective
 detectors are therefore exclusively fitted on *normal* (or *non-anomalous*) data, parameters like *threshold* are set to the
 smallest possible values.
 
-Models that are **currently support** include:
+Models that are **currently supported** include:
 
 * Angle-Based Outlier Detection (**ABOD**)
 * Autoencoder (**AE**)
@@ -102,8 +109,7 @@ Models that are **currently support** include:
 * Isolation-based Anomaly Detection using Nearest-Neighbor Ensembles (**INNE**)
 * Isolation Forest (**IForest**)
 * Kernel Density Estimation (**KDE**)
-* ****k*NN***
-* ****k*NN*** (*Mahalanobis*)
+* *k*-Nearest Neighbor (***k*NN**)
 * Kernel Principal Component Analysis (**KPCA**)
 * Linear Model Deviation-base Outlier Detection (**LMDD**)
 * Local Outlier Factor (**LOF**)
