@@ -69,13 +69,13 @@ x_train, x_test, y_train, y_test = generate_data(
 x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
 
 ce = ConformalEstimator(
-        detector=IForest(behaviour="old"),
-        method=Method.CV,
-        adjustment=Adjustment.BENJAMINI_HOCHBERG,
-        alpha=0.1,  # FDR
-        random_state=2,
-        split=10,
-    )
+            detector=IForest(behaviour="new"),
+            method=Method.CV_PLUS,
+            adjustment=Adjustment.BENJAMINI_HOCHBERG,
+            alpha=0.1,  # FDR
+            random_state=1,
+            split=10,
+        )
 
 ce.fit(x_train)  # Model Fit/Calibration
 estimates = ce.predict(x_test, raw=False)
@@ -85,16 +85,16 @@ print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
 ```
 
 Output:
-```
-0.099 (False Discovery Rate; FDR)
-0.901 (Statistical Power)
+```python
+0.099 # Empirical FDR
+0.901 # Empirical Power
 ```
 
 ### Supported Estimators
 
 The package currently supports anomaly estimators that are suitable for unsupervised one-class classification. As respective
-detectors are therefore exclusively fitted on *normal* (or *non-anomalous*) data, parameters like *threshold* are set to the
-smallest possible values.
+detectors are therefore exclusively fitted on *normal* (or *non-anomalous*) data, parameters like *threshold* are therefore internally
+set to the smallest possible values.
 
 Models that are **currently supported** include:
 
@@ -125,3 +125,11 @@ Models that are **currently supported** include:
 * Rotation-based Outlier Detection (**ROD**)
 * Subspace Outlier Detection (**SOD**)
 * Scalable Unsupervised Outlier Detection (**SUOD**)
+
+## Contact
+**General questions:** [oliver.hennhoefer@h-ka.de](mailto:oliver.hennhoefer@h-ka.de)\
+**Bug reporting:** [https://github.com/OliverHennhoefer/unquad/issues](https://github.com/OliverHennhoefer/unquad/issues)
+
+## What now?
+To dive deeper into the field of ***conformal inference*** make sure to visit the [awesome-conformal-prediction](https://github.com/valeman/awesome-conformal-prediction)
+repository!

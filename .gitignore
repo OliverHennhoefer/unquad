@@ -8,6 +8,7 @@ __pycache__
 
 # Root directories
 /.env/
+/.venv/
 /.idea/
 /venv/
 /dist/
