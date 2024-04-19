@@ -41,8 +41,6 @@ co-variate shift. Currently, this kind of online detector is not implemented. It
 
 ## Getting started
 
-***(Not yet available. Will briefly be published.)***
-
 ```sh
 pip install unquad
 ```
