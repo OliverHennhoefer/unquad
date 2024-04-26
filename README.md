@@ -2,11 +2,13 @@
 
 Tired of *alarm fatique*?
 
-**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors for **uncertainty quantified anomaly detection**
-based on one-class classification and the principles of **conformal inference**.
+**unquad** enables **conformal anomaly detection** for [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors.
 
-* ***unquad*** wraps almost any '[*PyOD*](https://pyod.readthedocs.io/en/latest/)' anomaly estimator (see [Supported Estimators](#supported-estimators)).
-* ***unquad*** fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
+**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors for
+**uncertainty-quantified anomaly detection** based on one-class classification and the principles of **conformal inference**.
+
+* Wraps most '[*PyOD*](https://pyod.readthedocs.io/en/latest/)' anomaly de (see [Supported Estimators](#supported-estimators)).
+* Fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
