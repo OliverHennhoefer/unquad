@@ -3,6 +3,7 @@ import pandas as pd
 from pyod.models.iforest import IForest
 
 from unquad.enums.adjustment import Adjustment
+from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
 from unquad.estimator.conformal import ConformalEstimator
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
@@ -25,9 +26,6 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
     x_test = x_test.drop(["Class"], axis=1)
 
     def test_split_conformal(self):
-        """
-        Split-Conformal Estimator.
-        """
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -48,9 +46,6 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         self.assertEqual(power, 0.809)
 
     def test_cv(self):
-        """
-        CV Estimator.
-        """
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -72,9 +67,6 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         self.assertEqual(power, 0.958)
 
     def test_cv_plus(self):
-        """
-        CV+ Estimator.
-        """
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -96,9 +88,6 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         self.assertEqual(power, 1.0)
 
     def test_jackknife(self):
-        """
-        Jackknife Estimator.
-        """
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -119,9 +108,6 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         self.assertEqual(power, 0.872)
 
     def test_jackknife_plus(self):
-        """
-        Jackknife+ Estimator.
-        """
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -142,18 +128,16 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         self.assertEqual(power, 0.835)
 
     def test_jackknife_after_bootstrap(self):
-        """
-        Jackknife-after-Bootstrap Estimator.
-        """
+
+        bc = BootstrapConfiguration(n=1_000, b=50, m=0.75)
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
             method=Method.JACKKNIFE_AFTER_BOOTSTRAP,
             adjustment=Adjustment.BENJAMINI_HOCHBERG,
             alpha=0.2,
+            bootstrap_config=bc,
             random_state=1,
-            split=50,
-            bootstrap=0.75,
             silent=True,
         )
 
@@ -167,9 +151,8 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         self.assertEqual(power, 0.947)
 
     def test_jackknife_plus_after_bootstrap(self):
-        """
-        Jackknife+-after-Bootstrap Estimator.
-        """
+
+        bc = BootstrapConfiguration(n=1_000, b=50, m=0.75)
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -177,8 +160,7 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
             adjustment=Adjustment.BENJAMINI_HOCHBERG,
             alpha=0.2,
             random_state=1,
-            split=50,
-            bootstrap=0.75,
+            bootstrap_config=bc,
             silent=True,
         )
 
@@ -190,3 +172,7 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
 
         self.assertEqual(fdr, 0.03)
         self.assertEqual(power, 0.97)
+
+
+if __name__ == "__main__":
+    unittest.main()

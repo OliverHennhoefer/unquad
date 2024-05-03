@@ -1,5 +1,7 @@
 import os
 
+from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
+
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
 
 import sys
@@ -50,7 +52,7 @@ class ConformalEstimator:
     method : enum:Method
         The conformal calibration scheme to be applied during training.
 
-    adjustment: enum:Adjustment
+    adjustment: enum:Adjustment (optional, default=None)
         Statistical adjustment procedure to account for multiple testing.
 
     split: float or integer (optional, fallback depending on 'method' parameter)
@@ -60,7 +62,7 @@ class ConformalEstimator:
         In case the parameter value is <1.0, the split will be performed based
         on relative proportions (see sklearn::train_test_split())
 
-    bootstrap: float (optional, default=30)
+    bootstrap_config: float (optional, default=30)
         The number of bootstraps to define regarding estimator calibration.
         Only has an effect for calibration procedures based on the 'bootstrap'.
         Fallback values are defined, in case no parameter definition was set.
@@ -75,10 +77,8 @@ class ConformalEstimator:
         number. This allows to increase the calibration set in order to obtain smaller
         p-values than what would be possible given only the calibration set. With that, higher
         certainty towards particular observations will be possible for the conformal estimator
-        to represent, resulting in higher FDR/Power.
-        This may particularly be interesting for very small sets of data or when the batch-size
-        during inference will be large (>1,000). In these cases, multiple testing correction
-        may be too strict so that no outliers may be found.
+        to represent, potentially resulting in higher FDR/Power for small calibration sets.
+        Experimental.
 
     random_state: integer (optional, default=None)
         Random state to fix outcomes for determinism.
@@ -91,20 +91,23 @@ class ConformalEstimator:
         self,
         detector: BaseDetector,
         method: Method,
-        adjustment: Adjustment,
+        adjustment: Adjustment = Adjustment.NONE,
         split: float = None,
-        bootstrap: float = 0.2,
+        bootstrap_config: BootstrapConfiguration = None,
         alpha: float = 0.1,
         kde_sampling: int = None,
         random_state: int = None,
         silent: bool = False,
     ):
+
+        self._sanity_check(method, split, alpha, bootstrap_config)
+
         self.detector = detector
         self.method = method
         self.procedure = adjustment
 
         self.split = split
-        self.bootstrap = bootstrap
+        self.bootstrap_config = bootstrap_config
         self.alpha = alpha
         self.kde_sampling = kde_sampling
         self.random_state = random_state
@@ -137,16 +140,28 @@ class ConformalEstimator:
             self.sample_kde() if self.kde_sampling is not None else None
             return
 
-        if self.method.value in ["CV", "CV+", "J", "J+"]:
+        c = None  # bootstrap configuration
+        enforce_c = None  # bootstrap configuration
+        if self.method.value in ["J", "J+"]:
+            len_x = np.shape(x)[0]
+            folds = KFold(n_splits=len_x, shuffle=True, random_state=self.random_state)
 
-            split = self._get_split(x, fallback=10)
-            folds = KFold(n_splits=split, shuffle=True, random_state=self.random_state)
+        elif self.method.value in ["CV", "CV+"]:
+            n_splits = self.split if self.split is not None else 10
+            folds = KFold(
+                n_splits=n_splits, shuffle=True, random_state=self.random_state
+            )
 
         elif self.method.value in ["JaB", "J+aB"]:
-            split = self._get_split(x, fallback=30)
+
+            b = self.bootstrap_config.b
+            m = self.bootstrap_config.m
+            c = self.bootstrap_config.c
+            enforce_c = self.bootstrap_config.enforce_c
+
             folds = ShuffleSplit(
-                n_splits=split,
-                train_size=self.bootstrap,
+                n_splits=b,
+                train_size=m,
                 random_state=self.random_state,
             )
         else:
@@ -176,6 +191,12 @@ class ConformalEstimator:
             model = copy(self.detector)
             model.fit(x)
             self.detector = copy(model)
+
+        if self.method.value in ["J+aB", "JaB"]:
+            if c is not None and enforce_c is True:
+                self.calibration_set = np.random.choice(
+                    self.calibration_set, size=c, replace=False
+                )
 
         self.sample_kde() if self.kde_sampling is not None else None
         return
@@ -248,18 +269,6 @@ class ConformalEstimator:
 
         return p_val
 
-    def _get_split(self, x: np.array, fallback: int) -> int:
-        """
-        Returns number of splits to be performed on training data.
-        :param x: Numpy Array, the training data
-        :param fallback: Integer, fallback number of splits when undefined
-        :return: Integer, number of splits
-        """
-        split = fallback if self.split is None else self.split
-        if self.method.value in ["J", "J+"]:
-            split = np.shape(x)[0]
-        return split
-
     @staticmethod
     def _check_x(x):
         return x if isinstance(x, np.ndarray) else x.to_numpy()
@@ -323,3 +332,25 @@ class ConformalEstimator:
                         "random_state": self.random_state,
                     }
                 )
+
+    @staticmethod
+    def _sanity_check(
+        method: Method,
+        split: Union[int, float],
+        alpha: float,
+        bootstrap_config: BootstrapConfiguration = None,
+    ):
+
+        # check alpha range
+        if not (0.0 < alpha <= 1.0):
+            raise ValueError("Parameter 'alpha' should be in range (0, 1].")
+
+        # check bootstrap configuration for JaB/J+aB
+        if method.value in ["JaB", "J+aB"] and bootstrap_config is None:
+            raise ValueError("Parameter 'bootstrap_config' must be set for JaB/J+aB.")
+
+        # check split number for CV/CV+
+        if method.value in ["CV", "CV+"] and split is None:
+            raise Warning(
+                "Parameter 'split' is not defined and will default to a method specific value."
+            )

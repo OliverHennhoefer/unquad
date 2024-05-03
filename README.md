@@ -4,11 +4,8 @@ Tired of *alarm fatique*?
 
 **unquad** enables **conformal anomaly detection** for [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors.
 
-**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors for
+**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (see [Supported Estimators](#supported-estimators)) for
 **uncertainty-quantified anomaly detection** based on one-class classification and the principles of **conformal inference**.
-
-* Wraps most '[*PyOD*](https://pyod.readthedocs.io/en/latest/)' anomaly de (see [Supported Estimators](#supported-estimators)).
-* Fits and calibrates given estimator to control the (marginal) **False Discovery Rate** (FDR).
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
@@ -26,14 +23,14 @@ given point predictor or classifier, CAD aims to control the [*false discovery r
 
 ***CAD translates anomaly scores into statistical p-values by comparing anomaly scores observed on test data to a retained set of calibration
 scores as previously on normal data during model training*** (see [*One-Class Classification*](https://en.wikipedia.org/wiki/One-class_classification#:~:text=In%20machine%20learning%2C%20one%2Dclass,of%20one%2Dclass%20classifiers%20where)).
-The larger the discrepancy between *normal* scores and observed test scores, the lower the obtained (and statistically valid) p-value.
+The larger the discrepancy between *normal* scores and observed test scores, the lower the obtained (**statistically valid**) p-value.
 The p-values, instead of the usual anomaly estimates, allow for FDR-control by statistical procedures like *Benjamini-Hochberg*.
 
 ### Assumption
 CAD assumes ***exchangability*** of training and future test data. *Exchangability* is closely related to the statistical
 term of *independent and identically distributed random variables* (*IID*). IID implies both, independence <ins>and</ins> 
 exchangability. Exchangability defines a joint probability distribution that remains the same under permutations
-of the variables. With that, exchangability is a very practicable as it is a weaker assumption than IID.
+of the variables. With that, exchangability is a very practicable assumption as it is a *weaker* than IID.
 
 ### Limitations
 Since CAD controls the FDR by adjustment procedures in context of **multiple testing**, trained conformal detectors currently
@@ -47,16 +44,16 @@ co-variate shift. Currently, this kind of online detector is not implemented. It
 pip install unquad
 ```
 
-### Usage
+### Usage: Split-Conformal
 
 ```python
-from pyod.models.iforest import IForest  # Isolation Forest (sklearn-based)
-from pyod.utils import generate_data  # Example Data (PyOD built-in)
+from pyod.models.iforest import IForest
+from pyod.utils import generate_data
 
-from unquad.estimator.conformal import ConformalEstimator  # Model Wrapper
-from unquad.enums.adjustment import Adjustment  # Multiple Testing Adjustments
-from unquad.enums.method import Method  # Conformal Methods
-from unquad.evaluation.metrics import false_discovery_rate, statistical_power  # Evaluation Metrics
+from unquad.estimator.conformal import ConformalEstimator
+from unquad.enums.adjustment import Adjustment
+from unquad.enums.method import Method
+from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_train, y_test = generate_data(
         n_train=1_000,
@@ -72,7 +69,7 @@ ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
             method=Method.CV_PLUS,
             adjustment=Adjustment.BENJAMINI_HOCHBERG,
-            alpha=0.1,  # FDR
+            alpha=0.2,  # nominal FDR level
             random_state=1,
             split=10,
         )
@@ -82,6 +79,62 @@ estimates = ce.predict(x_test, raw=False)
 
 print(false_discovery_rate(y=y_test, y_hat=estimates))  # Empirical FDR
 print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
+```
+
+```bash
+Training: 100%|██████████| 10/10 [00:01<00:00,  8.16it/s]
+Inference: 100%|██████████| 10/10 [00:00<00:00, 220.63it/s]
+```
+
+Output:
+```python
+0.194 # Empirical FDR
+0.806 # Empirical Power
+```
+
+### Usage: Jackknife+-after-Bootstrap
+
+```python
+from pyod.models.iforest import IForest
+from pyod.utils import generate_data
+
+from unquad.estimator.conformal import ConformalEstimator
+from unquad.enums.adjustment import Adjustment
+from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
+from unquad.enums.method import Method 
+from unquad.evaluation.metrics import false_discovery_rate, statistical_power
+
+x_train, x_test, y_train, y_test = generate_data(
+        n_train=1_000,
+        n_test=1_000,
+        n_features=10,
+        contamination=0.1,
+        random_state=1,
+    )
+
+x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
+
+bc = BootstrapConfiguration(n=1_000, b=40, m=0.95)
+
+ce = ConformalEstimator(
+            detector=IForest(behaviour="new"),
+            method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+            adjustment=Adjustment.BENJAMINI_HOCHBERG,
+            alpha=0.1,  # nominal FDR level
+            bootstrap_config=bc,
+            random_state=1,
+        )
+
+ce.fit(x_train)  # Model Fit/Calibration
+estimates = ce.predict(x_test, raw=False)
+
+print(false_discovery_rate(y=y_test, y_hat=estimates))  # Empirical FDR
+print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
+```
+
+```bash
+Training: 100%|██████████| 40/40 [00:04<00:00,  8.13it/s]
+Inference: 100%|██████████| 40/40 [00:00<00:00, 231.63it/s]
 ```
 
 Output:

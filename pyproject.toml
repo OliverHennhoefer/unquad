@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unquad"
-version = "0.0.1"
-description = "Uncertainty quantified anomaly detection for 'PyOD'-detectors based on conformal inference."
+version = "0.0.2"
+description = "Conformal anomaly detection for 'PyOD'-detectors."
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
 ]

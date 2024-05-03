@@ -20,11 +20,11 @@ if __name__ == "__main__":
 
     ce = ConformalEstimator(
         detector=KNN(),
-        method=Method.CV,
+        method=Method.SPLIT_CONFORMAL,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         random_state=2,
-        split=100,
+        split=300,
     )
 
     ce.fit(x_train)
