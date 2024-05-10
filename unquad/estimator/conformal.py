@@ -1,6 +1,7 @@
 import os
 
-from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
+from unquad.enums.aggregation import Aggregation
+from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
 
@@ -55,6 +56,9 @@ class ConformalEstimator:
     adjustment: enum:Adjustment (optional, default=None)
         Statistical adjustment procedure to account for multiple testing.
 
+    adjustment: enum:Adjustment (optional, default=Median)
+        Aggregation function for ensemble methods like CV+
+
     split: float or integer (optional, fallback depending on 'method' parameter)
         The number of splits to be performed regarding estimator calibration.
         Has no effect for the 'split-conformal' calibration.
@@ -64,7 +68,7 @@ class ConformalEstimator:
 
     bootstrap_config: float (optional, default=30)
         The number of bootstraps to define regarding estimator calibration.
-        Only has an effect for calibration procedures based on the 'bootstrap'.
+        Only has an effect for calibration procedures based on the 'split_config'.
         Fallback values are defined, in case no parameter definition was set.
 
     alpha: float (optional, default=0.1)
@@ -92,6 +96,7 @@ class ConformalEstimator:
         detector: BaseDetector,
         method: Method,
         adjustment: Adjustment = Adjustment.NONE,
+        aggregation: Aggregation = Aggregation.MEDIAN,
         split: float = None,
         bootstrap_config: BootstrapConfiguration = None,
         alpha: float = 0.1,
@@ -104,7 +109,8 @@ class ConformalEstimator:
 
         self.detector = detector
         self.method = method
-        self.procedure = adjustment
+        self.adjustment = adjustment
+        self.aggregation = aggregation
 
         self.split = split
         self.bootstrap_config = bootstrap_config
@@ -128,7 +134,9 @@ class ConformalEstimator:
         x = self._check_x(x)
         x = check_array(x)
 
-        if self.method.value in ["SC"]:
+        c = None  # split_config configuration
+        enforce_c = None  # split_config configuration
+        if self.method in [Method.SPLIT_CONFORMAL]:
             split = min(1_000.0, len(x) // 3) if self.split is None else self.split
             x_train, x_calib = train_test_split(
                 x, test_size=split, shuffle=True, random_state=self.random_state
@@ -140,19 +148,20 @@ class ConformalEstimator:
             self.sample_kde() if self.kde_sampling is not None else None
             return
 
-        c = None  # bootstrap configuration
-        enforce_c = None  # bootstrap configuration
-        if self.method.value in ["J", "J+"]:
+        elif self.method in [Method.JACKKNIFE, Method.JACKKNIFE_PLUS]:
             len_x = np.shape(x)[0]
             folds = KFold(n_splits=len_x, shuffle=True, random_state=self.random_state)
 
-        elif self.method.value in ["CV", "CV+"]:
+        elif self.method in [Method.CV, Method.CV_PLUS]:
             n_splits = self.split if self.split is not None else 10
             folds = KFold(
                 n_splits=n_splits, shuffle=True, random_state=self.random_state
             )
 
-        elif self.method.value in ["JaB", "J+aB"]:
+        elif self.method in [
+            Method.JACKKNIFE_AFTER_BOOTSTRAP,
+            Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+        ]:
 
             b = self.bootstrap_config.b
             m = self.bootstrap_config.m
@@ -165,7 +174,7 @@ class ConformalEstimator:
                 random_state=self.random_state,
             )
         else:
-            folds = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
+            raise ValueError("Unknown method.")
 
         n_folds = folds.get_n_splits()
         i = None
@@ -178,7 +187,11 @@ class ConformalEstimator:
             model = copy(self.detector)
             model.fit(x[train_idx, :])
 
-            if self.method.value in ["CV+", "J+", "J+aB"]:
+            if self.method in [
+                Method.CV_PLUS,
+                Method.JACKKNIFE_PLUS,
+                Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+            ]:
                 self.detector_set.append(copy(model))
 
             self.calibration_set = np.append(
@@ -186,13 +199,20 @@ class ConformalEstimator:
                 model.decision_function(x[calib_idx, :]),
             )
 
-        if self.method.value in ["CV", "J", "JaB"]:
-            self._set_params(random_iteration=True, iteration=i)
+        if self.method in [
+            Method.CV,
+            Method.JACKKNIFE,
+            Method.JACKKNIFE_AFTER_BOOTSTRAP,
+        ]:
+            self._set_params(random_iteration=True, iteration=i + 1)
             model = copy(self.detector)
             model.fit(x)
             self.detector = copy(model)
 
-        if self.method.value in ["J+aB", "JaB"]:
+        if self.method in [
+            Method.JACKKNIFE_AFTER_BOOTSTRAP,
+            Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+        ]:
             if c is not None and enforce_c is True:
                 self.calibration_set = np.random.choice(
                     self.calibration_set, size=c, replace=False
@@ -202,7 +222,7 @@ class ConformalEstimator:
         return
 
     def sample_kde(self) -> None:
-        # May help especially for small datasets or large batches with multiple testing correction.
+        # Experimental; may help for small calibration sets or large batches when using multiple testing adjustments.
         kde = gaussian_kde(self.calibration_set)
         kde_sample = kde.resample(self.kde_sampling)[0]
         self.calibration_set = np.concatenate(
@@ -220,7 +240,11 @@ class ConformalEstimator:
         x = self._check_x(x)
         x = check_array(x)
 
-        if self.method.value in ["CV+", "J+", "J+aB"]:
+        if self.method in [
+            Method.CV_PLUS,
+            Method.JACKKNIFE_PLUS,
+            Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+        ]:
             scores_array = np.stack(
                 [
                     model.decision_function(x)
@@ -233,7 +257,16 @@ class ConformalEstimator:
                 ],
                 axis=0,
             )
-            estimates = np.median(scores_array, axis=0)
+            if self.aggregation in [Aggregation.MEDIAN]:
+                estimates = np.median(scores_array, axis=0)
+            elif self.aggregation in [Aggregation.MEAN]:
+                estimates = np.mean(scores_array, axis=0)
+            elif self.aggregation in [Aggregation.MINIMUM]:
+                estimates = np.min(scores_array, axis=0)
+            elif self.aggregation in [Aggregation.MAXIMUM]:
+                estimates = np.max(scores_array, axis=0)
+            else:
+                raise ValueError("No valid aggregation function defined.")
         else:
             estimates = self.detector.decision_function(x)
 
@@ -262,9 +295,9 @@ class ConformalEstimator:
         :return: Numpy Array, a set of adjusted p-values
         """
 
-        if self.procedure.value == "bh":
+        if self.adjustment.value == "bh":
             p_val = stats.false_discovery_control(p_val, method="bh")
-        if self.procedure.value == "by":
+        if self.adjustment.value == "by":
             p_val = stats.false_discovery_control(p_val, method="by")
 
         return p_val
@@ -345,7 +378,7 @@ class ConformalEstimator:
         if not (0.0 < alpha <= 1.0):
             raise ValueError("Parameter 'alpha' should be in range (0, 1].")
 
-        # check bootstrap configuration for JaB/J+aB
+        # check split_config configuration for JaB/J+aB
         if method.value in ["JaB", "J+aB"] and bootstrap_config is None:
             raise ValueError("Parameter 'bootstrap_config' must be set for JaB/J+aB.")
 

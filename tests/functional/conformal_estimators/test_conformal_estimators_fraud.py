@@ -3,7 +3,7 @@ import pandas as pd
 from pyod.models.iforest import IForest
 
 from unquad.enums.adjustment import Adjustment
-from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
+from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
 from unquad.estimator.conformal import ConformalEstimator
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
@@ -70,12 +70,12 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         fdr = false_discovery_rate(y=self.y_test, y_hat=estimates)
         power = statistical_power(y=self.y_test, y_hat=estimates)
 
-        self.assertEqual(fdr, 0.131)
-        self.assertEqual(power, 0.869)
+        self.assertEqual(fdr, 0.107)
+        self.assertEqual(power, 0.893)
 
     def test_jackknife_after_bootstrap(self):
 
-        bc = BootstrapConfiguration(n=1_000, b=30, m=0.975)
+        bc = BootstrapConfiguration(n=1_000, b=30, c=1_000)
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -93,12 +93,12 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         fdr = false_discovery_rate(y=self.y_test, y_hat=estimates)
         power = statistical_power(y=self.y_test, y_hat=estimates)
 
-        self.assertEqual(fdr, 0.129)
-        self.assertEqual(power, 0.871)
+        self.assertEqual(fdr, 0.08)
+        self.assertEqual(power, 0.92)
 
     def test_jackknife_plus_after_bootstrap(self):
 
-        bc = BootstrapConfiguration(n=1_000, b=30, m=0.975)
+        bc = BootstrapConfiguration(n=1_000, b=30, m=0.9)
 
         ce = ConformalEstimator(
             detector=IForest(behaviour="new"),
@@ -116,8 +116,8 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         fdr = false_discovery_rate(y=self.y_test, y_hat=estimates)
         power = statistical_power(y=self.y_test, y_hat=estimates)
 
-        self.assertEqual(fdr, 0.154)
-        self.assertEqual(power, 0.846)
+        self.assertEqual(fdr, 0.147)
+        self.assertEqual(power, 0.853)
 
 
 if __name__ == "__main__":

@@ -2,10 +2,11 @@ import unittest
 import pandas as pd
 from pyod.models.iforest import IForest
 
-from unquad.enums.adjustment import Adjustment
-from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
-from unquad.estimator.conformal import ConformalEstimator
 from unquad.enums.method import Method
+from unquad.enums.adjustment import Adjustment
+from unquad.enums.aggregation import Aggregation
+from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
+from unquad.estimator.conformal import ConformalEstimator
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 
@@ -53,7 +54,7 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
             adjustment=Adjustment.BENJAMINI_HOCHBERG,
             alpha=0.1,
             random_state=1,
-            split=20,
+            split=10,
             silent=True,
         )
 
@@ -63,8 +64,8 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         fdr = false_discovery_rate(y=self.y_test, y_hat=estimates)
         power = statistical_power(y=self.y_test, y_hat=estimates)
 
-        self.assertEqual(fdr, 0.042)
-        self.assertEqual(power, 0.958)
+        self.assertEqual(fdr, 0.155)
+        self.assertEqual(power, 0.845)
 
     def test_cv_plus(self):
 
@@ -72,6 +73,7 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
             detector=IForest(behaviour="new"),
             method=Method.CV_PLUS,
             adjustment=Adjustment.BENJAMINI_HOCHBERG,
+            aggregation=Aggregation.MEDIAN,
             alpha=0.1,
             random_state=1,
             split=10,
@@ -104,7 +106,7 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         fdr = false_discovery_rate(y=self.y_test, y_hat=estimates)
         power = statistical_power(y=self.y_test, y_hat=estimates)
 
-        self.assertEqual(fdr, 0.128)
+        self.assertEqual(fdr, 0.146)
         self.assertEqual(power, 0.872)
 
     def test_jackknife_plus(self):

@@ -1,6 +1,6 @@
 import unittest
 
-from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
+from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
 
 
 class TestEvaluationMetrics(unittest.TestCase):

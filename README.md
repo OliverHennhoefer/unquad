@@ -100,30 +100,30 @@ from pyod.utils import generate_data
 
 from unquad.estimator.conformal import ConformalEstimator
 from unquad.enums.adjustment import Adjustment
-from unquad.estimator.bootstrap.bootstrap_config import BootstrapConfiguration
-from unquad.enums.method import Method 
+from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
+from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_train, y_test = generate_data(
-        n_train=1_000,
-        n_test=1_000,
-        n_features=10,
-        contamination=0.1,
-        random_state=1,
-    )
+    n_train=1_000,
+    n_test=1_000,
+    n_features=10,
+    contamination=0.1,
+    random_state=1,
+)
 
 x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
 
 bc = BootstrapConfiguration(n=1_000, b=40, m=0.95)
 
 ce = ConformalEstimator(
-            detector=IForest(behaviour="new"),
-            method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
-            adjustment=Adjustment.BENJAMINI_HOCHBERG,
-            alpha=0.1,  # nominal FDR level
-            bootstrap_config=bc,
-            random_state=1,
-        )
+    detector=IForest(behaviour="new"),
+    method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+    adjustment=Adjustment.BENJAMINI_HOCHBERG,
+    alpha=0.1,  # nominal FDR level
+    bootstrap_config=bc,
+    random_state=1,
+)
 
 ce.fit(x_train)  # Model Fit/Calibration
 estimates = ce.predict(x_test, raw=False)

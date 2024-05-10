@@ -16,7 +16,7 @@ class BootstrapConfiguration:
 
         self._n = n  # size of training data
         self._b = b  # number of bootstraps
-        self._m = m  # train bootstrap proportion
+        self._m = m  # train split_config proportion
 
         self._c = c  # calibration set size
         self._enforce_c = enforce_c
@@ -41,7 +41,7 @@ class BootstrapConfiguration:
 
         if b is not None and c is not None and enforce_c is False:
             warnings.warn(
-                "Calibration set size will not be enforced during computation."
+                "Calibration set size will not be enforce. The set size might slightly deviate from given 'c'."
             )
 
         if n is None:

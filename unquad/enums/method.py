@@ -3,7 +3,7 @@ from enum import Enum
 
 class Method(Enum):
     """
-    Enumerators of available conformal detection methods for uncertainty-quantified anomaly detection.
+    Enumerators of conformal methods for anomaly detection.
     """
 
     SPLIT_CONFORMAL: str = "SC"
