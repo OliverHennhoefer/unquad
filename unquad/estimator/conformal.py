@@ -136,8 +136,15 @@ class ConformalEstimator:
 
         c = None  # split_config configuration
         enforce_c = None  # split_config configuration
-        if self.method in [Method.SPLIT_CONFORMAL]:
-            split = min(1_000.0, len(x) // 3) if self.split is None else self.split
+        if self.method in [Method.NAIVE]:
+            self.detector.fit(x)
+            self.calibration_set = self.detector.decision_function(x)
+
+            self.sample_kde() if self.kde_sampling is not None else None
+            return
+
+        elif self.method in [Method.SPLIT_CONFORMAL]:
+            split = min(1_000, len(x) // 3) if self.split is None else self.split
             x_train, x_calib = train_test_split(
                 x, test_size=split, shuffle=True, random_state=self.random_state
             )
@@ -378,12 +385,19 @@ class ConformalEstimator:
         if not (0.0 < alpha <= 1.0):
             raise ValueError("Parameter 'alpha' should be in range (0, 1].")
 
+        if method in [Method.NAIVE] and split is not None:
+            raise Warning("Parameter 'split' has no effect for the naive method.")
+
         # check split_config configuration for JaB/J+aB
-        if method.value in ["JaB", "J+aB"] and bootstrap_config is None:
+        if (
+            method
+            in [Method.JACKKNIFE_AFTER_BOOTSTRAP, Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP]
+            and bootstrap_config is None
+        ):
             raise ValueError("Parameter 'bootstrap_config' must be set for JaB/J+aB.")
 
         # check split number for CV/CV+
-        if method.value in ["CV", "CV+"] and split is None:
+        if method in [Method.CV, Method.CV_PLUS] and split is None:
             raise Warning(
                 "Parameter 'split' is not defined and will default to a method specific value."
             )

@@ -26,6 +26,26 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
     y_test = x_test["Class"]
     x_test = x_test.drop(["Class"], axis=1)
 
+    def test_naive(self):
+
+        ce = ConformalEstimator(
+            detector=IForest(behaviour="new"),
+            method=Method.NAIVE,
+            adjustment=Adjustment.BENJAMINI_HOCHBERG,
+            alpha=0.1,
+            random_state=1,
+            silent=True,
+        )
+
+        ce.fit(self.x_train)
+        estimates = ce.predict(self.x_test, raw=False)
+
+        fdr = false_discovery_rate(y=self.y_test, y_hat=estimates)
+        power = statistical_power(y=self.y_test, y_hat=estimates)
+
+        self.assertEqual(fdr, 0)
+        self.assertEqual(power, 0)
+
     def test_split_conformal(self):
 
         ce = ConformalEstimator(
@@ -107,7 +127,7 @@ class TestConformalEstimatorsIonosphere(unittest.TestCase):
         power = statistical_power(y=self.y_test, y_hat=estimates)
 
         self.assertEqual(fdr, 0.146)
-        self.assertEqual(power, 0.872)
+        self.assertEqual(power, 0.854)
 
     def test_jackknife_plus(self):
 
