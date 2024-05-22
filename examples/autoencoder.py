@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     ce = ConformalEstimator(
         detector=AutoEncoder(),
-        method=Method.SPLIT_CONFORMAL,
+        method=Method.CV_PLUS,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         random_state=2,

@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from unquad.enums.aggregation import Aggregation
 from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
@@ -386,7 +387,7 @@ class ConformalEstimator:
             raise ValueError("Parameter 'alpha' should be in range (0, 1].")
 
         if method in [Method.NAIVE] and split is not None:
-            raise Warning("Parameter 'split' has no effect for the naive method.")
+            warnings.warn("Parameter 'split' has no effect for the naive method.")
 
         # check split_config configuration for JaB/J+aB
         if (
@@ -398,6 +399,6 @@ class ConformalEstimator:
 
         # check split number for CV/CV+
         if method in [Method.CV, Method.CV_PLUS] and split is None:
-            raise Warning(
+            warnings.warn(
                 "Parameter 'split' is not defined and will default to a method specific value."
             )

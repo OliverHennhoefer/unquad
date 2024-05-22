@@ -2,6 +2,7 @@ from pyod.models.gmm import GMM
 from pyod.utils import generate_data
 
 from unquad.enums.adjustment import Adjustment
+from unquad.enums.aggregation import Aggregation
 from unquad.estimator.conformal import ConformalEstimator
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
@@ -20,8 +21,9 @@ if __name__ == "__main__":
 
     ce = ConformalEstimator(
         detector=GMM(),
-        method=Method.CV,
+        method=Method.CV_PLUS,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
+        aggregation=Aggregation.MINIMUM,
         alpha=0.1,
         random_state=2,
         split=100,
