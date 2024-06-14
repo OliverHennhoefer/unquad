@@ -16,7 +16,7 @@ class BootstrapConfiguration:
 
         self._n = n  # size of training data
         self._b = b  # number of bootstraps
-        self._m = m  # train split_config proportion
+        self._m = m  # calibration proportion
 
         self._c = c  # calibration set size
         self._enforce_c = enforce_c

@@ -178,7 +178,7 @@ class ConformalEstimator:
 
             folds = ShuffleSplit(
                 n_splits=b,
-                train_size=m,
+                test_size=m,
                 random_state=self.random_state,
             )
         else:
