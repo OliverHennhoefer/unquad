@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from typing import Union
-from copy import copy
+from copy import copy, deepcopy
 from scipy import stats
 from tqdm import tqdm
 
@@ -200,7 +200,7 @@ class ConformalEstimator:
                 Method.JACKKNIFE_PLUS,
                 Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
             ]:
-                self.detector_set.append(copy(model))
+                self.detector_set.append(deepcopy(model))
 
             self.calibration_set = np.append(
                 self.calibration_set,
@@ -215,7 +215,7 @@ class ConformalEstimator:
             self._set_params(random_iteration=True, iteration=i + 1)
             model = copy(self.detector)
             model.fit(x)
-            self.detector = copy(model)
+            self.detector = deepcopy(model)
 
         if self.method in [
             Method.JACKKNIFE_AFTER_BOOTSTRAP,
