@@ -50,29 +50,29 @@ pip install unquad
 from pyod.models.iforest import IForest
 from pyod.utils import generate_data
 
-from unquad.estimator.conformal import ConformalEstimator
+from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.enums.adjustment import Adjustment
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_train, y_test = generate_data(
-        n_train=1_000,
-        n_test=1_000,
-        n_features=10,
-        contamination=0.1,
-        random_state=1,
-    )
+    n_train=1_000,
+    n_test=1_000,
+    n_features=10,
+    contamination=0.1,
+    random_state=1,
+)
 
 x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
 
 ce = ConformalEstimator(
-            detector=IForest(behaviour="new"),
-            method=Method.CV_PLUS,
-            adjustment=Adjustment.BENJAMINI_HOCHBERG,
-            alpha=0.2,  # nominal FDR level
-            random_state=1,
-            split=10,
-        )
+    detector=IForest(behaviour="new"),
+    method=Method.CV_PLUS,
+    adjustment=Adjustment.BENJAMINI_HOCHBERG,
+    alpha=0.2,  # nominal FDR level
+    seed=1,
+    split=10,
+)
 
 ce.fit(x_train)  # Model Fit/Calibration
 estimates = ce.predict(x_test, raw=False)
@@ -98,9 +98,9 @@ Output:
 from pyod.models.iforest import IForest
 from pyod.utils import generate_data
 
-from unquad.estimator.conformal import ConformalEstimator
+from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.enums.adjustment import Adjustment
-from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
+from unquad.estimator.bootstrap_config import BootstrapConfiguration
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
@@ -122,7 +122,7 @@ ce = ConformalEstimator(
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.1,  # nominal FDR level
     bootstrap_config=bc,
-    random_state=1,
+    seed=1,
 )
 
 ce.fit(x_train)  # Model Fit/Calibration

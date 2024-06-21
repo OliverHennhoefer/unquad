@@ -2,12 +2,11 @@ from pyod.models.pca import PCA
 from pyod.utils import generate_data
 
 from unquad.enums.adjustment import Adjustment
-from unquad.estimator.conformal import ConformalEstimator
+from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-
     x_train, x_test, y_train, y_test = generate_data(
         n_train=1_000,
         n_test=1_000,
@@ -20,11 +19,10 @@ if __name__ == "__main__":
 
     ce = ConformalEstimator(
         detector=PCA(n_components=5),
-        method=Method.CV_PLUS,
+        method=Method.JACKKNIFE_PLUS,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
-        random_state=2,
-        split=100,
+        seed=1,
     )
 
     ce.fit(x_train)

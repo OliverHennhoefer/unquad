@@ -2,7 +2,7 @@ import os
 import warnings
 
 from unquad.enums.aggregation import Aggregation
-from unquad.estimator.split_config.bootstrap_config import BootstrapConfiguration
+from unquad.estimator.split_configuration import SplitConfiguration
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
 
@@ -27,7 +27,6 @@ from pyod.models.sos import SOS
 from pyod.models.vae import VAE
 from pyod.models.base import BaseDetector
 
-from scipy.stats import gaussian_kde
 from sklearn.utils import check_array
 from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
@@ -49,147 +48,120 @@ class ConformalEstimator:
     Parameters
     ----------
     detector : BaseDetector
-        A 'PyOD' anomaly estimator as derived from the BaseDetector class.
+        An untrained instantiation of 'PyOD' anomaly estimator.
 
     method : enum:Method
-        The conformal calibration scheme to be applied during training.
+        The conformal method for model training.
 
-    adjustment: enum:Adjustment (optional, default=None)
-        Statistical adjustment procedure to account for multiple testing.
+    adjustment: enum:Adjustment (optional, default=Benjamini-Hochberg)
+        Statistical multiplicity adjustment.
 
-    adjustment: enum:Adjustment (optional, default=Median)
-        Aggregation function for ensemble methods like CV+
+    aggregation: enum:Aggregation (optional, default=Median)
+        Aggregation function for ensemble methods.
 
-    split: float or integer (optional, fallback depending on 'method' parameter)
+    split_config float or integer (optional, fallback depending on 'method' parameter)
         The number of splits to be performed regarding estimator calibration.
         Has no effect for the 'split-conformal' calibration.
         Fallback values are defined, in case no parameter definition was set.
         In case the parameter value is <1.0, the split will be performed based
         on relative proportions (see sklearn::train_test_split())
 
-    bootstrap_config: float (optional, default=30)
-        The number of bootstraps to define regarding estimator calibration.
-        Only has an effect for calibration procedures based on the 'split_config'.
-        Fallback values are defined, in case no parameter definition was set.
-
     alpha: float (optional, default=0.1)
-        Nominal FDR level to be controlled for.
+        Nominal FDR level.
 
-    kde_sampling: integer (optional, default=None)
-        For the default setting, only the calibration set as obtained from respective
-        calibration methods will be used. For a given integer, the calibration set will be
-        modeled by the kernel density function that will subsequently be sampled by the given
-        number. This allows to increase the calibration set in order to obtain smaller
-        p-values than what would be possible given only the calibration set. With that, higher
-        certainty towards particular observations will be possible for the conformal estimator
-        to represent, potentially resulting in higher FDR/Power for small calibration sets.
-        Experimental.
-
-    random_state: integer (optional, default=None)
-        Random state to fix outcomes for determinism.
+    seed: integer (optional, default=None)
+        Random state for reproducibility.
 
     silent: boolean (optional, default=False)
-        Whether to show the progress regarding model training, calibration and inference.
+        Whether to indicate training/calibration and inference progress.
     """
 
     def __init__(
         self,
         detector: BaseDetector,
         method: Method,
-        adjustment: Adjustment = Adjustment.NONE,
+        split: SplitConfiguration = None,
+        adjustment: Adjustment = Adjustment.BENJAMINI_HOCHBERG,
         aggregation: Aggregation = Aggregation.MEDIAN,
-        split: float = None,
-        bootstrap_config: BootstrapConfiguration = None,
-        alpha: float = 0.1,
-        kde_sampling: int = None,
-        random_state: int = None,
+        alpha: float = 0.2,
+        seed: int = None,
         silent: bool = False,
     ):
+        self._sanity_check(method, split, alpha)
 
-        self._sanity_check(method, split, alpha, bootstrap_config)
-
-        self.detector = detector
         self.method = method
+        self.detector = detector
+        self.split = split
         self.adjustment = adjustment
         self.aggregation = aggregation
-
-        self.split = split
-        self.bootstrap_config = bootstrap_config
         self.alpha = alpha
-        self.kde_sampling = kde_sampling
-        self.random_state = random_state
+        self.seed = seed
         self.silent = silent
 
         self.calibration_set = np.array([], dtype=np.float16)
         self.detector_set = []
 
         self._set_params()
+        np.random.seed(self.seed)
 
     def fit(self, x: Union[pd.DataFrame, np.ndarray]) -> None:
         """
-        Fits the given estimator on (non-anomalous) training data.
-        :param x: Numpy Array or Pandas DataFrame, set of (non-anomalous) training data.
+        Fits and calibrates an anomaly estimator.
+        :param x: Numpy Array or Pandas DataFrame, training data.
         :return: None
         """
 
         x = self._check_x(x)
-        x = check_array(x)
+        n_calib = None
 
-        c = None  # split_config configuration
-        enforce_c = None  # split_config configuration
         if self.method in [Method.NAIVE]:
             self.detector.fit(x)
             self.calibration_set = self.detector.decision_function(x)
-
-            self.sample_kde() if self.kde_sampling is not None else None
             return
 
         elif self.method in [Method.SPLIT_CONFORMAL]:
-            split = min(1_000, len(x) // 3) if self.split is None else self.split
             x_train, x_calib = train_test_split(
-                x, test_size=split, shuffle=True, random_state=self.random_state
+                x,
+                test_size=self.split.n_split,
+                shuffle=True,
+                random_state=self.seed,
             )
 
             self.detector.fit(x_train)
             self.calibration_set = self.detector.decision_function(x_calib)
-
-            self.sample_kde() if self.kde_sampling is not None else None
             return
 
         elif self.method in [Method.JACKKNIFE, Method.JACKKNIFE_PLUS]:
             len_x = np.shape(x)[0]
-            folds = KFold(n_splits=len_x, shuffle=True, random_state=self.random_state)
+            folds = KFold(n_splits=len_x, shuffle=True, random_state=self.seed)
 
         elif self.method in [Method.CV, Method.CV_PLUS]:
-            n_splits = self.split if self.split is not None else 10
             folds = KFold(
-                n_splits=n_splits, shuffle=True, random_state=self.random_state
+                n_splits=self.split.n_split,
+                shuffle=True,
+                random_state=self.seed,
             )
 
         elif self.method in [
             Method.JACKKNIFE_AFTER_BOOTSTRAP,
             Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
         ]:
-
-            b = self.bootstrap_config.b
-            m = self.bootstrap_config.m
-            c = self.bootstrap_config.c
-            enforce_c = self.bootstrap_config.enforce_c
+            n_calib = self.split.n_calib
+            self.split.configure(n_train=np.shape(x)[0])
 
             folds = ShuffleSplit(
-                n_splits=b,
-                test_size=m,
-                random_state=self.random_state,
+                n_splits=self.split.n_bootstraps,
+                train_size=self.split.n_split,
+                random_state=self.seed,
             )
         else:
-            raise ValueError("Unknown method.")
+            raise ValueError("Unknown conformal method.")
 
         n_folds = folds.get_n_splits()
         i = None
         for i, (train_idx, calib_idx) in enumerate(
             tqdm(folds.split(x), total=n_folds, desc="Training", disable=self.silent)
         ):
-
             self._set_params(random_iteration=True, iteration=i)
 
             model = copy(self.detector)
@@ -212,7 +184,7 @@ class ConformalEstimator:
             Method.JACKKNIFE,
             Method.JACKKNIFE_AFTER_BOOTSTRAP,
         ]:
-            self._set_params(random_iteration=True, iteration=i + 1)
+            self._set_params(random_iteration=True, iteration=(i + 1))
             model = copy(self.detector)
             model.fit(x)
             self.detector = deepcopy(model)
@@ -221,21 +193,12 @@ class ConformalEstimator:
             Method.JACKKNIFE_AFTER_BOOTSTRAP,
             Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
         ]:
-            if c is not None and enforce_c is True:
+            if n_calib is not None:
                 self.calibration_set = np.random.choice(
-                    self.calibration_set, size=c, replace=False
+                    self.calibration_set, size=n_calib, replace=False
                 )
 
-        self.sample_kde() if self.kde_sampling is not None else None
         return
-
-    def sample_kde(self) -> None:
-        # Experimental; may help for small calibration sets or large batches when using multiple testing adjustments.
-        kde = gaussian_kde(self.calibration_set)
-        kde_sample = kde.resample(self.kde_sampling)[0]
-        self.calibration_set = np.concatenate(
-            (self.calibration_set, kde_sample), axis=0
-        )
 
     def predict(self, x: Union[pd.DataFrame, np.ndarray], raw=False) -> np.array:
         """
@@ -246,7 +209,6 @@ class ConformalEstimator:
         """
 
         x = self._check_x(x)
-        x = check_array(x)
 
         if self.method in [
             Method.CV_PLUS,
@@ -278,31 +240,18 @@ class ConformalEstimator:
         else:
             estimates = self.detector.decision_function(x)
 
-        p_val = self.marginal_p_val(estimates)
+        p_val = self._calculate_p_val(estimates)
 
         if raw:
-            return self.correction(p_val)  # scores
+            return self._correct_multiplicity(p_val)
         else:
-            return self.correction(p_val) <= self.alpha  # labels
+            return self._correct_multiplicity(p_val) <= self.alpha
 
-    def marginal_p_val(self, scores: np.array) -> np.array:
-        """
-        Calculates marginal p-values given the test scores on test data.
-        The p-values are determined by comparing the obtained set of calibration scores from calling '.fit()'.
-        :param scores: Numpy Array, a set of anomaly scores (estimates) from trained estimator(s)
-        :return: Numpy Array, Set of marginal p-values
-        """
-
+    def _calculate_p_val(self, scores: np.array) -> np.array:
         p_val = np.sum(self.calibration_set >= scores[:, np.newaxis], axis=1)
         return (1.0 + p_val) / (1.0 + len(self.calibration_set))
 
-    def correction(self, p_val: np.array) -> np.array:
-        """
-        Performs adjustments in regard to multiple testing in order to control the marginal FDR.
-        :param p_val: Numpy Array, a set of p-values to be adjusted.
-        :return: Numpy Array, a set of adjusted p-values
-        """
-
+    def _correct_multiplicity(self, p_val: np.array) -> np.array:
         if self.adjustment.value == "bh":
             p_val = stats.false_discovery_control(p_val, method="bh")
         if self.adjustment.value == "by":
@@ -312,19 +261,16 @@ class ConformalEstimator:
 
     @staticmethod
     def _check_x(x):
-        return x if isinstance(x, np.ndarray) else x.to_numpy()
+        if isinstance(x, np.ndarray):
+            return check_array(x)
+        elif isinstance(x, pd.DataFrame):
+            return check_array(x.to_numpy())
+        else:
+            raise TypeError("Expected a pd.DataFrame or np.ndarray.")
 
     def _set_params(
         self, random_iteration: bool = False, iteration: int = None
     ) -> None:
-        """
-        Sets parameters at run-time, depending on passed model object.
-        Filters models unsuitable for one-class classification or otherwise unsupported.
-        :param random_iteration: Boolean, whether parameters are set during cross-validation procedure.
-        :param iteration: Integer, iteration within cross-validation procedure for seed randomization.
-        :return: None
-        """
-
         if self.detector.__class__ in [
             ALAD,
             CBLOF,
@@ -356,49 +302,47 @@ class ConformalEstimator:
             )
 
         if "random_state" in self.detector.get_params().keys():
-
             if random_iteration and iteration is not None:
-
                 self.detector.set_params(
                     **{
-                        "random_state": hash((iteration, self.random_state))
-                        % 4294967296,
+                        "random_state": hash((iteration, self.seed)) % 4294967296,
                     }
                 )
 
             else:
-
                 self.detector.set_params(
                     **{
-                        "random_state": self.random_state,
+                        "random_state": self.seed,
                     }
                 )
 
     @staticmethod
-    def _sanity_check(
-        method: Method,
-        split: Union[int, float],
-        alpha: float,
-        bootstrap_config: BootstrapConfiguration = None,
-    ):
-
-        # check alpha range
+    def _sanity_check(method: Method, split: SplitConfiguration, alpha: float):
         if not (0.0 < alpha <= 1.0):
             raise ValueError("Parameter 'alpha' should be in range (0, 1].")
 
-        if method in [Method.NAIVE] and split is not None:
-            warnings.warn("Parameter 'split' has no effect for the naive method.")
+        if (
+            method in [Method.NAIVE, Method.JACKKNIFE, Method.JACKKNIFE_PLUS]
+            and split is not None
+        ):
+            warnings.warn(
+                "Split configuration has no effect for defined conformal method."
+            )
 
-        # check split_config configuration for JaB/J+aB
         if (
             method
-            in [Method.JACKKNIFE_AFTER_BOOTSTRAP, Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP]
-            and bootstrap_config is None
+            in [
+                Method.SPLIT_CONFORMAL,
+                Method.CV,
+                Method.CV_PLUS,
+                Method.JACKKNIFE_AFTER_BOOTSTRAP,
+                Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+            ]
+            and split is None
         ):
-            raise ValueError("Parameter 'bootstrap_config' must be set for JaB/J+aB.")
+            raise ValueError(f"Split configuration must be defined for {method}.")
 
-        # check split number for CV/CV+
-        if method in [Method.CV, Method.CV_PLUS] and split is None:
-            warnings.warn(
-                "Parameter 'split' is not defined and will default to a method specific value."
+        if (method in [Method.CV, Method.CV_PLUS]) and split.n_params != 1:
+            raise ValueError(
+                f"Split configuration must only define 'n_split' for {method}."
             )

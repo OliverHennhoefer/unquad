@@ -2,12 +2,12 @@ from pyod.models.ocsvm import OCSVM
 from pyod.utils import generate_data
 
 from unquad.enums.adjustment import Adjustment
-from unquad.estimator.conformal import ConformalEstimator
+from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.enums.method import Method
+from unquad.estimator.split_configuration import SplitConfiguration
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-
     x_train, x_test, y_train, y_test = generate_data(
         n_train=5_000,
         n_test=10_000,
@@ -18,13 +18,14 @@ if __name__ == "__main__":
 
     x_train = x_train[y_train == 0]
 
+    sc = SplitConfiguration(n_split=500)
     ce = ConformalEstimator(
         detector=OCSVM(),
-        method=Method.CV_PLUS,
+        method=Method.SPLIT_CONFORMAL,
+        split=sc,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
-        random_state=2,
-        split=2,
+        seed=1,
     )
 
     ce.fit(x_train)

@@ -5,7 +5,6 @@ from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 
 class TestEvaluationMetrics(unittest.TestCase):
-
     estimates_variant1 = np.array([1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1])
     estimates_variant2 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 

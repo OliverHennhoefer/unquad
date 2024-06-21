@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unquad"
-version = "0.0.6"
+version = "0.0.7"
 description = "Conformal anomaly detection for 'PyOD'-detectors."
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
