@@ -1,9 +1,5 @@
 # *unquad*
 
-Tired of *alarm fatique*?
-
-**unquad** enables **conformal anomaly detection** for [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors.
-
 **unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (see [Supported Estimators](#supported-estimators)) for
 **uncertainty-quantified anomaly detection** based on one-class classification and the principles of **conformal inference**.
 
