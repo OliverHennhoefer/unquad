@@ -51,6 +51,7 @@ from pyod.models.iforest import IForest
 from pyod.utils import generate_data
 
 from unquad.estimator.conformal_estimator import ConformalEstimator
+from unquad.estimator.split_configuration import SplitConfiguration
 from unquad.enums.adjustment import Adjustment
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
@@ -65,13 +66,14 @@ x_train, x_test, y_train, y_test = generate_data(
 
 x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
 
+sc = SplitConfiguration(n_split=10)
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
     method=Method.CV_PLUS,
+    split=sc,
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.2,  # nominal FDR level
-    seed=1,
-    split=10,
+    seed=1
 )
 
 ce.fit(x_train)  # Model Fit/Calibration
@@ -82,14 +84,14 @@ print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
 ```
 
 ```bash
-Training: 100%|██████████| 10/10 [00:01<00:00,  8.16it/s]
-Inference: 100%|██████████| 10/10 [00:00<00:00, 220.63it/s]
+Training: 100%|██████████| 10/10 [00:01<00:00,  7.37it/s]
+Inference: 100%|██████████| 10/10 [00:00<00:00, 212.12it/s]
 ```
 
 Output:
 ```python
-0.194 # Empirical FDR
-0.806 # Empirical Power
+0.194  # Empirical FDR
+0.806  # Empirical Power
 ```
 
 ### Usage: Jackknife+-after-Bootstrap
@@ -99,8 +101,8 @@ from pyod.models.iforest import IForest
 from pyod.utils import generate_data
 
 from unquad.estimator.conformal_estimator import ConformalEstimator
+from unquad.estimator.split_configuration import SplitConfiguration
 from unquad.enums.adjustment import Adjustment
-from unquad.estimator.bootstrap_config import BootstrapConfiguration
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
@@ -114,14 +116,13 @@ x_train, x_test, y_train, y_test = generate_data(
 
 x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
 
-bc = BootstrapConfiguration(n=1_000, b=40, m=0.95)
-
+sc = SplitConfiguration(n_split=0.95, n_bootstraps=40)
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
     method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+    split=sc,
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.1,  # nominal FDR level
-    bootstrap_config=bc,
     seed=1,
 )
 
@@ -133,8 +134,8 @@ print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
 ```
 
 ```bash
-Training: 100%|██████████| 40/40 [00:04<00:00,  8.13it/s]
-Inference: 100%|██████████| 40/40 [00:00<00:00, 231.63it/s]
+Training: 100%|██████████| 40/40 [00:05<00:00,  7.31it/s]
+Inference: 100%|██████████| 40/40 [00:00<00:00, 217.68it/s]
 ```
 
 Output:
