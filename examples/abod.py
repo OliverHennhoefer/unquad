@@ -18,12 +18,11 @@ if __name__ == "__main__":
 
     x_train = x_train[y_train == 0]
 
-    sc = SplitConfiguration(n_split=0.95, n_bootstraps=35)
     ce = ConformalEstimator(
         detector=ABOD(),
         method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
-        split=sc,
+        split=SplitConfiguration(n_split=0.95, n_bootstraps=35),
         alpha=0.1,
         seed=1,
     )

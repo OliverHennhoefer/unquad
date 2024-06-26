@@ -64,23 +64,22 @@ x_train, x_test, y_train, y_test = generate_data(
     random_state=1,
 )
 
-x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
+x_train = x_train[y_train == 0]  # keep normal instances; one-class classification
 
-sc = SplitConfiguration(n_split=10)
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
     method=Method.CV_PLUS,
-    split=sc,
+    split=SplitConfiguration(n_split=10),
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.2,  # nominal FDR level
     seed=1
 )
 
-ce.fit(x_train)  # Model Fit/Calibration
+ce.fit(x_train)  # model fit and calibration
 estimates = ce.predict(x_test, raw=False)
 
-print(false_discovery_rate(y=y_test, y_hat=estimates))  # Empirical FDR
-print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
+print(false_discovery_rate(y=y_test, y_hat=estimates))
+print(statistical_power(y=y_test, y_hat=estimates))
 ```
 
 ```bash
@@ -90,8 +89,8 @@ Inference: 100%|██████████| 10/10 [00:00<00:00, 212.12it/s]
 
 Output:
 ```python
-0.194  # Empirical FDR
-0.806  # Empirical Power
+0.194  # empirical FDR
+0.806  # empirical Power
 ```
 
 ### Usage: Jackknife+-after-Bootstrap
@@ -114,23 +113,22 @@ x_train, x_test, y_train, y_test = generate_data(
     random_state=1,
 )
 
-x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
+x_train = x_train[y_train == 0]  # keep normal instances; one-class classification
 
-sc = SplitConfiguration(n_split=0.95, n_bootstraps=40)
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
     method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
-    split=sc,
+    split=SplitConfiguration(n_split=0.95, n_bootstraps=40),
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.1,  # nominal FDR level
     seed=1,
 )
 
-ce.fit(x_train)  # Model Fit/Calibration
+ce.fit(x_train)  # model fit and calibration
 estimates = ce.predict(x_test, raw=False)
 
-print(false_discovery_rate(y=y_test, y_hat=estimates))  # Empirical FDR
-print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
+print(false_discovery_rate(y=y_test, y_hat=estimates))
+print(statistical_power(y=y_test, y_hat=estimates))
 ```
 
 ```bash
@@ -140,8 +138,8 @@ Inference: 100%|██████████| 40/40 [00:00<00:00, 217.68it/s]
 
 Output:
 ```python
-0.099 # Empirical FDR
-0.901 # Empirical Power
+0.099 # empirical FDR
+0.901 # empirical Power
 ```
 
 ### Supported Estimators

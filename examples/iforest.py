@@ -19,11 +19,10 @@ if __name__ == "__main__":
 
     x_train = x_train[y_train == 0]
 
-    sc = SplitConfiguration(n_split=550)
     ce = ConformalEstimator(
         detector=IForest(behaviour="old"),
         method=Method.SPLIT_CONFORMAL,
-        split=sc,
+        split=SplitConfiguration(n_split=550),
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         aggregation=Aggregation.MINIMUM,
         alpha=0.1,

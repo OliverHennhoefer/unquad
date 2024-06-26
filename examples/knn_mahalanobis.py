@@ -21,13 +21,12 @@ if __name__ == "__main__":
     x_train = x_train[y_train == 0]
     X_train_cov = np.cov(x_train, rowvar=False)
 
-    sc = SplitConfiguration(n_split=0.99, n_bootstraps=30)
     ce = ConformalEstimator(
         detector=KNN(
             algorithm="auto", metric="mahalanobis", metric_params={"V": X_train_cov}
         ),
         method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
-        split=sc,
+        split=SplitConfiguration(n_split=0.99, n_bootstraps=30),
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         seed=1,
