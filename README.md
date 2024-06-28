@@ -1,5 +1,7 @@
 # *unquad*
 
+A Python library for uncertainty-quantified anomaly detection.
+
 **unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (see [Supported Estimators](#supported-estimators)) for
 **uncertainty-quantified anomaly detection** based on one-class classification and the principles of **conformal inference**.
 
@@ -20,19 +22,7 @@ given point predictor or classifier, CAD aims to control the [*false discovery r
 ***CAD translates anomaly scores into statistical p-values by comparing anomaly scores observed on test data to a retained set of calibration
 scores as previously on normal data during model training*** (see [*One-Class Classification*](https://en.wikipedia.org/wiki/One-class_classification#:~:text=In%20machine%20learning%2C%20one%2Dclass,of%20one%2Dclass%20classifiers%20where)).
 The larger the discrepancy between *normal* scores and observed test scores, the lower the obtained (**statistically valid**) p-value.
-The p-values, instead of the usual anomaly estimates, allow for FDR-control by statistical procedures like *Benjamini-Hochberg*.
-
-### Assumption
-CAD assumes ***exchangability*** of training and future test data. *Exchangability* is closely related to the statistical
-term of *independent and identically distributed random variables* (*IID*). IID implies both, independence <ins>and</ins> 
-exchangability. Exchangability defines a joint probability distribution that remains the same under permutations
-of the variables. With that, exchangability is a very practicable assumption as it is a *weaker* than IID.
-
-### Limitations
-Since CAD controls the FDR by adjustment procedures in context of **multiple testing**, trained conformal detectors currently
-only work for *batch-wise* anomaly detection (on static data).\
-Generally, CAD also offers a range of methods for the online setting when working with dynamic time-series data under potential
-co-variate shift. Currently, this kind of online detector is not implemented. It is planned to add respective methods in future releases.
+The p-values, instead of the usual anomaly estimates, allow for FDR control by statistical procedures like *Benjamini-Hochberg*.
 
 ## Getting started
 
@@ -40,7 +30,7 @@ co-variate shift. Currently, this kind of online detector is not implemented. It
 pip install unquad
 ```
 
-### Usage: Split-Conformal
+### Usage: CV+
 
 ```python
 from pyod.models.iforest import IForest
@@ -60,23 +50,22 @@ x_train, x_test, y_train, y_test = generate_data(
     random_state=1,
 )
 
-x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
+x_train = x_train[y_train == 0]  # keep normal instances; one-class classification
 
-sc = SplitConfiguration(n_split=10)
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
     method=Method.CV_PLUS,
-    split=sc,
+    split=SplitConfiguration(n_split=10),
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.2,  # nominal FDR level
     seed=1
 )
 
-ce.fit(x_train)  # Model Fit/Calibration
+ce.fit(x_train)  # model fit and calibration
 estimates = ce.predict(x_test, raw=False)
 
-print(false_discovery_rate(y=y_test, y_hat=estimates))  # Empirical FDR
-print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
+print(false_discovery_rate(y=y_test, y_hat=estimates))
+print(statistical_power(y=y_test, y_hat=estimates))
 ```
 
 ```bash
@@ -86,8 +75,8 @@ Inference: 100%|██████████| 10/10 [00:00<00:00, 212.12it/s]
 
 Output:
 ```python
-0.194  # Empirical FDR
-0.806  # Empirical Power
+0.194  # empirical FDR
+0.806  # empirical Power
 ```
 
 ### Usage: Jackknife+-after-Bootstrap
@@ -110,23 +99,22 @@ x_train, x_test, y_train, y_test = generate_data(
     random_state=1,
 )
 
-x_train = x_train[y_train == 0]  # Normal Instances (One-Class Classification)
+x_train = x_train[y_train == 0]  # keep normal instances; one-class classification
 
-sc = SplitConfiguration(n_split=0.95, n_bootstraps=40)
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
     method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
-    split=sc,
+    split=SplitConfiguration(n_split=0.95, n_bootstraps=40),
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.1,  # nominal FDR level
     seed=1,
 )
 
-ce.fit(x_train)  # Model Fit/Calibration
+ce.fit(x_train)  # model fit and calibration
 estimates = ce.predict(x_test, raw=False)
 
-print(false_discovery_rate(y=y_test, y_hat=estimates))  # Empirical FDR
-print(statistical_power(y=y_test, y_hat=estimates))  # Empirical Power
+print(false_discovery_rate(y=y_test, y_hat=estimates))
+print(statistical_power(y=y_test, y_hat=estimates))
 ```
 
 ```bash
@@ -136,8 +124,8 @@ Inference: 100%|██████████| 40/40 [00:00<00:00, 217.68it/s]
 
 Output:
 ```python
-0.099 # Empirical FDR
-0.901 # Empirical Power
+0.099 # empirical FDR
+0.901 # empirical Power
 ```
 
 ### Supported Estimators
@@ -177,9 +165,4 @@ Models that are **currently supported** include:
 * Scalable Unsupervised Outlier Detection (**SUOD**)
 
 ## Contact
-**General questions:** [oliver.hennhoefer@h-ka.de](mailto:oliver.hennhoefer@h-ka.de)\
 **Bug reporting:** [https://github.com/OliverHennhoefer/unquad/issues](https://github.com/OliverHennhoefer/unquad/issues)
-
-## What now?
-To dive deeper into the field of ***conformal inference*** make sure to visit the [awesome-conformal-prediction](https://github.com/valeman/awesome-conformal-prediction)
-repository!

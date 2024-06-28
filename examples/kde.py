@@ -1,8 +1,9 @@
 from pyod.models.kde import KDE
 from pyod.utils import generate_data
 
-from unquad.enums.adjustment import Adjustment
 from unquad.estimator.conformal_estimator import ConformalEstimator
+from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.enums.adjustment import Adjustment
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
@@ -20,10 +21,10 @@ if __name__ == "__main__":
     ce = ConformalEstimator(
         detector=KDE(),
         method=Method.CV,
+        split=SplitConfiguration(n_split=100),
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
-        seed=2,
-        split=100,
+        seed=1
     )
 
     ce.fit(x_train)

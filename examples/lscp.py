@@ -25,11 +25,11 @@ if __name__ == "__main__":
         PCA(n_components=5),
         PCA(n_components=10),
     ]
-    sc = SplitConfiguration(n_split=5)
+
     ce = ConformalEstimator(
         detector=LSCP(detector_list),
         method=Method.CV,
-        split=sc,
+        split=SplitConfiguration(n_split=5),
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
         alpha=0.1,
         seed=1,
