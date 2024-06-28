@@ -1,30 +1,26 @@
-from pyod.models.abod import ABOD
-from pyod.utils import generate_data
+import pandas as pd
 
+from pyod.models.abod import ABOD
+from sklearn.model_selection import train_test_split
+
+from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
+from unquad.enums.dataset import Dataset
 from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.enums.method import Method
 from unquad.estimator.split_configuration import SplitConfiguration
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-    x_train, x_test, y_train, y_test = generate_data(
-        n_train=1_000,
-        n_test=1_000,
-        n_features=10,
-        contamination=0.1,
-        random_state=1,
-    )
+    dl = DataLoader(dataset=Dataset.MUSK)
+    x_train, x_test, y_test = dl.get_experiment_setup()
 
-    x_train = x_train[y_train == 0]
-
-    sc = SplitConfiguration(n_split=0.95, n_bootstraps=35)
     ce = ConformalEstimator(
         detector=ABOD(),
-        method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+        method=Method.CV_PLUS,
+        split=SplitConfiguration(n_split=10),
         adjustment=Adjustment.BENJAMINI_HOCHBERG,
-        split=sc,
-        alpha=0.1,
+        alpha=0.2,
         seed=1,
     )
 
