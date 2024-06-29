@@ -1,7 +1,4 @@
-import pandas as pd
-
 from pyod.models.abod import ABOD
-from sklearn.model_selection import train_test_split
 
 from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment

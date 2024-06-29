@@ -34,23 +34,17 @@ pip install unquad
 
 ```python
 from pyod.models.iforest import IForest
-from pyod.utils import generate_data
 
 from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
+from unquad.enums.dataset import Dataset
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
-x_train, x_test, y_train, y_test = generate_data(
-    n_train=1_000,
-    n_test=1_000,
-    n_features=10,
-    contamination=0.1,
-    random_state=1,
-)
-
-x_train = x_train[y_train == 0]  # keep normal instances; one-class classification
+dl = DataLoader(dataset=Dataset.THYROID)
+x_train, x_test, y_test = dl.get_experiment_setup()
 
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
@@ -68,38 +62,27 @@ print(false_discovery_rate(y=y_test, y_hat=estimates))
 print(statistical_power(y=y_test, y_hat=estimates))
 ```
 
-```bash
-Training: 100%|██████████| 10/10 [00:01<00:00,  7.37it/s]
-Inference: 100%|██████████| 10/10 [00:00<00:00, 212.12it/s]
-```
-
 Output:
 ```python
-0.194  # empirical FDR
-0.806  # empirical Power
+0.174  # empirical FDR
+0.826  # empirical Power
 ```
 
 ### Usage: Jackknife+-after-Bootstrap
 
 ```python
 from pyod.models.iforest import IForest
-from pyod.utils import generate_data
 
 from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
+from unquad.enums.dataset import Dataset
 from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
-x_train, x_test, y_train, y_test = generate_data(
-    n_train=1_000,
-    n_test=1_000,
-    n_features=10,
-    contamination=0.1,
-    random_state=1,
-)
-
-x_train = x_train[y_train == 0]  # keep normal instances; one-class classification
+dl = DataLoader(dataset=Dataset.THYROID)
+x_train, x_test, y_test = dl.get_experiment_setup()
 
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
@@ -117,15 +100,10 @@ print(false_discovery_rate(y=y_test, y_hat=estimates))
 print(statistical_power(y=y_test, y_hat=estimates))
 ```
 
-```bash
-Training: 100%|██████████| 40/40 [00:05<00:00,  7.31it/s]
-Inference: 100%|██████████| 40/40 [00:00<00:00, 217.68it/s]
-```
-
 Output:
 ```python
-0.099 # empirical FDR
-0.901 # empirical Power
+0.041 # empirical FDR
+0.959 # empirical Power
 ```
 
 ### Supported Estimators

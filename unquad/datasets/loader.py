@@ -18,7 +18,11 @@ class DataLoader:
         df = pd.read_parquet(path)
         return df
 
-    def get_experiment_setup(self):
+    def get_experiment_setup(self, random_state: int=1):
+        """
+        Setup following 'Testing for Outliers with Conformal p-Values' (Bates. 2023).
+        """
+
         inliers = self._df.loc[self._df.Class == 0]
         n_train = len(inliers) // 2
         n_test = min(1000, n_train // 3)
@@ -27,14 +31,14 @@ class DataLoader:
         train_set, test_set = train_test_split(
             inliers,
             train_size=n_train,
-            random_state=1,
+            random_state=random_state,
         )
         x_train = train_set.drop(["Class"], axis=1)
         test_set = pd.concat(
             [
-                test_set.sample(n=n_test_inlier, random_state=1),
+                test_set.sample(n=n_test_inlier, random_state=random_state),
                 self._df.loc[self._df.Class == 1].sample(
-                    n=n_test_outlier, random_state=1
+                    n=n_test_outlier, random_state=random_state
                 ),
             ],
             ignore_index=True,

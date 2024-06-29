@@ -1,29 +1,21 @@
 import numpy as np
-
 from pyod.models.knn import KNN
-from pyod.utils import generate_data
 
+from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
+from unquad.enums.dataset import Dataset
 from unquad.estimator.conformal_estimator import ConformalEstimator
 from unquad.enums.method import Method
 from unquad.estimator.split_configuration import SplitConfiguration
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-    x_train, x_test, y_train, y_test = generate_data(
-        n_train=1_000,
-        n_test=1_000,
-        n_features=10,
-        contamination=0.1,
-        random_state=1,
-    )
-
-    x_train = x_train[y_train == 0]
-    X_train_cov = np.cov(x_train, rowvar=False)
+    dl = DataLoader(dataset=Dataset.SHUTTLE)
+    x_train, x_test, y_test = dl.get_experiment_setup()
 
     ce = ConformalEstimator(
         detector=KNN(
-            algorithm="auto", metric="mahalanobis", metric_params={"V": X_train_cov}
+            algorithm="auto", metric="mahalanobis", metric_params={"V": np.cov(x_train, rowvar=False)}
         ),
         method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
         split=SplitConfiguration(n_split=0.99, n_bootstraps=30),
