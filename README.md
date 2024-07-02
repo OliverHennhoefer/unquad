@@ -44,7 +44,7 @@ from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 dl = DataLoader(dataset=Dataset.THYROID)
-x_train, x_test, y_test = dl.get_experiment_setup()
+x_train, x_test, y_test = dl.get_example_setup()
 
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
@@ -82,7 +82,7 @@ from unquad.enums.method import Method
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 dl = DataLoader(dataset=Dataset.THYROID)
-x_train, x_test, y_test = dl.get_experiment_setup()
+x_train, x_test, y_test = dl.get_example_setup()
 
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),

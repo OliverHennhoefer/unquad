@@ -11,7 +11,7 @@ from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
     dl = DataLoader(dataset=Dataset.SHUTTLE)
-    x_train, x_test, y_test = dl.get_experiment_setup()
+    x_train, x_test, y_test = dl.get_example_setup()
 
     ce = ConformalEstimator(
         detector=GMM(),
