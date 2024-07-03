@@ -6,8 +6,6 @@ class Method(Enum):
     Enumerators of conformal methods for anomaly detection.
     """
 
-    NAIVE: str = "NAIVE"  # reference
-
     SPLIT_CONFORMAL: str = "SC"
     CV: str = "CV"
     CV_PLUS: str = "CV+"

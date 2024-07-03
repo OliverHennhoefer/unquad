@@ -15,7 +15,9 @@ if __name__ == "__main__":
 
     ce = ConformalEstimator(
         detector=KNN(
-            algorithm="auto", metric="mahalanobis", metric_params={"V": np.cov(x_train, rowvar=False)}
+            algorithm="auto",
+            metric="mahalanobis",
+            metric_params={"V": np.cov(x_train, rowvar=False)},
         ),
         method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
         split=SplitConfiguration(n_split=0.99, n_bootstraps=30),

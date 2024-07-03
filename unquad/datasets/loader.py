@@ -17,7 +17,7 @@ class DataLoader:
         df = pd.read_parquet(path)
         return df
 
-    def get_example_setup(self, random_state: int=1):
+    def get_example_setup(self, random_state: int = 1):
         """
         Setup following 'Testing for Outliers with Conformal p-Values' (Bates. 2023).
         """

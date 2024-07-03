@@ -114,12 +114,7 @@ class ConformalEstimator:
         x = self._check_x(x)
         n_calib = None
 
-        if self.method in [Method.NAIVE]:
-            self.detector.fit(x)
-            self.calibration_set = self.detector.decision_function(x)
-            return
-
-        elif self.method in [Method.SPLIT_CONFORMAL]:
+        if self.method in [Method.SPLIT_CONFORMAL]:
             x_train, x_calib = train_test_split(
                 x,
                 test_size=self.split.n_split,
@@ -322,7 +317,7 @@ class ConformalEstimator:
             raise ValueError("Parameter 'alpha' should be in range (0, 1].")
 
         if (
-            method in [Method.NAIVE, Method.JACKKNIFE, Method.JACKKNIFE_PLUS]
+            method in [Method.JACKKNIFE, Method.JACKKNIFE_PLUS]
             and split is not None
         ):
             warnings.warn(
