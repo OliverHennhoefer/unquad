@@ -2,7 +2,7 @@ import os
 import warnings
 
 from unquad.enums.aggregation import Aggregation
-from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.estimator.config.split import SplitConfiguration
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
 
@@ -32,7 +32,7 @@ from sklearn.model_selection import KFold, ShuffleSplit, train_test_split
 
 from unquad.enums.adjustment import Adjustment
 from unquad.enums.method import Method
-from unquad.errors.forbidden_model_error import ForbiddenModelError
+from unquad.error.forbidden_model import ForbiddenModelError
 
 
 class ConformalEstimator:
@@ -59,7 +59,7 @@ class ConformalEstimator:
     aggregation: enum:Aggregation (optional, default=Median)
         Aggregation function for ensemble methods.
 
-    split_config float or integer (optional, fallback depending on 'method' parameter)
+    config float or integer (optional, fallback depending on 'method' parameter)
         The number of splits to be performed regarding estimator calibration.
         Has no effect for the 'split-conformal' calibration.
         Fallback values are defined, in case no parameter definition was set.
@@ -83,7 +83,7 @@ class ConformalEstimator:
         split: SplitConfiguration = None,
         adjustment: Adjustment = Adjustment.BENJAMINI_HOCHBERG,
         aggregation: Aggregation = Aggregation.MEDIAN,
-        alpha: float = 0.2,
+        alpha: float = 0.1,
         seed: int = None,
         silent: bool = False,
     ):

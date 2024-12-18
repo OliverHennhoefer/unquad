@@ -1,6 +1,6 @@
 import unittest
 
-from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.estimator.config.split import SplitConfiguration
 
 
 class TestSplitConfiguration(unittest.TestCase):

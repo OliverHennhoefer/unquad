@@ -7,7 +7,7 @@ from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
 from unquad.enums.aggregation import Aggregation
 from unquad.estimator.conformal_estimator import ConformalEstimator
-from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.estimator.config.split import SplitConfiguration
 from unquad.evaluation.metrics import false_discovery_rate, statistical_power
 
 

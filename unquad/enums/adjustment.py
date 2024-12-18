@@ -6,6 +6,6 @@ class Adjustment(Enum):
     Enumerators of adjustment procedures for FDR control.
     """
 
-    BENJAMINI_HOCHBERG = "bh"
-    BENJAMINI_YEKUTIELI = "by"
+    BENJAMINI_HOCHBERG: str = "bh"
+    BENJAMINI_YEKUTIELI: str = "by"
     NONE = None

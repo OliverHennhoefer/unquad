@@ -2,11 +2,11 @@ from enum import Enum
 
 
 class Dataset(Enum):
-    BREASTW = "breastw"
-    FRAUD = "fraud"
-    IONOSPHERE = "ionosphere"
-    MAMMOGRAPHY = "mammography"
-    MUSK = "musk"
-    SHUTTLE = "shuttle"
-    THYROID = "thyroid"
-    WBC = "wbc"
+    BREASTW: str = "breastw"
+    FRAUD: str = "fraud"
+    IONOSPHERE: str = "ionosphere"
+    MAMMOGRAPHY: str = "mammography"
+    MUSK: str = "musk"
+    SHUTTLE: str = "shuttle"
+    THYROID: str = "thyroid"
+    WBC: str = "wbc"

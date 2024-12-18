@@ -34,7 +34,7 @@ pip install unquad
 from pyod.models.iforest import IForest
 
 from unquad.estimator.conformal_estimator import ConformalEstimator
-from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.estimator.config.split import SplitConfiguration
 from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
 from unquad.enums.dataset import Dataset
@@ -72,7 +72,7 @@ Output:
 from pyod.models.iforest import IForest
 
 from unquad.estimator.conformal_estimator import ConformalEstimator
-from unquad.estimator.split_configuration import SplitConfiguration
+from unquad.estimator.config.split import SplitConfiguration
 from unquad.datasets.loader import DataLoader
 from unquad.enums.adjustment import Adjustment
 from unquad.enums.dataset import Dataset
