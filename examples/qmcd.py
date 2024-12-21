@@ -1,6 +1,6 @@
 from pyod.models.qmcd import QMCD
 
-from tests.datasets.loader import DataLoader
+from unquad.data.loader import DataLoader
 from unquad.estimator.estimator import ConformalDetector
 from unquad.strategy.cross_val import CrossValidationConformal
 from unquad.utils.enums.dataset import Dataset

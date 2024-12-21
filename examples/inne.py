@@ -1,6 +1,6 @@
 from pyod.models.inne import INNE
 
-from tests.datasets.loader import DataLoader
+from unquad.data.loader import DataLoader
 from unquad.estimator.estimator import ConformalDetector
 from unquad.strategy.bootstrap import BootstrapConformal
 from unquad.utils.enums.dataset import Dataset

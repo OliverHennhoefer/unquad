@@ -1,6 +1,6 @@
 from pyod.models.rod import ROD
 
-from tests.datasets.loader import DataLoader
+from unquad.data.loader import DataLoader
 from unquad.estimator.configuration import EstimatorConfig
 from unquad.estimator.estimator import ConformalDetector
 from unquad.strategy.bootstrap import BootstrapConformal

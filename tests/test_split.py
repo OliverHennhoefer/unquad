@@ -3,7 +3,7 @@ import unittest
 from pyod.models.iforest import IForest
 
 from unquad.utils.enums.dataset import Dataset
-from tests.datasets.loader import DataLoader
+from unquad.data.loader import DataLoader
 from unquad.estimator.estimator import ConformalDetector
 from unquad.strategy.split import SplitConformal
 from unquad.utils.metrics import false_discovery_rate, statistical_power

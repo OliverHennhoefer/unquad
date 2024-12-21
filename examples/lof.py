@@ -1,6 +1,6 @@
 from pyod.models.lof import LOF
 
-from tests.datasets.loader import DataLoader
+from unquad.data.loader import DataLoader
 from unquad.estimator.estimator import ConformalDetector
 from unquad.strategy.jackknife import JackknifeConformal
 from unquad.utils.enums.dataset import Dataset

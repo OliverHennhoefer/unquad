@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unquad"
-version = "0.1.0"
-description = "Conformal Anomaly Detection (CAD) for PyOD-detectors."
+version = "0.1.1"
+description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
 ]

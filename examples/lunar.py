@@ -1,6 +1,6 @@
 from pyod.models.lunar import LUNAR
 
-from tests.datasets.loader import DataLoader
+from unquad.data.loader import DataLoader
 from unquad.estimator.configuration import EstimatorConfig
 from unquad.estimator.estimator import ConformalDetector
 from unquad.strategy.cross_val import CrossValidationConformal
