@@ -1,28 +1,24 @@
 from pyod.models.lmdd import LMDD
 
-from unquad.datasets.loader import DataLoader
-from unquad.enums.adjustment import Adjustment
-from unquad.enums.dataset import Dataset
-from unquad.estimator.conformal_estimator import ConformalEstimator
-from unquad.enums.method import Method
-from unquad.estimator.config.split import SplitConfiguration
-from unquad.evaluation.metrics import false_discovery_rate, statistical_power
+from tests.datasets.loader import DataLoader
+from unquad.estimator.configuration import EstimatorConfig
+from unquad.estimator.estimator import ConformalDetector
+from unquad.strategy.split import SplitConformal
+from unquad.utils.enums.dataset import Dataset
+from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
     dl = DataLoader(dataset=Dataset.SHUTTLE)
-    x_train, x_test, y_test = dl.get_example_setup()
+    x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
-    ce = ConformalEstimator(
+    ce = ConformalDetector(
         detector=LMDD(),
-        method=Method.SPLIT_CONFORMAL,
-        split=SplitConfiguration(n_split=0.225),
-        adjustment=Adjustment.BENJAMINI_HOCHBERG,
-        alpha=0.1,
-        seed=1,
+        strategy=SplitConformal(calib_size=0.1),
+        config=EstimatorConfig(alpha=0.2),
     )
 
     ce.fit(x_train)
-    estimates = ce.predict(x_test, raw=False)
+    estimates = ce.predict(x_test)
 
-    print(false_discovery_rate(y=y_test, y_hat=estimates))
-    print(statistical_power(y=y_test, y_hat=estimates))
+    print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
+    print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")

@@ -33,20 +33,20 @@ pip install unquad
 ```python
 from pyod.models.iforest import IForest
 
-from unquad.estimator.conformal_estimator import ConformalEstimator
+from unquad.estimator.conformal import ConformalEstimator
 from unquad.estimator.config.split import SplitConfiguration
-from unquad.datasets.loader import DataLoader
-from unquad.enums.adjustment import Adjustment
-from unquad.enums.dataset import Dataset
-from unquad.enums.method import Method
-from unquad.evaluation.metrics import false_discovery_rate, statistical_power
+from tests.datasets.loader import DataLoader
+from unquad.utils.enums.adjustment import Adjustment
+from unquad.utils.enums.dataset import Dataset
+from unquad.utils.enums import Strategy
+from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 dl = DataLoader(dataset=Dataset.THYROID)
 x_train, x_test, y_test = dl.get_example_setup()
 
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
-    method=Method.CV_PLUS,
+    method=Strategy.CV_PLUS,
     split=SplitConfiguration(n_split=10),
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.2,  # nominal FDR level
@@ -71,20 +71,20 @@ Output:
 ```python
 from pyod.models.iforest import IForest
 
-from unquad.estimator.conformal_estimator import ConformalEstimator
+from unquad.estimator.conformal import ConformalEstimator
 from unquad.estimator.config.split import SplitConfiguration
-from unquad.datasets.loader import DataLoader
-from unquad.enums.adjustment import Adjustment
-from unquad.enums.dataset import Dataset
-from unquad.enums.method import Method
-from unquad.evaluation.metrics import false_discovery_rate, statistical_power
+from tests.datasets.loader import DataLoader
+from unquad.utils.enums.adjustment import Adjustment
+from unquad.utils.enums.dataset import Dataset
+from unquad.utils.enums import Strategy
+from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 dl = DataLoader(dataset=Dataset.THYROID)
 x_train, x_test, y_test = dl.get_example_setup()
 
 ce = ConformalEstimator(
     detector=IForest(behaviour="new"),
-    method=Method.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
+    method=Strategy.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
     split=SplitConfiguration(n_split=0.95, n_bootstraps=40),
     adjustment=Adjustment.BENJAMINI_HOCHBERG,
     alpha=0.1,  # nominal FDR level
