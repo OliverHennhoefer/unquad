@@ -28,80 +28,74 @@ The p-values, instead of the usual anomaly estimates, allow for FDR control by s
 pip install unquad
 ```
 
-### Usage: CV+
+### Usage: CV
 
 ```python
-from pyod.models.iforest import IForest
+from pyod.models.gmm import GMM
 
-from unquad.estimator.conformal import ConformalEstimator
-from unquad.estimator.config.split import SplitConfiguration
 from tests.datasets.loader import DataLoader
-from unquad.utils.enums.adjustment import Adjustment
+from unquad.estimator.estimator import ConformalDetector
+from unquad.strategy.cross_val import CrossValidationConformal
 from unquad.utils.enums.dataset import Dataset
-from unquad.utils.enums import Strategy
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
-dl = DataLoader(dataset=Dataset.THYROID)
-x_train, x_test, y_test = dl.get_example_setup()
+dl = DataLoader(dataset=Dataset.SHUTTLE)
+x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
-ce = ConformalEstimator(
-    detector=IForest(behaviour="new"),
-    method=Strategy.CV_PLUS,
-    split=SplitConfiguration(n_split=10),
-    adjustment=Adjustment.BENJAMINI_HOCHBERG,
-    alpha=0.2,  # nominal FDR level
-    seed=1
+ce = ConformalDetector(
+    detector=GMM(),
+    strategy=CrossValidationConformal(k=5)
 )
 
-ce.fit(x_train)  # model fit and calibration
-estimates = ce.predict(x_test, raw=False)
+ce.fit(x_train)
+estimates = ce.predict(x_test)
 
-print(false_discovery_rate(y=y_test, y_hat=estimates))
-print(statistical_power(y=y_test, y_hat=estimates))
+print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
+print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
 ```
 
 Output:
 ```python
-0.174  # empirical FDR
-0.826  # empirical Power
+Empirical FDR: 0.049
+Empirical Power: 0.951
 ```
 
-### Usage: Jackknife+-after-Bootstrap
+### Usage: Bootstrap-after-Jackknife+
 
 ```python
 from pyod.models.iforest import IForest
 
-from unquad.estimator.conformal import ConformalEstimator
-from unquad.estimator.config.split import SplitConfiguration
 from tests.datasets.loader import DataLoader
+from unquad.estimator.configuration import EstimatorConfig
+from unquad.estimator.estimator import ConformalDetector
+from unquad.strategy.bootstrap import BootstrapConformal
+from unquad.utils.enums.aggregation import Aggregation
 from unquad.utils.enums.adjustment import Adjustment
 from unquad.utils.enums.dataset import Dataset
-from unquad.utils.enums import Strategy
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
-dl = DataLoader(dataset=Dataset.THYROID)
-x_train, x_test, y_test = dl.get_example_setup()
+dl = DataLoader(dataset=Dataset.SHUTTLE)
+    x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
-ce = ConformalEstimator(
-    detector=IForest(behaviour="new"),
-    method=Strategy.JACKKNIFE_PLUS_AFTER_BOOTSTRAP,
-    split=SplitConfiguration(n_split=0.95, n_bootstraps=40),
-    adjustment=Adjustment.BENJAMINI_HOCHBERG,
-    alpha=0.1,  # nominal FDR level
-    seed=1,
-)
+    ce = ConformalDetector(
+        detector=IForest(behaviour="new"),
+        strategy=BootstrapConformal(resampling_ratio=0.99, n_bootstraps=20, plus=True),
+        config=EstimatorConfig(alpha=0.1,
+                               adjustment=Adjustment.BENJAMINI_HOCHBERG,
+                               aggregation=Aggregation.MEAN),
+    )
 
-ce.fit(x_train)  # model fit and calibration
-estimates = ce.predict(x_test, raw=False)
+    ce.fit(x_train)
+    estimates = ce.predict(x_test)
 
-print(false_discovery_rate(y=y_test, y_hat=estimates))
-print(statistical_power(y=y_test, y_hat=estimates))
+    print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
+    print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
 ```
 
 Output:
 ```python
-0.041 # empirical FDR
-0.959 # empirical Power
+Empirical FDR: 0.067
+Empirical Power: 0.933
 ```
 
 ### Supported Estimators
