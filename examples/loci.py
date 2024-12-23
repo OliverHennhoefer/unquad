@@ -1,8 +1,8 @@
 from pyod.models.loci import LOCI
 
-from unquad.data.loader import DataLoader
-from unquad.estimator.configuration import EstimatorConfig
-from unquad.estimator.estimator import ConformalDetector
+from unquad.utils.data.loader import DataLoader
+from unquad.estimator.configuration import DetectorConfig
+from unquad.estimator.detector import ConformalDetector
 from unquad.strategy.split import SplitConformal
 from unquad.utils.enums.dataset import Dataset
 from unquad.utils.metrics import false_discovery_rate, statistical_power
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     ce = ConformalDetector(
         detector=LOCI(k=1),
         strategy=SplitConformal(calib_size=1_000),
-        config=EstimatorConfig(alpha=0.125),
+        config=DetectorConfig(alpha=0.125),
     )
 
     ce.fit(x_train)

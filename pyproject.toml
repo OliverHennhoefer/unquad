@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unquad"
-version = "0.1.1"
+version = "0.1.2"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
@@ -22,12 +22,14 @@ dependencies = [
     "pandas ~=2.2.1",
     "pyod ~=1.1.3",
     "scipy ~=1.13.0",
-    "tensorflow ~=2.16.1",
-    "torch ~=2.2.2",
     "tqdm ~=4.66.2",
-    "suod ~=0.1.3",
-    "pyarrow ~= 16.1.0"
 ]
+
+[project.optional-dependencies]
+dev = ["black", "flake8"]
+dl = ["tensorflow ~=2.16.1", "torch ~=2.2.2"]
+data = ["pyarrow ~= 16.1.0"]
+all = ["black", "flake8", "tensorflow ~=2.16.1", "torch ~=2.2.2", "pyarrow ~= 16.1.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/OliverHennhoefer/unquad"

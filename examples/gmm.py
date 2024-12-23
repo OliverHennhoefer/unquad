@@ -1,10 +1,10 @@
 from pyod.models.gmm import GMM
 
-from unquad.data.loader import DataLoader
-from unquad.estimator.configuration import EstimatorConfig
-from unquad.estimator.estimator import ConformalDetector
-from unquad.strategy.cross_val import CrossValidationConformal
+from unquad.utils.data.loader import DataLoader
 from unquad.utils.enums.dataset import Dataset
+from unquad.estimator.configuration import DetectorConfig
+from unquad.estimator.detector import ConformalDetector
+from unquad.strategy.split import SplitConformal
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
@@ -13,8 +13,8 @@ if __name__ == "__main__":
 
     ce = ConformalDetector(
         detector=GMM(),
-        strategy=CrossValidationConformal(k=5),
-        config=EstimatorConfig(alpha=0.1),
+        strategy=SplitConformal(calib_size=1_000),
+        config=DetectorConfig(alpha=0.05),
     )
 
     ce.fit(x_train)

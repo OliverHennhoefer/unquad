@@ -1,18 +1,69 @@
 import math
-from copy import copy, deepcopy
-from typing import Union
-
 import numpy as np
 import pandas as pd
+
+from tqdm import tqdm
+from typing import Union
+from copy import copy, deepcopy
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import ShuffleSplit
-from tqdm import tqdm
 
 from unquad.estimator.parameter import set_params
 from unquad.strategy.base import BaseStrategy
 
 
 class BootstrapConformal(BaseStrategy):
+    """
+    Bootstrap conformal anomaly detection strategy.
+
+    This class implements a conformal anomaly detection strategy based on bootstrap resampling.
+    It trains multiple anomaly detection models on resampled data and calibrates them using a calibration set.
+    The strategy allows flexibility in the number of bootstraps, resampling ratio, and calibration set size.
+
+    Attributes:
+        resampling_ratio (float, optional): The ratio of the training set size to the total dataset size
+            for each bootstrap sample. Default is None.
+        n_bootstraps (int, optional): The number of bootstrap samples (models) to train. Default is None.
+        n_calib (int, optional): The number of calibration points to sample from the calibration set. Default is None.
+        plus (bool): A flag indicating whether to append models during calibration. Default is False.
+        _detector_list (list): A list of trained anomaly detection models.
+        _calibration_set (list): A list of calibration scores used for making decisions.
+
+    Methods:
+        __init__(resampling_ratio=None, n_bootstraps=None, n_calib=None, plus=False):
+            Initializes the BootstrapConformal object with specified parameters.
+
+        fit_calibrate(x, detector, seed=1):
+            Fits and calibrates the anomaly detection model using bootstrap resampling.
+
+            Args:
+                x (Union[pd.DataFrame, np.ndarray]): The data used to train and calibrate the detector.
+                detector (BaseDetector): The base anomaly detection model to be used.
+                seed (int, optional): The random seed for reproducibility. Default is 1.
+
+            Returns:
+                tuple: A tuple containing:
+                    - list[BaseDetector]: A list of trained anomaly detection models.
+                    - list[list]: A list of calibration scores.
+
+        _sanity_check():
+            Performs a sanity check to ensure exactly two of the parameters (resampling_ratio,
+            n_bootstraps, n_calib) are defined.
+
+        _configure(n):
+            Configures the parameters for bootstrap resampling and calibration based on the provided data size.
+
+            Args:
+                n (int): The number of samples in the dataset.
+
+            Returns:
+                tuple: A tuple containing the configured values for resampling_ratio,
+                    n_bootstraps, and n_calib.
+
+            Raises:
+                ValueError: If not exactly two parameters among resampling_ratio, n_bootstraps, and
+                            n_calib are defined.
+    """
 
     def __init__(
         self,
@@ -21,6 +72,7 @@ class BootstrapConformal(BaseStrategy):
         n_calib: int = None,
         plus: bool = False,
     ):
+        super().__init__(plus)
         self.resampling_ratio: None | float = resampling_ratio
         self.n_bootstraps: None | int = n_bootstraps
         self.n_calib: None | int = n_calib

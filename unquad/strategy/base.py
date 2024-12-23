@@ -8,6 +8,32 @@ from pyod.models.base import BaseDetector
 
 
 class BaseStrategy(abc.ABC):
+    """
+    Abstract base class for calibration strategies in anomaly detection.
+
+    This class serves as the base for all calibration strategies used in anomaly detection.
+    It provides a framework for fitting and calibrating detectors with specific strategies,
+    while allowing customization through subclasses.
+
+    Attributes:
+        plus (bool): A flag to indicate whether a specific adjustment (e.g., adding a constant)
+                     should be applied during calibration. Default is False.
+
+    Methods:
+        __init__(plus=False):
+            Initializes the base strategy with an optional flag to enable specific adjustments during calibration.
+
+        fit_calibrate(x, detector, seed):
+            Abstract method for fitting and calibrating the detector. This must be implemented by subclasses.
+
+            Args:
+                x (Union[pd.DataFrame, np.ndarray]): The data used for calibration.
+                detector (BaseDetector): The anomaly detection model to be calibrated.
+                seed (Optional[int]): Optional random seed for reproducibility.
+
+            Raises:
+                NotImplementedError: This method must be implemented by subclasses.
+    """
 
     def __init__(self, plus: bool = False):
         self.plus: bool = plus

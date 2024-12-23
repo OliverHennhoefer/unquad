@@ -1,19 +1,51 @@
-from copy import copy, deepcopy
-from typing import Union
-
 import numpy as np
 import pandas as pd
+
+from tqdm import tqdm
+from typing import Union
+from copy import copy, deepcopy
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import KFold
-from tqdm import tqdm
 
 from unquad.estimator.parameter import set_params
 from unquad.strategy.base import BaseStrategy
 
 
 class CrossValidationConformal(BaseStrategy):
+    """
+    Cross-validation conformal anomaly detection strategy.
+
+    This class implements a conformal anomaly detection strategy using k-fold cross-validation.
+    It trains multiple anomaly detection models on different training folds and calibrates them
+    using the corresponding calibration set. The strategy supports model calibration with or
+    without appending models during the process.
+
+    Attributes:
+        k (int): The number of folds in the k-fold cross-validation.
+        plus (bool): A flag indicating whether to append models during calibration. Default is False.
+        _detector_list (list): A list of trained anomaly detection models.
+        _calibration_set (list): A list of calibration scores used for making decisions.
+
+    Methods:
+        __init__(k, plus=False):
+            Initializes the CrossValidationConformal object with specified parameters.
+
+        fit_calibrate(x, detector, seed=1):
+            Fits and calibrates the anomaly detection model using k-fold cross-validation.
+
+            Args:
+                x (Union[pd.DataFrame, np.ndarray]): The data used to train and calibrate the detector.
+                detector (BaseDetector): The base anomaly detection model to be used.
+                seed (int, optional): The random seed for reproducibility. Default is 1.
+
+            Returns:
+                tuple: A tuple containing:
+                    - list[BaseDetector]: A list of trained anomaly detection models.
+                    - list[list]: A list of calibration scores.
+    """
 
     def __init__(self, k: int, plus: bool = False):
+        super().__init__(plus)
         self.k = k
         self.plus: bool = plus
 

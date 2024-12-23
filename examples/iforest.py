@@ -1,8 +1,8 @@
 from pyod.models.iforest import IForest
 
-from unquad.data.loader import DataLoader
-from unquad.estimator.configuration import EstimatorConfig
-from unquad.estimator.estimator import ConformalDetector
+from unquad.utils.data.loader import DataLoader
+from unquad.estimator.configuration import DetectorConfig
+from unquad.estimator.detector import ConformalDetector
 from unquad.strategy.bootstrap import BootstrapConformal
 from unquad.utils.enums.aggregation import Aggregation
 from unquad.utils.enums.adjustment import Adjustment
@@ -16,9 +16,11 @@ if __name__ == "__main__":
     ce = ConformalDetector(
         detector=IForest(behaviour="new"),
         strategy=BootstrapConformal(resampling_ratio=0.99, n_bootstraps=20, plus=True),
-        config=EstimatorConfig(alpha=0.1,
-                               adjustment=Adjustment.BENJAMINI_HOCHBERG,
-                               aggregation=Aggregation.MEAN),
+        config=DetectorConfig(
+            alpha=0.1,
+            adjustment=Adjustment.BENJAMINI_HOCHBERG,
+            aggregation=Aggregation.MEAN,
+        ),
     )
 
     ce.fit(x_train)

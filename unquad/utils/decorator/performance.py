@@ -1,12 +1,26 @@
-from typing import Callable, Union
-
 import numpy as np
-from functools import wraps
-
 import pandas as pd
+
+from typing import Callable, Union
+from functools import wraps
 
 
 def performance_conversion(*arg_names):
+    """
+    Decorator to convert specific function arguments to numpy arrays and convert
+    the return value back to lists.
+
+    This decorator modifies the specified arguments in the decorated function
+    by converting them to numpy arrays. It also converts any numpy arrays returned
+    by the function back to lists.
+
+    Args:
+        *arg_names (str): The names of the arguments to be converted to numpy arrays.
+
+    Returns:
+        function: A wrapped function that performs the necessary conversions on arguments and return values.
+    """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -55,6 +69,19 @@ def performance_conversion(*arg_names):
 
 
 def ensure_numpy_array(func: Callable) -> Callable:
+    """
+    Decorator to ensure that the input data is a numpy array before calling the function.
+
+    This decorator checks if the input data `x` is a Pandas DataFrame and converts it to
+    a numpy array. If `x` is already a numpy array, it remains unchanged. The function is
+    then called with the modified data.
+
+    Args:
+        func (Callable): The function to be decorated.
+
+    Returns:
+        Callable: The decorated function that ensures the input is a numpy array.
+    """
 
     @wraps(func)
     def wrapper(self, x: Union[pd.DataFrame, np.ndarray], *args, **kwargs):
