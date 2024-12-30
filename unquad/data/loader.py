@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 
-from unquad.utils.enums.dataset import Dataset
+from unquad.utils.enums import Dataset
 
 
 class DataLoader:

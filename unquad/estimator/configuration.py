@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from unquad.utils.enums.adjustment import Adjustment
-from unquad.utils.enums.aggregation import Aggregation
+from unquad.utils.enums import Adjustment
+from unquad.utils.enums import Aggregation
 
 
 @dataclass
@@ -25,7 +25,7 @@ class DetectorConfig:
     """
 
     alpha: float = 0.2
-    adjustment: Adjustment = Adjustment.BENJAMINI_HOCHBERG
+    adjustment: Adjustment = Adjustment.BH
     aggregation: Aggregation = Aggregation.MEDIAN
     seed: int = 1
     silent: bool = True

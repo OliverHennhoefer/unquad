@@ -7,7 +7,7 @@ from pyod.models.rgraph import RGraph
 from pyod.models.sampling import Sampling
 from pyod.models.sos import SOS
 
-from unquad.utils.error.forbidden_model import ForbiddenModelError
+from unquad.utils.error import ForbiddenModelError
 
 forbidden_model_list = [
     CBLOF,

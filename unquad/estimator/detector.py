@@ -13,7 +13,7 @@ from unquad.estimator.configuration import DetectorConfig
 from unquad.estimator.parameter import set_params
 from unquad.strategy.base import BaseStrategy
 from unquad.utils.aggregation import aggregate
-from unquad.utils.decorator.performance import ensure_numpy_array
+from unquad.utils.decorator import ensure_numpy_array
 from unquad.utils.multiplicity import multiplicity_correction
 from unquad.utils.statistical import calculate_p_val, get_decision
 

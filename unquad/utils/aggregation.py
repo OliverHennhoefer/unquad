@@ -1,7 +1,7 @@
 import numpy as np
 
-from unquad.utils.decorator.performance import performance_conversion
-from unquad.utils.enums.aggregation import Aggregation
+from unquad.utils.decorator import performance_conversion
+from unquad.utils.enums import Aggregation
 
 
 @performance_conversion("scores")

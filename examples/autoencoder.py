@@ -1,10 +1,10 @@
 from pyod.models.auto_encoder_torch import AutoEncoder
 
-from unquad.utils.data.loader import DataLoader
+from unquad.utils.enums import Dataset
+from unquad.data.loader import DataLoader
 from unquad.estimator.configuration import DetectorConfig
 from unquad.estimator.detector import ConformalDetector
 from unquad.strategy.split import SplitConformal
-from unquad.utils.enums.dataset import Dataset
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":

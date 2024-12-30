@@ -1,6 +1,6 @@
 import numpy as np
 
-from unquad.utils.decorator.performance import performance_conversion
+from unquad.utils.decorator import performance_conversion
 
 
 @performance_conversion("scores", "calibration_set")

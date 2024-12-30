@@ -2,7 +2,7 @@ import unittest
 
 
 from unquad.utils.aggregation import aggregate
-from unquad.utils.enums.aggregation import Aggregation
+from unquad.utils.enums import Aggregation
 
 
 class TestUtilsAggregation(unittest.TestCase):
