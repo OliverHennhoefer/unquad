@@ -26,10 +26,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["black", "flake8"]
+dev = ["black"]
 dl = ["tensorflow >=2.16.1", "torch >=2.2.2"]
 data = ["pyarrow >= 16.1.0"]
-all = ["black", "flake8", "tensorflow >=2.16.1", "torch >=2.2.2", "pyarrow >= 16.1.0"]
+all = ["black", "tensorflow >=2.16.1", "torch >=2.2.2", "pyarrow >= 16.1.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/OliverHennhoefer/unquad"
