@@ -85,5 +85,9 @@ class DataLoader:
         return x_train, x_test, y_test
 
     @property
-    def df(self):
+    def df(self) -> pd.DataFrame:
         return self._df
+
+    @property
+    def rows(self) -> int:
+        return self._df.shape[0]
