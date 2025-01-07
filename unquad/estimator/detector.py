@@ -95,4 +95,4 @@ class ConformalDetector:
         p_val = calculate_p_val(estimates, self.calibration_set)
         p_val_adj = multiplicity_correction(self.config.adjustment, p_val)
 
-        return p_val if raw else get_decision(self.config, p_val_adj)
+        return p_val if raw else get_decision(self.config.alpha, p_val_adj)

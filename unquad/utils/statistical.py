@@ -1,6 +1,5 @@
 import numpy as np
 
-from unquad.estimator.configuration import DetectorConfig
 from unquad.utils.decorator import performance_conversion
 
 
@@ -29,16 +28,15 @@ def calculate_p_val(scores: np.array, calibration_set: np.array) -> np.array:
 
 
 @performance_conversion("scores")
-def get_decision(config: DetectorConfig, scores: np.array) -> [bool]:
+def get_decision(alpha: float, scores: np.array) -> [bool]:
     """
     Make a decision for each score based on the given significance level.
 
     This function compares each score to the specified alpha threshold and
     returns a decision indicating whether the score is less than or equal to alpha.
-    If the 'fore_anomaly' parameter is true,
 
     Args:
-        config (DetectorConfig): Detector configuration.
+        alpha (float): The significance threshold used to make the decision.
         scores (np.array): The array of test scores to evaluate.
 
     Returns:
@@ -49,8 +47,4 @@ def get_decision(config: DetectorConfig, scores: np.array) -> [bool]:
         The decision for each score is made as:
             True if score <= alpha, otherwise False.
     """
-    if config.force_anomaly:
-        bound = 1 / (len(scores) + 1)
-        scores = np.array([0 if x <= bound else x for x in scores])
-
-    return scores <= config.alpha
+    return scores <= alpha
