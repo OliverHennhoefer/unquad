@@ -16,6 +16,8 @@ class DetectorConfig:
             Default is Benjamini-Hochberg adjustment.
         aggregation (Aggregation): Method used for aggregating metrics or data points.
             Default is median.
+        force_anomaly (bool): Whether anomaly scores outside the calibration range are
+            categorically considered an anomaly. Default is False.
         seed (int): Random seed for reproducibility in stochastic processes.
             Default is 1.
         silent (bool): Suppresses logs or warnings if True. Default is True.
@@ -27,5 +29,6 @@ class DetectorConfig:
     alpha: float = 0.2
     adjustment: Adjustment = Adjustment.BH
     aggregation: Aggregation = Aggregation.MEDIAN
+    force_anomaly: bool = False
     seed: int = 1
     silent: bool = True
