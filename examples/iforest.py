@@ -2,8 +2,8 @@ from pyod.models.iforest import IForest
 
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
-from unquad.estimator.configuration import DetectorConfig
-from unquad.estimator.detector import ConformalDetector
+from unquad.estimation.properties.configuration import DetectorConfig
+from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.enums import Aggregation
 from unquad.utils.enums import Adjustment

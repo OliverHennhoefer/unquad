@@ -8,7 +8,7 @@ from copy import copy, deepcopy
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import ShuffleSplit
 
-from unquad.estimator.parameter import set_params
+from unquad.estimation.properties.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 
 

@@ -2,8 +2,8 @@ from pyod.models.pca import PCA
 
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
-from unquad.estimator.configuration import DetectorConfig
-from unquad.estimator.detector import ConformalDetector
+from unquad.estimation.properties.configuration import DetectorConfig
+from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 

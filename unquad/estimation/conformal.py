@@ -9,8 +9,8 @@ from typing import Union
 from pyod.models.base import BaseDetector
 from tqdm import tqdm
 
-from unquad.estimator.configuration import DetectorConfig
-from unquad.estimator.parameter import set_params
+from unquad.estimation.properties.configuration import DetectorConfig
+from unquad.estimation.properties.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 from unquad.utils.aggregation import aggregate
 from unquad.utils.decorator import ensure_numpy_array
