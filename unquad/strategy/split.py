@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from unquad.strategy.base import BaseStrategy
 
 
-class SplitConformal(BaseStrategy):
+class Split(BaseStrategy):
     """
     Split conformal anomaly detection strategy.
 

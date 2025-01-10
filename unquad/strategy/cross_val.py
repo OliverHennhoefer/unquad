@@ -11,7 +11,7 @@ from unquad.estimator.parameter import set_params
 from unquad.strategy.base import BaseStrategy
 
 
-class CrossValidationConformal(BaseStrategy):
+class CrossValidation(BaseStrategy):
     """
     Cross-validation conformal anomaly detection strategy.
 

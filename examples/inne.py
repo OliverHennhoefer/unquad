@@ -3,7 +3,7 @@ from pyod.models.inne import INNE
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.bootstrap import BootstrapConformal
+from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     ce = ConformalDetector(
         detector=INNE(),
-        strategy=BootstrapConformal(resampling_ratio=0.99, n_calib=2_000),
+        strategy=Bootstrap(resampling_ratio=0.99, n_calib=2_000),
     )
 
     ce.fit(x_train)

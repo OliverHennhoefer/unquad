@@ -56,10 +56,6 @@ class DataLoader:
         return df
 
     def get_example_setup(self, random_state: int = 1):
-        """
-        Setup following 'Testing for Outliers with Conformal p-Values' (Bates. 2023).
-        """
-
         inliers = self._df.loc[self._df.Class == 0]
         n_train = len(inliers) // 2
         n_test = min(1000, n_train // 3)

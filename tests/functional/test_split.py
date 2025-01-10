@@ -6,7 +6,7 @@ from pyod.models.iforest import IForest
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.split import SplitConformal
+from unquad.strategy.split import Split
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 
@@ -17,7 +17,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
         ce = ConformalDetector(
-            detector=IForest(behaviour="new"), strategy=SplitConformal(calib_size=2_000)
+            detector=IForest(behaviour="new"), strategy=Split(calib_size=2_000)
         )
 
         ce.fit(x_train)

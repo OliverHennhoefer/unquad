@@ -33,7 +33,7 @@ from pyod.models.gmm import GMM
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.split import SplitConformal
+from unquad.strategy.split import Split
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 dl = DataLoader(dataset=Dataset.SHUTTLE)
@@ -41,7 +41,7 @@ x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
 ce = ConformalDetector(
     detector=GMM(),
-    strategy=SplitConformal(calib_size=1_000)
+    strategy=Split(calib_size=1_000)
 )
 
 ce.fit(x_train)
@@ -82,7 +82,7 @@ from pyod.models.iforest import IForest
 from unquad.data.loader import DataLoader
 from unquad.estimator.configuration import DetectorConfig
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.bootstrap import BootstrapConformal
+from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.enums import Aggregation, Adjustment, Dataset
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
@@ -91,7 +91,7 @@ x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
 ce = ConformalDetector(
     detector=IForest(behaviour="new"),
-    strategy=BootstrapConformal(resampling_ratio=0.99, n_bootstraps=20, plus=True),
+    strategy=Bootstrap(resampling_ratio=0.99, n_bootstraps=20, plus=True),
     config=DetectorConfig(alpha=0.1, adjustment=Adjustment.BY, aggregation=Aggregation.MEAN),
 )
 

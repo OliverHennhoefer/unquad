@@ -6,7 +6,7 @@ from pyod.models.iforest import IForest
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.jackknife import JackknifeConformal
+from unquad.strategy.jackknife import Jackknife
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 
@@ -16,9 +16,7 @@ class TestCaseJackknifeConformal(unittest.TestCase):
         dl = DataLoader(dataset=Dataset.BREAST)
         x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
-        ce = ConformalDetector(
-            detector=IForest(behaviour="new"), strategy=JackknifeConformal()
-        )
+        ce = ConformalDetector(detector=IForest(behaviour="new"), strategy=Jackknife())
 
         ce.fit(x_train)
         est = ce.predict(x_test)

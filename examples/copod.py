@@ -3,7 +3,7 @@ from pyod.models.copod import COPOD
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.jackknife import JackknifeConformal
+from unquad.strategy.jackknife import Jackknife
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     ce = ConformalDetector(
         detector=COPOD(),
-        strategy=JackknifeConformal(),
+        strategy=Jackknife(),
     )
 
     ce.fit(x_train)

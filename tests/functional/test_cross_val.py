@@ -5,7 +5,7 @@ from pyod.models.iforest import IForest
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.cross_val import CrossValidationConformal
+from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 
@@ -16,7 +16,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         x_train, x_test, y_test = dl.get_example_setup(random_state=1)
 
         ce = ConformalDetector(
-            detector=IForest(behaviour="new"), strategy=CrossValidationConformal(k=5)
+            detector=IForest(behaviour="new"), strategy=CrossValidation(k=5)
         )
 
         ce.fit(x_train)
@@ -35,7 +35,7 @@ class TestCaseSplitConformal(unittest.TestCase):
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=CrossValidationConformal(k=5, plus=True),
+            strategy=CrossValidation(k=5, plus=True),
         )
 
         ce.fit(x_train)

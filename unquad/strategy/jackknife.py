@@ -5,10 +5,10 @@ from typing import Union, Optional
 from pyod.models.base import BaseDetector
 
 from unquad.strategy.base import BaseStrategy
-from unquad.strategy.cross_val import CrossValidationConformal
+from unquad.strategy.cross_val import CrossValidation
 
 
-class JackknifeConformal(BaseStrategy):
+class Jackknife(BaseStrategy):
     """
     Jackknife conformal anomaly detection strategy.
 
@@ -42,7 +42,7 @@ class JackknifeConformal(BaseStrategy):
     def __init__(self, plus: bool = False):
         super().__init__(plus)
         self.plus: bool = plus
-        self.strategy: BaseStrategy = CrossValidationConformal(k=1, plus=plus)
+        self.strategy: BaseStrategy = CrossValidation(k=1, plus=plus)
 
     def fit_calibrate(
         self,

@@ -12,7 +12,7 @@ from unquad.estimator.parameter import set_params
 from unquad.strategy.base import BaseStrategy
 
 
-class BootstrapConformal(BaseStrategy):
+class Bootstrap(BaseStrategy):
     """
     Bootstrap conformal anomaly detection strategy.
 

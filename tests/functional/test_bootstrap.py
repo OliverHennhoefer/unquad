@@ -5,7 +5,7 @@ from pyod.models.iforest import IForest
 from unquad.utils.enums import Dataset
 from unquad.data.loader import DataLoader
 from unquad.estimator.detector import ConformalDetector
-from unquad.strategy.bootstrap import BootstrapConformal
+from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 
@@ -17,7 +17,7 @@ class TestCaseBootstrapConformal(unittest.TestCase):
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=BootstrapConformal(resampling_ratio=0.995, n_calib=1_000),
+            strategy=Bootstrap(resampling_ratio=0.995, n_calib=1_000),
         )
 
         ce.fit(x_train)
@@ -36,7 +36,7 @@ class TestCaseBootstrapConformal(unittest.TestCase):
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=BootstrapConformal(resampling_ratio=0.99, n_bootstraps=15),
+            strategy=Bootstrap(resampling_ratio=0.99, n_bootstraps=15),
         )
 
         ce.fit(x_train)
@@ -55,7 +55,7 @@ class TestCaseBootstrapConformal(unittest.TestCase):
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=BootstrapConformal(n_calib=1_000, n_bootstraps=25),
+            strategy=Bootstrap(n_calib=1_000, n_bootstraps=25),
         )
 
         ce.fit(x_train)
