@@ -2,9 +2,7 @@ import unittest
 
 from pyod.models.iforest import IForest
 
-
-from unquad.utils.enums import Dataset
-from unquad.data.loader import DataLoader
+from unquad.data.load import load_breast
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife
 from unquad.utils.metrics import false_discovery_rate, statistical_power
@@ -13,8 +11,7 @@ from unquad.utils.metrics import false_discovery_rate, statistical_power
 class TestCaseJackknifeConformal(unittest.TestCase):
     def test_jackknife_conformal(self):
 
-        dl = DataLoader(dataset=Dataset.BREAST)
-        x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+        x_train, x_test, y_test = load_breast(setup=True)
 
         ce = ConformalDetector(detector=IForest(behaviour="new"), strategy=Jackknife())
 

@@ -40,9 +40,9 @@ class Aggregation(Enum):
 
 class Dataset(Enum):
     """
-    Enumerates the available datasets for anomaly detection tasks.
+    Enumerates the available data for anomaly detection tasks.
 
-    This enum represents various datasets that can be used for training and testing anomaly detection models.
+    This enum represents various data that can be used for training and testing anomaly detection models.
 
     Attributes:
         BREAST (str): The breast cancer dataset.

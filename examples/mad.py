@@ -1,15 +1,13 @@
 from pyod.models.mad import MAD
 
-from unquad.utils.enums import Dataset
-from unquad.data.loader import DataLoader
+from unquad.data.load import load_fraud
 from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-    dl = DataLoader(dataset=Dataset.FRAUD)
-    x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+    x_train, x_test, y_test = load_fraud(setup=True)
 
     ce = ConformalDetector(
         detector=MAD(),

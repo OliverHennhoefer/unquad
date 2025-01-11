@@ -2,9 +2,7 @@ import unittest
 
 from pyod.models.iforest import IForest
 
-
-from unquad.utils.enums import Dataset
-from unquad.data.loader import DataLoader
+from unquad.data.load import load_fraud
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.metrics import false_discovery_rate, statistical_power
@@ -12,9 +10,7 @@ from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 class TestCaseSplitConformal(unittest.TestCase):
     def test_split_conformal(self):
-
-        dl = DataLoader(dataset=Dataset.FRAUD)
-        x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+        x_train, x_test, y_test = load_fraud(setup=True)
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"), strategy=Split(calib_size=2_000)

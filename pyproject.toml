@@ -2,6 +2,9 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+include = ["unquad/unquad/datasets/*.parquet.gz"]
+
 [project]
 name = "unquad"
 version = "0.1.5"

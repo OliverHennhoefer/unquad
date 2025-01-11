@@ -1,14 +1,12 @@
 from pyod.models.copod import COPOD
 
-from unquad.utils.enums import Dataset
-from unquad.data.loader import DataLoader
+from unquad.data.load import load_breast
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-    dl = DataLoader(dataset=Dataset.BREAST)
-    x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+    x_train, x_test, y_test = load_breast(setup=True)
 
     ce = ConformalDetector(
         detector=COPOD(),

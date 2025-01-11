@@ -1,15 +1,13 @@
 from pyod.models.mcd import MCD
 
-from unquad.utils.enums import Dataset
-from unquad.data.loader import DataLoader
+from unquad.data.load import load_ionosphere
 from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-    dl = DataLoader(dataset=Dataset.IONOSPHERE)
-    x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+    x_train, x_test, y_test = load_ionosphere(setup=True)
 
     ce = ConformalDetector(
         detector=MCD(),

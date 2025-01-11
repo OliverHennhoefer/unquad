@@ -2,8 +2,7 @@ import unittest
 
 from pyod.models.iforest import IForest
 
-from unquad.utils.enums import Dataset
-from unquad.data.loader import DataLoader
+from unquad.data.load import load_fraud
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
@@ -11,9 +10,7 @@ from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 class TestCaseSplitConformal(unittest.TestCase):
     def test_cross_val_conformal(self):
-
-        dl = DataLoader(dataset=Dataset.FRAUD)
-        x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+        x_train, x_test, y_test = load_fraud(setup=True)
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"), strategy=CrossValidation(k=5)
@@ -29,9 +26,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         self.assertEqual(power, 0.885)
 
     def test_cross_val_conformal_plus(self):
-
-        dl = DataLoader(dataset=Dataset.FRAUD)
-        x_train, x_test, y_test = dl.get_example_setup(random_state=1)
+        x_train, x_test, y_test = load_fraud(setup=True)
 
         ce = ConformalDetector(
             detector=IForest(behaviour="new"),
