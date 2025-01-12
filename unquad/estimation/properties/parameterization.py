@@ -7,8 +7,6 @@ from pyod.models.rgraph import RGraph
 from pyod.models.sampling import Sampling
 from pyod.models.sos import SOS
 
-from unquad.utils.error import ForbiddenModelError
-
 forbidden_model_list = [
     CBLOF,
     COF,
@@ -65,11 +63,11 @@ def set_params(
             BaseDetector: The configured detector with the updated parameters.
 
         Raises:
-            ForbiddenModelError: If the detector is part of the forbidden_model_list.
+            ValueError: If the detector is part of the forbidden_model_list.
     """
 
     if detector.__class__ in forbidden_model_list:
-        raise ForbiddenModelError(f"{detector.__class__.__name__} is not supported.")
+        raise ValueError(f"{detector.__class__.__name__} is not supported.")
 
     if "contamination" in detector.get_params().keys():
         detector.set_params(
