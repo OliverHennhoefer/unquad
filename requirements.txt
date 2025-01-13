@@ -1,16 +1,11 @@
 # required
-numpy>=1.26.0
+numpy~=1.26.0
 pandas>=2.2.1
 pyod~=2.0.3
 scipy>=1.13.0
 tqdm>=4.66.2
+pyarrow>=16.1.0
 
 # deep learning
 tensorflow>=2.16.1
 torch>=2.2.2
-
-# built-in data
-pyarrow>=16.1.0
-
-# development
-black>=24.0.0

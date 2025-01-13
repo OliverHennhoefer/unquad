@@ -3,11 +3,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-include = ["unquad/unquad/datasets/*.parquet.gz"]
+include = ["unquad/data/datasets/*.parquet.gz"]
 
 [project]
 name = "unquad"
-version = "0.1.5"
+version = "0.1.83"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
@@ -21,18 +21,18 @@ classifiers = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "numpy >=1.26.0",
-    "pandas >=2.2.1",
-    "pyod ~=2.0.3",
-    "scipy >=1.13.0",
-    "tqdm >=4.66.2",
+    "numpy~=1.26.0",
+    "pandas>=2.2.1",
+    "pyod~=2.0.3",
+    "scipy>=1.13.0",
+    "tqdm>=4.66.2",
+    "pyarrow>=16.1.0",
 ]
 
 [project.optional-dependencies]
 dev = ["black"]
-dl = ["tensorflow >=2.16.1", "torch >=2.2.2"]
-data = ["pyarrow >= 16.1.0"]
-all = ["black", "tensorflow >=2.16.1", "torch >=2.2.2", "pyarrow >= 16.1.0"]
+dl = ["tensorflow>=2.16.1", "torch>=2.2.2"]
+all = ["black", "tensorflow>=2.16.1", "torch>=2.2.2"]
 
 [project.urls]
 "Homepage" = "https://github.com/OliverHennhoefer/unquad"

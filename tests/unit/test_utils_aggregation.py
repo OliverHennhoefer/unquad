@@ -1,6 +1,5 @@
 import unittest
 
-
 from unquad.utils.aggregation import aggregate
 from unquad.utils.enums import Aggregation
 
