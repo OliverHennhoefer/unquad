@@ -43,13 +43,19 @@ class Jackknife(BaseStrategy):
         super().__init__(plus)
         self.plus: bool = plus
         self.strategy: BaseStrategy = CrossValidation(k=1, plus=plus)
+        self.calib_id: [int] = None
 
     def fit_calibrate(
         self,
         x: Union[pd.DataFrame, np.ndarray],
         detector: BaseDetector,
-        seed: Optional[int],
+        weighted: bool = False,
+        seed: int = 1,
     ):
 
         self.strategy.k = len(x)
         return self.strategy.fit_calibrate(x, detector, seed)
+
+    @property
+    def calibration_ids(self):
+        return None

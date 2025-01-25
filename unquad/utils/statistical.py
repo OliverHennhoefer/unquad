@@ -27,6 +27,18 @@ def calculate_p_val(scores: np.array, calibration_set: np.array) -> np.array:
     return (1.0 + sum_smaller) / (1.0 + len(calibration_set))
 
 
+@performance_conversion("scores", "calibration_set")
+def calculate_weighted_p_val(
+    scores: np.array, calibration_set: np.array, w_scores: np.array, w_calib: np.array
+) -> np.array:
+    numerator = (calibration_set >= scores[:, np.newaxis]) * 1.0
+    numerator *= w_calib
+    numerator = np.sum(numerator, axis=1)  # weighted sum
+    numerator += abs(scores * w_scores)
+    denominator = sum(w_calib) + abs(scores * w_scores)
+    return numerator / denominator
+
+
 @performance_conversion("scores")
 def get_decision(alpha: float, scores: np.array) -> [bool]:
     """

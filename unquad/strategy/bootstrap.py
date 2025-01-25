@@ -81,8 +81,14 @@ class Bootstrap(BaseStrategy):
         self._detector_list: [BaseDetector] = []
         self._calibration_set: [float] = []
 
+        self.calib_id: [int] = None
+
     def fit_calibrate(
-        self, x: Union[pd.DataFrame, np.ndarray], detector: BaseDetector, seed: int = 1
+        self,
+        x: Union[pd.DataFrame, np.ndarray],
+        detector: BaseDetector,
+        weighted: bool = False,
+        seed: int = 1,
     ) -> (list[BaseDetector], list[list]):
         self._configure(len(x))
 
@@ -166,3 +172,7 @@ class Bootstrap(BaseStrategy):
             self.n_bootstraps = calculate_n_bootstraps(
                 n_train=n, resampling_ratio=self.resampling_ratio, n_calib=self.n_calib
             )
+
+    @property
+    def calibration_ids(self):
+        return None

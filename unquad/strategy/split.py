@@ -43,15 +43,27 @@ class Split(BaseStrategy):
     def __init__(self, calib_size: float | int = 0.1) -> None:
         super().__init__()
         self.calib_size: float | int = calib_size
+        self.calib_id: [int] = None
 
     def fit_calibrate(
-        self, x: Union[pd.DataFrame, np.ndarray], detector: BaseDetector, seed: int = 1
+        self,
+        x: Union[pd.DataFrame, np.ndarray],
+        detector: BaseDetector,
+        weighted: bool = False,
+        seed: int = 1,
     ) -> (list[BaseDetector], list[list]):
 
-        train, calib = train_test_split(
-            x, test_size=self.calib_size, shuffle=True, random_state=seed
+        x_id = np.arange(len(x))  # split by id
+        train_id, calib_id = train_test_split(
+            x_id, test_size=self.calib_size, shuffle=True, random_state=seed
         )
-        detector.fit(train)
-        calibration_set = detector.decision_function(calib)
 
+        detector.fit(x[train_id])
+        calibration_set = detector.decision_function(x[calib_id])
+
+        self.calib_id = calib_id if weighted else None
         return [detector], calibration_set
+
+    @property
+    def calibration_ids(self):
+        return self.calib_id

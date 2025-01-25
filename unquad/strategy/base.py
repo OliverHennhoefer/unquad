@@ -37,13 +37,20 @@ class BaseStrategy(abc.ABC):
 
     def __init__(self, plus: bool = False):
         self.plus: bool = plus
+        self.calib_id: [int]
 
     @abc.abstractmethod
     def fit_calibrate(
         self,
         x: Union[pd.DataFrame, np.ndarray],
         detector: BaseDetector,
+        weighted: Optional[bool],
         seed: Optional[int],
     ):
 
         raise NotImplementedError("The _calibrate() method must be implemented.")
+
+    @property
+    @abc.abstractmethod
+    def calibration_ids(self):
+        pass
