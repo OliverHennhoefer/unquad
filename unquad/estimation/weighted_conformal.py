@@ -22,11 +22,15 @@ from unquad.utils.statistical import get_decision, calculate_weighted_p_val
 
 class WeightedConformalDetector:
     """
-    Conformal anomaly detector using a specified detector and strategy.
+    Weighted Conformal anomaly detector using a specified detector and strategy.
 
     This class provides functionality to fit and predict using a conformal anomaly detection model.
     It uses an underlying detector model and a strategy for calibration, and applies statistical
     methods for anomaly detection, adjusting for multiple hypotheses as needed.
+
+    The implementation is described in the publication
+    "Model-free selective inference under covariate shift via weighted conformal p-values" that
+    adapts the concepts of "Conformal Prediction Under Covariate Shift" to anomaly detection
 
     Attributes:
         detector (BaseDetector): The anomaly detection model to be used.
@@ -98,7 +102,6 @@ class WeightedConformalDetector:
         ]
 
         w_cal, w_x = self._compute_weights(x)
-
         estimates = aggregate(self.config.aggregation, scores_list)
         p_val = calculate_weighted_p_val(estimates, self.calibration_set, w_x, w_cal)
         p_val_adj = multiplicity_correction(self.config.adjustment, p_val)

@@ -17,7 +17,7 @@ class Split(BaseStrategy):
     on the training set, and uses the calibration set to calibrate the model.
 
     Attributes:
-        calib_size (float | int): The proportion or absolute size of the data to be used for calibration.
+        _calib_size (float | int): The proportion or absolute size of the data to be used for calibration.
             If a float, it represents the proportion of the dataset to be used for calibration.
             If an integer, it represents the absolute number of samples to be used for calibration.
             Default is 0.1.
@@ -42,8 +42,8 @@ class Split(BaseStrategy):
 
     def __init__(self, calib_size: float | int = 0.1) -> None:
         super().__init__()
-        self.calib_size: float | int = calib_size
-        self.calib_id: [int] = None
+        self._calib_size: float | int = calib_size
+        self._calibration_ids: [int] = None
 
     def fit_calibrate(
         self,
@@ -53,17 +53,17 @@ class Split(BaseStrategy):
         seed: int = 1,
     ) -> (list[BaseDetector], list[list]):
 
-        x_id = np.arange(len(x))  # split by id
+        x_id = np.arange(len(x))
         train_id, calib_id = train_test_split(
-            x_id, test_size=self.calib_size, shuffle=True, random_state=seed
+            x_id, test_size=self._calib_size, shuffle=True, random_state=seed
         )
 
         detector.fit(x[train_id])
         calibration_set = detector.decision_function(x[calib_id])
 
-        self.calib_id = calib_id if weighted else None
+        self._calibration_ids = calib_id if weighted else None
         return [detector], calibration_set
 
     @property
     def calibration_ids(self):
-        return self.calib_id
+        return self._calibration_ids

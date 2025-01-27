@@ -16,7 +16,7 @@ class BaseStrategy(abc.ABC):
     while allowing customization through subclasses.
 
     Attributes:
-        plus (bool): A flag to indicate whether a specific adjustment (e.g., adding a constant)
+        _plus (bool): A flag to indicate whether a specific adjustment (e.g., adding a constant)
                      should be applied during calibration. Default is False.
 
     Methods:
@@ -36,8 +36,8 @@ class BaseStrategy(abc.ABC):
     """
 
     def __init__(self, plus: bool = False):
-        self.plus: bool = plus
-        self.calib_id: [int]
+        self._plus: bool = plus
+        self._calibration_ids: [int]
 
     @abc.abstractmethod
     def fit_calibrate(

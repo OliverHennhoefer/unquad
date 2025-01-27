@@ -21,8 +21,8 @@ class CrossValidation(BaseStrategy):
     without appending models during the process.
 
     Attributes:
-        k (int): The number of folds in the k-fold cross-validation.
-        plus (bool): A flag indicating whether to append models during calibration. Default is False.
+        _k (int): The number of folds in the k-fold cross-validation.
+        _plus (bool): A flag indicating whether to append models during calibration. Default is False.
         _detector_list (list): A list of trained anomaly detection models.
         _calibration_set (list): A list of calibration scores used for making decisions.
 
@@ -46,13 +46,13 @@ class CrossValidation(BaseStrategy):
 
     def __init__(self, k: int, plus: bool = False):
         super().__init__(plus)
-        self.k = k
-        self.plus: bool = plus
+        self._k: int = k
+        self._plus: bool = plus
 
         self._detector_list: [BaseDetector] = []
         self._calibration_set: [float] = []
 
-        self.calib_id: [int] = None
+        self._calibration_ids: [int] = []
 
     def fit_calibrate(
         self,
@@ -65,26 +65,27 @@ class CrossValidation(BaseStrategy):
         _detector = detector
 
         folds = KFold(
-            n_splits=self.k,
+            n_splits=self._k,
             shuffle=True,
             random_state=seed,
         )
 
         for i, (train_idx, calib_idx) in enumerate(
-            tqdm(folds.split(x), total=self.k, desc="Training", disable=False)
+            tqdm(folds.split(x), total=self._k, desc="Training", disable=False)
         ):
+            self._calibration_ids.extend(calib_idx.tolist())
 
             model = copy(_detector)
             model = set_params(model, seed=seed, random_iteration=True, iteration=i)
-            model.fit(x[train_idx, :])
+            model.fit(x[train_idx])
 
-            self._detector_list.append(deepcopy(model)) if self.plus else None
-            self._calibration_set.extend(model.decision_function(x[calib_idx, :]))
+            self._detector_list.append(deepcopy(model)) if self._plus else None
+            self._calibration_set.extend(model.decision_function(x[calib_idx]))
 
-        if not self.plus:
+        if not self._plus:
             model = copy(_detector)
             model = set_params(
-                model, seed=seed, random_iteration=True, iteration=(i + 1)
+                model, seed=seed, random_iteration=True, iteration=(i + 1)  # noqa
             )
             model.fit(x)
             self._detector_list.append(deepcopy(model))
@@ -93,4 +94,4 @@ class CrossValidation(BaseStrategy):
 
     @property
     def calibration_ids(self):
-        return None
+        return self._calibration_ids
