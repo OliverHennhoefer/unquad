@@ -2,12 +2,9 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build]
-include = ["unquad/data/datasets/*.parquet.gz"]
-
 [project]
 name = "unquad"
-version = "0.1.83"
+version = "0.1.85"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
