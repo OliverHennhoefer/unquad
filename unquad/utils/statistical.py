@@ -35,7 +35,7 @@ def calculate_weighted_p_val(
     numerator *= w_calib
     numerator = np.sum(numerator, axis=1)  # weighted sum
     numerator += abs(scores * w_scores)
-    denominator = sum(w_calib) + abs(scores * w_scores)
+    denominator = np.sum(w_calib) + abs(scores * w_scores)
     return numerator / denominator
 
 

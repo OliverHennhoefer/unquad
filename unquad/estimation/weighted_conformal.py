@@ -122,11 +122,11 @@ class WeightedConformalDetector:
         x = joint_labeled[:, :-1]
         y = joint_labeled[:, -1]
 
-        log_reg = LogisticRegression(random_state=self.config.seed)
-        log_reg.fit(x, y)
+        model = LogisticRegression(random_state=self.config.seed)
+        model.fit(x, y)
 
-        calib_prob = log_reg.predict_proba(calib_labeled[:, :-1])
-        tests_prob = log_reg.predict_proba(tests_labeled[:, :-1])
+        calib_prob = model.predict_proba(calib_labeled[:, :-1])
+        tests_prob = model.predict_proba(tests_labeled[:, :-1])
 
         w_calib = calib_prob[:, 1] / calib_prob[:, 0]
         w_tests = tests_prob[:, 1] / tests_prob[:, 0]
