@@ -1,6 +1,8 @@
 import os
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
 
@@ -122,7 +124,13 @@ class WeightedConformalDetector:
         x = joint_labeled[:, :-1]
         y = joint_labeled[:, -1]
 
-        model = LogisticRegression(random_state=self.config.seed)
+        model = make_pipeline(
+            StandardScaler(),
+            LogisticRegression(
+                max_iter=1_000, random_state=self.config.seed, verbose=0
+            ),
+            memory=None,
+        )
         model.fit(x, y)
 
         calib_prob = model.predict_proba(calib_labeled[:, :-1])

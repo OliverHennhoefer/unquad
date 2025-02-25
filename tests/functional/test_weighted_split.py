@@ -22,8 +22,8 @@ class TestCaseSplitConformalWeighted(unittest.TestCase):
         fdr = false_discovery_rate(y=y_test, y_hat=est)
         power = statistical_power(y=y_test, y_hat=est)
 
-        self.assertEqual(fdr, 0.107)
-        self.assertEqual(power, 0.893)
+        self.assertEqual(fdr, 0.118)
+        self.assertEqual(power, 0.882)
 
     def test_split_conformal_weighted_shuttle(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
@@ -38,8 +38,8 @@ class TestCaseSplitConformalWeighted(unittest.TestCase):
         fdr = false_discovery_rate(y=y_test, y_hat=est)
         power = statistical_power(y=y_test, y_hat=est)
 
-        self.assertEqual(fdr, 0.203)
-        self.assertEqual(power, 0.797)
+        self.assertEqual(fdr, 0.19)
+        self.assertEqual(power, 0.81)
 
 
 if __name__ == "__main__":

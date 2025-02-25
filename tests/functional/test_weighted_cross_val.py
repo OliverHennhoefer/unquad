@@ -22,8 +22,8 @@ class TestCaseSplitConformalWeighted(unittest.TestCase):
         fdr = false_discovery_rate(y=y_test, y_hat=est)
         power = statistical_power(y=y_test, y_hat=est)
 
-        self.assertEqual(fdr, 0.078)
-        self.assertEqual(power, 0.922)
+        self.assertEqual(fdr, 0.0)
+        self.assertEqual(power, 1.0)
 
     def test_cross_val_conformal_plus_weighted(self):
         x_train, x_test, y_test = load_fraud(setup=True)
@@ -39,8 +39,8 @@ class TestCaseSplitConformalWeighted(unittest.TestCase):
         fdr = false_discovery_rate(y=y_test, y_hat=est)
         power = statistical_power(y=y_test, y_hat=est)
 
-        self.assertEqual(fdr, 0.11)
-        self.assertEqual(power, 0.89)
+        self.assertEqual(fdr, 0.0)
+        self.assertEqual(power, 1.0)
 
 
 if __name__ == "__main__":
