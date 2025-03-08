@@ -127,7 +127,10 @@ class WeightedConformalDetector:
         model = make_pipeline(
             StandardScaler(),
             LogisticRegression(
-                max_iter=1_000, random_state=self.config.seed, verbose=0
+                max_iter=1_000,
+                random_state=self.config.seed,
+                verbose=0,
+                class_weight="balanced",
             ),
             memory=None,
         )

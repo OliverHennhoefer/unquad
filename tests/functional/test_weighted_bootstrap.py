@@ -43,8 +43,8 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
         power = statistical_power(y=y_test, y_hat=est)
 
         self.assertEqual(len(wce.calibration_set), 3419)
-        self.assertEqual(fdr, 0.189)
-        self.assertEqual(power, 0.811)
+        self.assertEqual(fdr, 0.154)
+        self.assertEqual(power, 0.846)
 
     def test_bootstrap_conformal_compute_resampling_ratio_weighted(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
