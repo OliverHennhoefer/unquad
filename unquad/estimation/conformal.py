@@ -5,7 +5,7 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # noqa: E402
 import numpy as np
 import pandas as pd
 
-from typing import Union
+from typing import Union, Literal
 from pyod.models.base import BaseDetector
 from tqdm import tqdm
 
@@ -46,15 +46,18 @@ class ConformalDetector:
             Returns:
                 None
 
-        predict(x, raw=False):
-            Predicts anomaly scores and decisions for the given data.
+        predict(x, output="decision"):
+            Predicts anomaly status based on the specified output type.
 
             Args:
                 x (Union[pd.DataFrame, np.ndarray]): The data to make predictions on.
-                raw (bool): If True, returns raw p-values; otherwise, returns the final anomaly decisions.
+                output (Literal["decision", "p-value", "score"]): Specifies the output format. Defaults to "decision".
+                    - "decision": Returns binary anomaly decisions based on adjusted p-values and alpha.
+                    - "p-value": Returns the raw p-values.
+                    - "score": Returns the aggregated anomaly scores (estimates).
 
             Returns:
-                Union[np.ndarray, bool]: Either raw p-values or binary anomaly decisions.
+                np.ndarray: An array containing the requested output (decisions, p-values, or scores).
     """
 
     def __init__(
@@ -79,7 +82,11 @@ class ConformalDetector:
         )
 
     @ensure_numpy_array
-    def predict(self, x: Union[pd.DataFrame, np.ndarray], raw=False):
+    def predict(
+        self,
+        x: Union[pd.DataFrame, np.ndarray],
+        output: Literal["decision", "p-value", "score"] = "decision",
+    ):
 
         scores_list = [
             model.decision_function(x)
@@ -95,4 +102,9 @@ class ConformalDetector:
         p_val = calculate_p_val(estimates, self.calibration_set)
         p_val_adj = multiplicity_correction(self.config.adjustment, p_val)
 
-        return p_val if raw else get_decision(self.config.alpha, p_val_adj)
+        if output == "score":
+            return estimates
+        elif output == "p-value":
+            return p_val
+        else:  # Default case is "decision"
+            return get_decision(self.config.alpha, p_val_adj)
