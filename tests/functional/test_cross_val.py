@@ -23,7 +23,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         power = statistical_power(y=y_test, y_hat=est)
 
         self.assertEqual(fdr, 0.115)
-        self.assertEqual(power, 0.885)
+        self.assertEqual(power, 0.77)
 
     def test_cross_val_conformal_plus(self):
         x_train, x_test, y_test = load_fraud(setup=True)
@@ -40,7 +40,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         power = statistical_power(y=y_test, y_hat=est)
 
         self.assertEqual(fdr, 0.141)
-        self.assertEqual(power, 0.859)
+        self.assertEqual(power, 0.79)
 
 
 if __name__ == "__main__":

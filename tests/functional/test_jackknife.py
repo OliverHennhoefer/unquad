@@ -22,7 +22,7 @@ class TestCaseJackknifeConformal(unittest.TestCase):
         power = statistical_power(y=y_test, y_hat=est)
 
         self.assertEqual(fdr, 0.222)
-        self.assertEqual(power, 0.778)
+        self.assertEqual(power, 1.0)
 
 
 if __name__ == "__main__":

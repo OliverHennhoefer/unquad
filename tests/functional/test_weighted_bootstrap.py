@@ -26,7 +26,7 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
 
         self.assertEqual(len(wce.calibration_set), 1_000)
         self.assertEqual(fdr, 0.067)
-        self.assertEqual(power, 0.933)
+        self.assertEqual(power, 0.98)
 
     def test_bootstrap_conformal_compute_n_calib_weighted(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
@@ -44,7 +44,7 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
 
         self.assertEqual(len(wce.calibration_set), 3419)
         self.assertEqual(fdr, 0.154)
-        self.assertEqual(power, 0.846)
+        self.assertEqual(power, 0.99)
 
     def test_bootstrap_conformal_compute_resampling_ratio_weighted(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
@@ -62,7 +62,7 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
 
         self.assertEqual(len(wce.calibration_set), 1000)
         self.assertEqual(fdr, 0.067)
-        self.assertEqual(power, 0.933)
+        self.assertEqual(power, 0.98)
 
 
 if __name__ == "__main__":
