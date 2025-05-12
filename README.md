@@ -106,6 +106,51 @@ Empirical FDR: 0.067
 Empirical Power: 0.933
 ```
 
+### Citation
+
+If you find this repository useful for your research, please consider citing these papers:
+
+```text
+@INPROCEEDINGS {Hennhofer2024,
+author = { Hennhofer, Oliver and Preisach, Christine },
+booktitle = { 2024 IEEE International Conference on Knowledge Graph (ICKG) },
+title = {{ Leave-One-Out-, Bootstrap- and Cross-Conformal Anomaly Detectors }},
+year = {2024},
+volume = {},
+ISSN = {},
+pages = {110-119},
+doi = {10.1109/ICKG63256.2024.00022},
+url = {https://doi.ieeecomputersociety.org/10.1109/ICKG63256.2024.00022},
+publisher = {IEEE Computer Society},
+address = {Los Alamitos, CA, USA},
+month =Dec}
+```
+
+```text
+@article{Bates2023,
+  title = {Testing for outliers with conformal p-values},
+  volume = {51},
+  ISSN = {0090-5364},
+  url = {http://dx.doi.org/10.1214/22-AOS2244},
+  DOI = {10.1214/22-aos2244},
+  number = {1},
+  journal = {The Annals of Statistics},
+  publisher = {Institute of Mathematical Statistics},
+  author = {Bates,  Stephen and Candès,  Emmanuel and Lei,  Lihua and Romano,  Yaniv and Sesia,  Matteo},
+  year = {2023},
+  month = feb 
+}
+```
+
+```text
+@inproceedings{Jin2023,
+  title={Model-free selective inference under covariate shift via weighted conformal p-values},
+  author={Ying Jin and Emmanuel J. Cand{\`e}s},
+  year={2023},
+  url={https://api.semanticscholar.org/CorpusID:259950903}
+}
+```
+
 ### Supported Estimators
 
 The package only supports anomaly estimators that are suitable for unsupervised one-class classification. As respective
