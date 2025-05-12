@@ -27,6 +27,7 @@ These **statistically valid** _p_-values enable error control through methods li
 
 Using the default behavior of `ConformalDetector()` with default `DetectorConfig()`.
 
+
 ```python
 from pyod.models.gmm import GMM
 
@@ -110,6 +111,7 @@ Empirical Power: 0.933
 
 If you find this repository useful for your research, please consider citing these papers:
 
+Resampling-based Conformal Anomaly Detectors:
 ```text
 @INPROCEEDINGS {Hennhofer2024,
 author = { Hennhofer, Oliver and Preisach, Christine },
@@ -126,6 +128,7 @@ address = {Los Alamitos, CA, USA},
 month =Dec}
 ```
 
+Statistical Validity of Conformal p-Values:
 ```text
 @article{Bates2023,
   title = {Testing for outliers with conformal p-values},
@@ -141,7 +144,7 @@ month =Dec}
   month = feb 
 }
 ```
-
+Weighted Conformal p-Values:
 ```text
 @inproceedings{Jin2023,
   title={Model-free selective inference under covariate shift via weighted conformal p-values},
