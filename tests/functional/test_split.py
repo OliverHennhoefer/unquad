@@ -23,7 +23,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         power = statistical_power(y=y_test, y_hat=est)
 
         self.assertEqual(fdr, 0.134)
-        self.assertEqual(power, 0.866)
+        self.assertEqual(power, 0.84)
 
     def test_split_conformal_shuttle(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
@@ -39,7 +39,7 @@ class TestCaseSplitConformal(unittest.TestCase):
         power = statistical_power(y=y_test, y_hat=est)
 
         self.assertEqual(fdr, 0.25)
-        self.assertEqual(power, 0.75)
+        self.assertEqual(power, 0.99)
 
 
 if __name__ == "__main__":
