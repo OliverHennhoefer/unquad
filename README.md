@@ -53,7 +53,7 @@ print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
 Output:
 ```text
 Empirical FDR: 0.108
-Empirical Power: 0.892
+Empirical Power: 0.99
 ```
 
 The behavior can be customized by changing the `DetectorConfig()`:
@@ -103,7 +103,7 @@ print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
 Output:
 ```text
 Empirical FDR: 0.067
-Empirical Power: 0.933
+Empirical Power: 0.98
 ```
 
 ### Supported Estimators
