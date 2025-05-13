@@ -16,16 +16,21 @@ class Bootstrap(BaseStrategy):
     """
     Bootstrap conformal anomaly detection strategy.
 
-    This class implements a conformal anomaly detection strategy based on bootstrap resampling.
-    It trains multiple anomaly detection models on resampled data and calibrates them using a calibration set.
-    The strategy allows flexibility in the number of bootstraps, resampling ratio, and calibration set size.
+    Implements a conformal strategy based on bootstrap resampling.
+    It trains multiple detectors on resampled data and calibrates them using
+    a calibration set.
+    The strategy allows flexibility in the number of bootstraps,
+    resampling ratio, and calibration set size.
 
     Attributes:
-        _resampling_ratio (float, optional): The ratio of the training set size to the total dataset size
-            for each bootstrap sample. Default is None.
-        _n_bootstraps (int, optional): The number of bootstrap samples (models) to train. Default is None.
-        _n_calib (int, optional): The number of calibration points to sample from the calibration set. Default is None.
-        _plus (bool): A flag indicating whether to append models during calibration. Default is False.
+        _resampling_ratio (float, optional): The ratio of the training set size to the
+        total dataset size for each bootstrap sample. Default is None.
+        _n_bootstraps (int, optional): The number of bootstrap samples (models)
+        to train. Default is None.
+        _n_calib (int, optional): The number of calibration points to sample
+        from the calibration set. Default is None.
+        _plus (bool): A flag indicating whether to append models during calibration.
+        Default is False.
         _detector_list (list): A list of trained anomaly detection models.
         _calibration_set (list): A list of calibration scores used for making decisions.
 
@@ -37,7 +42,7 @@ class Bootstrap(BaseStrategy):
             Fits and calibrates the anomaly detection model using bootstrap resampling.
 
             Args:
-                x (Union[pd.DataFrame, np.ndarray]): The data used to train and calibrate the detector.
+                x (Union[pd.DataFrame, np.ndarray]): Data to train/calibrate a detector.
                 detector (BaseDetector): The base anomaly detection model to be used.
                 seed (int, optional): The random seed for reproducibility. Default is 1.
 
@@ -47,11 +52,12 @@ class Bootstrap(BaseStrategy):
                     - list[list]: A list of calibration scores.
 
         _sanity_check():
-            Performs a sanity check to ensure exactly two of the parameters (resampling_ratio,
-            n_bootstraps, n_calib) are defined.
+            Performs a sanity check to ensure exactly two of the parameters
+            (resampling_ratio, n_bootstraps, n_calib) are defined.
 
         _configure(n):
-            Configures the parameters for bootstrap resampling and calibration based on the provided data size.
+            Configures the parameters for bootstrap resampling and calibration
+            based on the provided data size.
 
             Args:
                 n (int): The number of samples in the dataset.
@@ -61,8 +67,8 @@ class Bootstrap(BaseStrategy):
                     n_bootstraps, and n_calib.
 
             Raises:
-                ValueError: If not exactly two parameters among resampling_ratio, n_bootstraps, and
-                            n_calib are defined.
+                ValueError: If not exactly two parameters among resampling_ratio,
+                n_bootstraps, and n_calib are defined.
     """
 
     def __init__(
@@ -141,7 +147,8 @@ class Bootstrap(BaseStrategy):
         )
         if num_defined != 2:
             raise ValueError(
-                "Exactly two parameters (resampling_ratio, n_bootstraps, n_calib) must be defined."
+                "Exactly two parameters (resampling_ratio, n_bootstraps, n_calib) "
+                "must be defined."
             )
 
     def _configure(self, n: int) -> (float, int, int):

@@ -12,31 +12,34 @@ class Split(BaseStrategy):
     """
     Split conformal anomaly detection strategy.
 
-    This class implements a conformal anomaly detection strategy using a split approach.
-    It splits the data into a training set and a calibration set, trains an anomaly detection model
+    Implements a conformal anomaly detection strategy using a split approach.
+    ISplits data into a training and a calibration set, trains a detector
     on the training set, and uses the calibration set to calibrate the model.
 
     Attributes:
-        _calib_size (float | int): The proportion or absolute size of the data to be used for calibration.
-            If a float, it represents the proportion of the dataset to be used for calibration.
-            If an integer, it represents the absolute number of samples to be used for calibration.
-            Default is 0.1.
+        _calib_size (float | int): The proportion or absolute size of the data
+        to be used for calibration.
+            If a float, it represents the proportion of the dataset
+            to be used for calibration.
+            If an integer, it represents the absolute number of samples
+            to be used for calibration. Default is 0.1.
 
     Methods:
         __init__(calib_size=0.1):
-            Initializes the SplitConformal object with the specified calibration set size.
+            Initializes SplitConformal object with the specified calibration set size.
 
         fit_calibrate(x, detector, seed=1):
             Fits and calibrates the anomaly detection model using a train-test split.
 
             Args:
-                x (Union[pd.DataFrame, np.ndarray]): The data used to train and calibrate the detector.
+                x (Union[pd.DataFrame, np.ndarray]): The data used to train and
+                calibrate the detector.
                 detector (BaseDetector): The base anomaly detection model to be used.
                 seed (int, optional): The random seed for reproducibility. Default is 1.
 
             Returns:
                 tuple: A tuple containing:
-                    - list[BaseDetector]: A list containing the trained anomaly detection model.
+                    - list[BaseDetector]: A list containing the trained detectors.
                     - list[list]: A list of calibration scores for the calibration set.
     """
 

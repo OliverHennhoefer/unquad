@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from typing import Union, Optional
+from typing import Union
 from pyod.models.base import BaseDetector
 
 from unquad.strategy.base import BaseStrategy
@@ -12,24 +12,25 @@ class Jackknife(BaseStrategy):
     """
     Jackknife conformal anomaly detection strategy.
 
-    This class implements a conformal anomaly detection strategy using the jackknife resampling method.
-    It leverages the `CrossValidationConformal` strategy with k set to the size of the dataset,
-    effectively training a separate model for each sample (leave-one-out approach) and calibrating
+    Implements a conformal strategy using the jackknife resampling method.
+    Basically `CrossValidationConformal` with k set to the size of the dataset,
+    effectively training a separate model for each sample (loo) and calibrating
     the models based on the left-out sample.
 
     Attributes:
-        _plus (bool): A flag indicating whether to append models during calibration. Default is False.
-        _strategy (BaseStrategy): An instance of the `CrossValidationConformal` strategy with k=1.
+        _plus (bool): A flag indicating whether to append models during calibration.
+        Default is False.
+        _strategy (BaseStrategy): `CrossValidationConformal` strategy with k=1.
 
     Methods:
         __init__(plus=False):
             Initializes the JackknifeConformal object with the specified `plus` flag.
 
         fit_calibrate(x, detector, seed=None):
-            Fits and calibrates the anomaly detection model using the jackknife resampling method.
+            Fits and calibrates the detector using the jackknife resampling method.
 
             Args:
-                x (Union[pd.DataFrame, np.ndarray]): The data used to train and calibrate the detector.
+                x (Union[pd.DataFrame, np.ndarray]): Data used to train/calibrate.
                 detector (BaseDetector): The base anomaly detection model to be used.
                 seed (Optional[int]): An optional random seed for reproducibility.
 

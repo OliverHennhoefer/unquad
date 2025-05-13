@@ -13,15 +13,16 @@ def calculate_p_val(scores: np.array, calibration_set: np.array) -> np.array:
     calibration scores greater than or equal to the given scores.
 
     Args:
-        scores (np.array): The array of test scores for which p-values need to be calculated.
-        calibration_set (np.array): The array of calibration scores used to compute p-values.
+        scores (np.array): Test scores for which p-values need to be calculated.
+        calibration_set (np.array): Calibration scores used to compute p-values.
 
     Returns:
         np.array: The array of p-values corresponding to the input scores.
 
     Notes:
         The p-value for each score is calculated using the formula:
-            p_val = (1 + number of calibration_set values >= score) / (1 + number of calibration_set values)
+            p_val = (1 + number of calibration_set values >= score) /
+            (1 + number of calibration_set values)
     """
     sum_smaller = np.sum(calibration_set >= scores[:, np.newaxis], axis=1)
     return (1.0 + sum_smaller) / (1.0 + len(calibration_set))

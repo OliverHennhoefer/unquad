@@ -5,7 +5,8 @@ class Adjustment(Enum):
     """
     Enumerates adjustment procedures for False Discovery Rate (FDR) control.
 
-    This enum represents different methods for adjusting p-values when performing multiple hypothesis tests.
+    This enum represents different methods for adjusting p-values
+    when performing multiple hypothesis tests.
 
     Attributes:
         BH (str): The Benjamini-Hochberg procedure.
@@ -22,8 +23,8 @@ class Aggregation(Enum):
     """
     Enumerates aggregation functions for ensemble methods.
 
-    This enum defines different aggregation strategies for combining multiple model outputs,
-    typically used in ensemble methods.
+    This enum defines different aggregation strategies for combining multiple
+    model outputs, typically used in ensemble methods.
 
     Attributes:
         MEAN (str): The mean aggregation method.

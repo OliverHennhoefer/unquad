@@ -15,14 +15,16 @@ class CrossValidation(BaseStrategy):
     """
     Cross-validation conformal anomaly detection strategy.
 
-    This class implements a conformal anomaly detection strategy using k-fold cross-validation.
-    It trains multiple anomaly detection models on different training folds and calibrates them
-    using the corresponding calibration set. The strategy supports model calibration with or
-    without appending models during the process.
+    Implements a conformal strategy using k-fold cross-validation.
+    It trains multiple detectors on different training folds and calibrates them
+    using the corresponding calibration set.
+    The strategy supports model calibration with or without appending models
+    during the process.
 
     Attributes:
         _k (int): The number of folds in the k-fold cross-validation.
-        _plus (bool): A flag indicating whether to append models during calibration. Default is False.
+        _plus (bool): A flag indicating whether to append models during calibration.
+        Default is False.
         _detector_list (list): A list of trained anomaly detection models.
         _calibration_set (list): A list of calibration scores used for making decisions.
 
@@ -31,10 +33,10 @@ class CrossValidation(BaseStrategy):
             Initializes the CrossValidationConformal object with specified parameters.
 
         fit_calibrate(x, detector, seed=1):
-            Fits and calibrates the anomaly detection model using k-fold cross-validation.
+            Fits and calibrates the detector using k-fold cross-validation.
 
             Args:
-                x (Union[pd.DataFrame, np.ndarray]): The data used to train and calibrate the detector.
+                x (Union[pd.DataFrame, np.ndarray]): Data to train/calibrate a detector.
                 detector (BaseDetector): The base anomaly detection model to be used.
                 seed (int, optional): The random seed for reproducibility. Default is 1.
 

@@ -14,8 +14,10 @@ def aggregate(method: Aggregation, scores: np.array) -> list[float]:
 
     Args:
         method (Aggregation): The aggregation method to use. Must be one of the
-                               methods defined in the Aggregation enum (e.g., MEAN, MEDIAN, MINIMUM, MAXIMUM).
-        scores (np.array): A 2D NumPy array where each row represents an individual model's anomaly scores.
+                               methods defined in the Aggregation enum
+                               (e.g., MEAN, MEDIAN, MINIMUM, MAXIMUM).
+        scores (np.array): A 2D NumPy array where each row represents an
+        individual model's anomaly scores.
 
     Returns:
         list[float]: The aggregated anomaly scores as a list.

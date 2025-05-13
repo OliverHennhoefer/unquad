@@ -3,33 +3,37 @@ import numpy as np
 from unquad.utils.decorator import performance_conversion
 
 
-@performance_conversion("y", "y_hat") # Keep decorator if needed
+@performance_conversion("y", "y_hat")  # Keep decorator if needed
 def false_discovery_rate(y: np.array, y_hat: np.array, dec: int = 3) -> float:
     """
     Calculate the False Discovery Rate (FDR) for binary classification.
 
-    The FDR is the proportion of false positives among all positive predictions made by the model.
+    The FDR is the proportion of false positives among all positive predictions.
     FDR = FP / (FP + TP)
 
     Args:
-        y (np.array): The true labels, where 1 indicates positive/anomaly and 0 indicates negative/normal.
-        y_hat (np.array): The predicted labels, where 1 indicates positive/anomaly and 0 indicates negative/normal.
-        dec (int, optional): The number of decimal places to round the result. Default is 3.
+        y (np.array): True labels, where 1 indicates positive/anomaly
+        and 0 indicates negative/normal.
+        y_hat (np.array): Predicted labels, where 1 indicates positive/anomaly
+        nd 0 indicates negative/normal.
+        dec (int, optional): The number of decimal places to round the result.
+        Default is 3.
 
     Returns:
-        float: The calculated False Discovery Rate, rounded to the specified decimal places.
+        float: The calculated False Discovery Rate,
+        rounded to the specified decimal places.
     """
     # Ensure boolean or 0/1 int arrays for logical operations
-    y_true = (y == 1)
-    y_pred = (y_hat == 1)
+    y_true = y == 1
+    y_pred = y_hat == 1
 
     true_positives = np.sum(y_pred & y_true)
-    false_positives = np.sum(y_pred & ~y_true) # Use logical NOT on boolean array
+    false_positives = np.sum(y_pred & ~y_true)  # Use logical NOT on boolean array
 
     total_predicted_positives = true_positives + false_positives
 
     if total_predicted_positives == 0:
-        fdr = 0.0 # Or np.nan, depending on desired behavior when no positives are predicted
+        fdr = 0.0
     else:
         fdr = false_positives / total_predicted_positives
 

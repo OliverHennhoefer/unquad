@@ -9,14 +9,16 @@ from unquad.utils.enums import Adjustment
 @performance_conversion("scores")
 def multiplicity_correction(method: Adjustment, scores: np.array) -> float:
     """
-    Apply multiplicity correction to the given scores using the specified adjustment method.
+    Multiplicity correction to the given scores using the specified adjustment method.
 
     The function adjusts p-values (or scores) for multiple comparisons using
-    either the Benjamini-Hochberg or Benjamini-Yekutieli procedure, or it returns the scores unadjusted.
+    either the Benjamini-Hochberg or Benjamini-Yekutieli procedure,
+    or it returns the scores unadjusted.
 
     Args:
         method (Adjustment): The adjustment method to apply. It can be one of
-                              Adjustment.NONE, Adjustment.BENJAMINI_HOCHBERG, or Adjustment.BENJAMINI_YEKUTIELI.
+                              Adjustment.NONE, Adjustment.BENJAMINI_HOCHBERG,
+                              or Adjustment.BENJAMINI_YEKUTIELI.
         scores (np.array): The array of p-values or scores to adjust.
 
     Returns:

@@ -26,30 +26,32 @@ class WeightedConformalDetector:
     """
     Weighted Conformal anomaly detector using a specified detector and strategy.
 
-    This class provides functionality to fit and predict using a conformal anomaly detection model.
-    It uses an underlying detector model and a strategy for calibration, and applies statistical
-    methods for anomaly detection, adjusting for multiple hypotheses as needed.
+    Provides functionality to fit and predict using a conformal anomaly detector.
+    It uses an underlying detector and a strategy for calibration, and applies
+    statistical methods for anomaly detection, adjusting for multiplicity.
 
-    The implementation is described in the publication
-    "Model-free selective inference under covariate shift via weighted conformal p-values" that
-    adapts the concepts of "Conformal Prediction Under Covariate Shift" to anomaly detection
+    The implementation is described in the publication "Model-free selective inference
+    under covariate shift via weighted conformal p-values" that adapts the concepts of
+    "Conformal Prediction Under Covariate Shift" to anomaly detection
 
     Attributes:
         detector (BaseDetector): The anomaly detection model to be used.
         strategy (BaseStrategy): The strategy used to calibrate the detector.
-        config (DetectorConfig): Configuration parameters for the anomaly detection process.
-        detector_set (list): A list of trained anomaly detection models used for predictions.
+        config (DetectorConfig): Configuration parameters.
+        detector_set (list): A list of trained detectors used for predictions.
         calibration_set (list): A list of calibration values used to adjust predictions.
 
     Methods:
         __init__(detector, strategy, config=DetectorConfig()):
-            Initializes the ConformalDetector with a detector, strategy, and configuration.
+            Initializes the ConformalDetector with a detector,
+            strategy, and configuration.
 
         fit(x):
-            Fits the conformal anomaly detector model by calibrating it using the provided data.
+            Fits the conformal anomaly detector model
+            by calibrating it using the provided data.
 
             Args:
-                x (Union[pd.DataFrame, np.ndarray]): The training data to calibrate the model.
+                x (Union[pd.DataFrame, np.ndarray]): Data to calibrate the model.
 
             Returns:
                 None
@@ -59,13 +61,15 @@ class WeightedConformalDetector:
 
             Args:
                 x (Union[pd.DataFrame, np.ndarray]): The data to make predictions on.
-                output (Literal["decision", "p-value", "score"]): Specifies the output format. Defaults to "decision".
-                    - "decision": Returns binary anomaly decisions based on adjusted p-values and alpha.
+                output (Literal["decision", "p-value", "score"]): Output type.
+                Defaults to "decision".
+                    - "decision": Returns decisions based on adj. p-values and alpha.
                     - "p-value": Returns the raw p-values.
                     - "score": Returns the aggregated anomaly scores (estimates).
 
             Returns:
-                np.ndarray: An array containing the requested output (decisions, p-values, or scores).
+                np.ndarray: An array containing the requested output
+                (decisions, p-values, or scores).
     """
 
     def __init__(
@@ -94,8 +98,11 @@ class WeightedConformalDetector:
         self.calibration_samples = x[self.strategy.calibration_ids]
 
     @ensure_numpy_array
-    def predict(self, x: Union[pd.DataFrame, np.ndarray],
-                output: Literal["decision", "p-value", "score"] = "decision",):
+    def predict(
+        self,
+        x: Union[pd.DataFrame, np.ndarray],
+        output: Literal["decision", "p-value", "score"] = "decision",
+    ):
 
         scores_list = [
             model.decision_function(x)

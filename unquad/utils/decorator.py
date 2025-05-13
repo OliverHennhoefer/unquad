@@ -18,7 +18,8 @@ def performance_conversion(*arg_names):
         *arg_names (str): The names of the arguments to be converted to numpy arrays.
 
     Returns:
-        function: A wrapped function that performs the necessary conversions on arguments and return values.
+        function: A wrapped function that performs the necessary conversions
+        on arguments and return values.
     """
 
     def decorator(func):
@@ -64,10 +65,10 @@ def performance_conversion(*arg_names):
 
 def ensure_numpy_array(func: Callable) -> Callable:
     """
-    Decorator to ensure that the input data is a numpy array before calling the function.
+    Decorator to ensure that input data is a numpy array before calling the function.
 
-    This decorator checks if the input data `x` is a Pandas DataFrame and converts it to
-    a numpy array. If `x` is already a numpy array, it remains unchanged. The function is
+    This decorator checks if the input data x is a Pandas DataFrame and converts it to
+    a numpy array. If x is already a numpy array, it remains unchanged. The function is
     then called with the modified data.
 
     Args:

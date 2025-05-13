@@ -1,0 +1,21 @@
+# Auto detect text files and ensure they use LF line endings in the repo
+* text=auto eol=lf
+
+# Explicitly declare file types that should always have LF
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Declare files that should always have CRLF (less common)
+# *.bat text eol=crlf
+
+# Declare files that should be treated as binary (Git won't change line endings)
+*.png binary
+*.jpg binary

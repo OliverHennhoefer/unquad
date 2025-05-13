@@ -35,29 +35,30 @@ def set_params(
     iteration: int = None,
 ) -> BaseDetector:
     """
-    Imports and configures conformal anomaly detectors, while managing restricted models.
+    Imports/configures conformal anomaly detectors, while managing restricted models.
 
     Imports:
         - BaseDetector from pyod.models.base: The base class for all detectors.
         - Various specific detectors from pyod.models (CBLOF, COF, RGraph, etc.)
-        - ForbiddenModelError from unquad.utils.error.forbidden_model: Custom error raised
-          when attempting to use unsupported models.
+        - ForbiddenModelError from unquad.utils.error.forbidden_model: Custom error
+        raised when attempting to use unsupported models.
 
     Attributes:
         forbidden_model_list (list): List of models that are not supported for use.
-        tf (bool): Flag indicating whether specific models (ALAD, DeepSVDD, etc.) were successfully imported.
+        tf (bool): Flag indicating whether specific models were successfully imported.
 
     Functions:
         set_params(detector, seed, random_iteration=False, iteration=None):
-            Configures the provided detector by setting parameters such as contamination,
-            n_jobs, and random_state. Raises a ForbiddenModelError if the detector is in the
-            forbidden_model_list.
+            Configures the provided detector by setting parameters such as
+            contamination, n_jobs, and random_state. Raises a ForbiddenModelError
+            if the detector is in the forbidden_model_list.
 
         Args:
             detector (BaseDetector): The detector model to configure.
             seed (int): The random seed for reproducibility.
-            random_iteration (bool): If True, randomize the `random_state` based on the iteration.
-            iteration (int, optional): The current iteration for randomizing the `random_state`.
+            random_iteration (bool): If True, randomize the `random_state`
+            based on the iteration.
+            iteration (int, optional): The current iteration for setting `random_state`.
 
         Returns:
             BaseDetector: The configured detector with the updated parameters.
