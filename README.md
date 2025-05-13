@@ -1,7 +1,6 @@
 # *unquad*: Uncertainty-Quantified Anomaly Detection
 
 [![PyPI Downloads](https://static.pepy.tech/badge/unquad)](https://pepy.tech/projects/unquad) [![PyPI Downloads](https://static.pepy.tech/badge/unquad/month)](https://pepy.tech/projects/unquad) [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/unquad)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (see [Supported Estimators](#supported-estimators)) enabling
 **uncertainty-quantified anomaly detection** based on one-class classification and the principles of **conformal inference**.
