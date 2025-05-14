@@ -40,8 +40,7 @@ def performance_conversion(*arg_names: str) -> Callable:
                     except ValueError:
                         # Attempt to convert nested lists if direct conversion fails
                         return [
-                            np.array(v) if isinstance(v, list) else v
-                            for v in value
+                            np.array(v) if isinstance(v, list) else v for v in value
                         ]
                 return value
 

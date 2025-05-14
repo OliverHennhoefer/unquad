@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from typing import Union, List, Tuple, Optional # Added List, Tuple, Optional
+from typing import Union, List, Tuple, Optional  # Added List, Tuple, Optional
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import train_test_split
 
@@ -39,7 +39,7 @@ class Split(BaseStrategy):
                 in practice for `train_test_split`). If an int, it's the
                 absolute number of samples. Defaults to ``0.1`` (10%).
         """
-        super().__init__() # `plus` is not relevant for a single split
+        super().__init__()  # `plus` is not relevant for a single split
         self._calib_size: Union[float, int] = calib_size
         self._calibration_ids: Optional[List[int]] = None
 
@@ -85,10 +85,10 @@ class Split(BaseStrategy):
         calibration_set = detector.decision_function(x[calib_id])
 
         if weighted:
-            self._calibration_ids = calib_id.tolist() # Ensure it's a list
+            self._calibration_ids = calib_id.tolist()  # Ensure it's a list
         else:
             self._calibration_ids = None
-        return [detector], calibration_set.tolist() # Ensure list return
+        return [detector], calibration_set.tolist()  # Ensure list return
 
     @property
     def calibration_ids(self) -> Optional[List[int]]:

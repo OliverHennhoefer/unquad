@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
-from typing import Union, List, Tuple # Added List, Tuple
+from typing import Union, List, Tuple  # Added List, Tuple
 from copy import copy, deepcopy
 from pyod.models.base import BaseDetector
 from sklearn.model_selection import KFold
@@ -64,7 +64,7 @@ class CrossValidation(BaseStrategy):
         self,
         x: Union[pd.DataFrame, np.ndarray],
         detector: BaseDetector,
-        weighted: bool = False, # This argument is present but not used in current logic
+        weighted: bool = False,  # This argument is present but not used in current logic
         seed: int = 1,
     ) -> Tuple[List[BaseDetector], List[float]]:
         """Fits detector(s) and generates calibration scores using k-fold CV.
@@ -128,7 +128,10 @@ class CrossValidation(BaseStrategy):
         if not self._plus:
             model = copy(_detector)
             model = set_params(
-                model, seed=seed, random_iteration=True, iteration=(last_iteration_index + 1)
+                model,
+                seed=seed,
+                random_iteration=True,
+                iteration=(last_iteration_index + 1),
             )
             model.fit(x)
             self._detector_list.append(deepcopy(model))

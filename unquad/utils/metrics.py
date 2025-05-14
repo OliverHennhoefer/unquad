@@ -4,9 +4,7 @@ from unquad.utils.decorator import performance_conversion
 
 
 @performance_conversion("y", "y_hat")
-def false_discovery_rate(
-    y: np.ndarray, y_hat: np.ndarray, dec: int = 3
-) -> float:
+def false_discovery_rate(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> float:
     """Calculates the False Discovery Rate (FDR) for binary classification.
 
     The False Discovery Rate is the proportion of false positives among all
@@ -45,9 +43,7 @@ def false_discovery_rate(
 
 
 @performance_conversion("y", "y_hat")
-def statistical_power(
-    y: np.ndarray, y_hat: np.ndarray, dec: int = 3
-) -> float:
+def statistical_power(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> float:
     """Calculates statistical power (recall or true positive rate).
 
     Statistical power, also known as recall or true positive rate (TPR),

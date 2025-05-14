@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from typing import Union, List, Tuple, Optional # Added List, Tuple, Optional
+from typing import Union, List, Tuple, Optional  # Added List, Tuple, Optional
 from pyod.models.base import BaseDetector
 
 from unquad.strategy.base import BaseStrategy
@@ -59,7 +59,7 @@ class Jackknife(BaseStrategy):
         self,
         x: Union[pd.DataFrame, np.ndarray],
         detector: BaseDetector,
-        weighted: bool = False, # Parameter passed to internal strategy
+        weighted: bool = False,  # Parameter passed to internal strategy
         seed: int = 1,
     ) -> Tuple[List[BaseDetector], List[float]]:
         """Fits detector(s) and gets calibration scores using jackknife.

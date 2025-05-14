@@ -143,7 +143,9 @@ class Bootstrap(BaseStrategy):
         )
 
         n_folds = folds.get_n_splits()
-        last_iteration_index = 0 # To ensure unique iteration for final model if not _plus
+        last_iteration_index = (
+            0  # To ensure unique iteration for final model if not _plus
+        )
         for i, (train_idx, calib_idx) in enumerate(
             tqdm(folds.split(x), total=n_folds, desc="Training", disable=False)
         ):
@@ -161,7 +163,10 @@ class Bootstrap(BaseStrategy):
         if not self._plus:
             model = copy(_detector)
             model = set_params(
-                model, seed=seed, random_iteration=True, iteration=(last_iteration_index + 1)
+                model,
+                seed=seed,
+                random_iteration=True,
+                iteration=(last_iteration_index + 1),
             )
             model.fit(x)
             self._detector_list.append(deepcopy(model))
@@ -172,12 +177,12 @@ class Bootstrap(BaseStrategy):
             )
             self._calibration_set = [self._calibration_set[i] for i in ids]
             if weighted:
-                 self._calibration_ids = [self._calibration_ids[i] for i in ids]
+                self._calibration_ids = [self._calibration_ids[i] for i in ids]
             else:
-                 # If not weighted, _calibration_ids might become inconsistent
-                 # with a subsampled _calibration_set. Consider if this is intended.
-                 # For now, it remains the full list of IDs if not weighted.
-                 pass
+                # If not weighted, _calibration_ids might become inconsistent
+                # with a subsampled _calibration_set. Consider if this is intended.
+                # For now, it remains the full list of IDs if not weighted.
+                pass
 
         return self._detector_list, self._calibration_set
 
@@ -254,8 +259,8 @@ class Bootstrap(BaseStrategy):
         ) -> float:
             if num_bootstraps < 1:
                 raise ValueError("Number of bootstraps must be at least 1.")
-            if n_data <= 0 or num_bootstraps * n_data == 0 :
-                 raise ValueError("Product n_data * num_bootstraps must be positive.")
+            if n_data <= 0 or num_bootstraps * n_data == 0:
+                raise ValueError("Product n_data * num_bootstraps must be positive.")
 
             val = 1.0 - (float(num_calib_target) / (num_bootstraps * n_data))
             if not (0 < val < 1):

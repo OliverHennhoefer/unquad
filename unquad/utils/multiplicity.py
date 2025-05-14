@@ -9,7 +9,7 @@ from unquad.utils.enums import Adjustment
 @performance_conversion("scores")
 def multiplicity_correction(
     method: Adjustment, scores: np.ndarray
-) -> list: # Adjusted return type based on actual behavior
+) -> list:  # Adjusted return type based on actual behavior
     """Applies multiplicity correction to scores using a specified method.
 
     This function processes an array of p-values (or scores from multiple tests)

@@ -8,6 +8,7 @@ It also disables TensorFlow OneDNN optimizations by default via an environment
 variable to ensure consistent numerical behavior across different CPU architectures,
 which can be important for reproducibility in some anomaly detection models.
 """
+
 import os
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -15,8 +16,8 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import numpy as np
 import pandas as pd
 
-from typing import Union, Literal, List # List imported for type hint clarity
-from pyod.models.base import BaseDetector as PyODBaseDetector # Alias for clarity
+from typing import Union, Literal, List  # List imported for type hint clarity
+from pyod.models.base import BaseDetector as PyODBaseDetector  # Alias for clarity
 from tqdm import tqdm
 
 from unquad.estimation.properties.configuration import DetectorConfig

@@ -1,7 +1,7 @@
 import abc
 import numpy as np
 import pandas as pd
-from typing import Union, Optional, List # Corrected List import
+from typing import Union, Optional, List  # Corrected List import
 from pyod.models.base import BaseDetector
 
 
@@ -26,7 +26,7 @@ class BaseStrategy(abc.ABC):
                 modify their calibration behavior. Defaults to ``False``.
         """
         self._plus: bool = plus
-        self._calibration_ids: List[int] # Corrected type hint
+        self._calibration_ids: List[int]  # Corrected type hint
 
     @abc.abstractmethod
     def fit_calibrate(
@@ -35,7 +35,9 @@ class BaseStrategy(abc.ABC):
         detector: BaseDetector,
         weighted: Optional[bool],
         seed: Optional[int],
-    ) -> None: # Assuming abstract method primarily for side effects or subclass defined returns
+    ) -> (
+        None
+    ):  # Assuming abstract method primarily for side effects or subclass defined returns
         """Fits the detector and performs calibration.
 
         This abstract method must be implemented by subclasses to define the

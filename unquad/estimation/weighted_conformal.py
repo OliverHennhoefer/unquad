@@ -9,7 +9,7 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import numpy as np
 import pandas as pd
 
-from typing import Union, Literal, List, Tuple # Added List, Tuple
+from typing import Union, Literal, List, Tuple  # Added List, Tuple
 from pyod.models.base import BaseDetector
 from tqdm import tqdm
 
@@ -77,7 +77,7 @@ class WeightedConformalDetector:
 
         self.detector_set: List[BaseDetector] = []
         self.calibration_set: List[float] = []
-        self.calibration_samples: np.ndarray = np.array([]) # Initialize as empty
+        self.calibration_samples: np.ndarray = np.array([])  # Initialize as empty
 
     @ensure_numpy_array
     def fit(self, x: Union[pd.DataFrame, np.ndarray]) -> None:
@@ -98,13 +98,15 @@ class WeightedConformalDetector:
         self.detector_set, self.calibration_set = self.strategy.fit_calibrate(
             x=x, detector=self.detector, weighted=True, seed=self.config.seed
         )
-        if self.strategy.calibration_ids is not None and len(self.strategy.calibration_ids) > 0:
+        if (
+            self.strategy.calibration_ids is not None
+            and len(self.strategy.calibration_ids) > 0
+        ):
             self.calibration_samples = x[self.strategy.calibration_ids]
         else:
             # Handle case where calibration_ids might be empty or None
             # This might happen if the strategy doesn't yield IDs or x is too small
             self.calibration_samples = np.array([])
-
 
     @ensure_numpy_array
     def predict(
@@ -152,9 +154,14 @@ class WeightedConformalDetector:
         ]
 
         w_cal, w_x = self._compute_weights(x)
-        estimates = aggregate(self.config.aggregation, np.array(scores_list)) # Ensure scores_list is array for aggregate
+        estimates = aggregate(
+            self.config.aggregation, np.array(scores_list)
+        )  # Ensure scores_list is array for aggregate
         p_val = calculate_weighted_p_val(
-            np.array(estimates), np.array(self.calibration_set), np.array(w_x), np.array(w_cal)
+            np.array(estimates),
+            np.array(self.calibration_set),
+            np.array(w_x),
+            np.array(w_cal),
         )
         p_val_adj = multiplicity_correction(self.config.adjustment, p_val)
 
@@ -231,8 +238,12 @@ class WeightedConformalDetector:
         # For calibration samples, weight is P(label=1 | z_calib) / P(label=0 | z_calib)
         # For test samples, weight is P(label=1 | z_test) / P(label=0 | z_test)
         # These are likelihood ratios p(z | test) / p(z | calib)
-        w_calib = calib_prob[:, 1] / (calib_prob[:, 0] + 1e-9) # Add epsilon for stability
-        w_tests = tests_prob[:, 1] / (tests_prob[:, 0] + 1e-9) # Add epsilon for stability
+        w_calib = calib_prob[:, 1] / (
+            calib_prob[:, 0] + 1e-9
+        )  # Add epsilon for stability
+        w_tests = tests_prob[:, 1] / (
+            tests_prob[:, 0] + 1e-9
+        )  # Add epsilon for stability
 
         clipped_w_calib = np.clip(w_calib, 0.35, 45.0)
         clipped_w_tests = np.clip(w_tests, 0.35, 45.0)
