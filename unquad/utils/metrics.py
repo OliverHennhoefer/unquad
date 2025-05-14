@@ -3,32 +3,36 @@ import numpy as np
 from unquad.utils.decorator import performance_conversion
 
 
-@performance_conversion("y", "y_hat")  # Keep decorator if needed
-def false_discovery_rate(y: np.array, y_hat: np.array, dec: int = 3) -> float:
-    """
-    Calculate the False Discovery Rate (FDR) for binary classification.
+@performance_conversion("y", "y_hat")
+def false_discovery_rate(
+    y: np.ndarray, y_hat: np.ndarray, dec: int = 3
+) -> float:
+    """Calculates the False Discovery Rate (FDR) for binary classification.
 
-    The FDR is the proportion of false positives among all positive predictions.
-    FDR = FP / (FP + TP)
+    The False Discovery Rate is the proportion of false positives among all
+    instances predicted as positive. It is calculated as:
+    FDR = FP / (FP + TP), where FP is false positives and TP is true positives.
+    If the total number of predicted positives (FP + TP) is zero, FDR is
+    defined as 0.0.
 
     Args:
-        y (np.array): True labels, where 1 indicates positive/anomaly
-        and 0 indicates negative/normal.
-        y_hat (np.array): Predicted labels, where 1 indicates positive/anomaly
-        nd 0 indicates negative/normal.
-        dec (int, optional): The number of decimal places to round the result.
-        Default is 3.
+        y (numpy.ndarray): True binary labels, where 1 indicates an actual
+            positive (e.g., anomaly) and 0 indicates an actual negative
+            (e.g., normal).
+        y_hat (numpy.ndarray): Predicted binary labels, where 1 indicates a
+            predicted positive and 0 indicates a predicted negative.
+        dec (int, optional): The number of decimal places to which the
+            resulting FDR should be rounded. Defaults to ``3``.
 
     Returns:
-        float: The calculated False Discovery Rate,
-        rounded to the specified decimal places.
+        float: The calculated False Discovery Rate, rounded to `dec`
+            decimal places.
     """
-    # Ensure boolean or 0/1 int arrays for logical operations
     y_true = y == 1
     y_pred = y_hat == 1
 
     true_positives = np.sum(y_pred & y_true)
-    false_positives = np.sum(y_pred & ~y_true)  # Use logical NOT on boolean array
+    false_positives = np.sum(y_pred & ~y_true)
 
     total_predicted_positives = true_positives + false_positives
 
@@ -41,16 +45,42 @@ def false_discovery_rate(y: np.array, y_hat: np.array, dec: int = 3) -> float:
 
 
 @performance_conversion("y", "y_hat")
-def statistical_power(y: np.array, y_hat: np.array, dec: int = 3) -> float:
-    """
-    Corrected: Calculate the statistical power of a binary classifier.
-    """
-    y = y.astype(int)
-    y_hat = y_hat.astype(int)
+def statistical_power(
+    y: np.ndarray, y_hat: np.ndarray, dec: int = 3
+) -> float:
+    """Calculates statistical power (recall or true positive rate).
 
-    true_positives = sum((y == 1) & (y_hat == 1))
-    false_negatives = sum((y == 1) & (y_hat == 0))
-    total_actual_outliers = true_positives + false_negatives
+    Statistical power, also known as recall or true positive rate (TPR),
+    measures the proportion of actual positives that are correctly identified
+    by the classifier. It is calculated as:
+    Power (TPR) = TP / (TP + FN), where TP is true positives and FN is
+    false negatives.
+    If the total number of actual positives (TP + FN) is zero, power is
+    defined as 0.0.
 
-    power = (true_positives / total_actual_outliers) if total_actual_outliers > 0 else 0
+    Args:
+        y (numpy.ndarray): True binary labels, where 1 indicates an actual
+            positive (e.g., anomaly) and 0 indicates an actual negative
+            (e.g., normal).
+        y_hat (numpy.ndarray): Predicted binary labels, where 1 indicates a
+            predicted positive and 0 indicates a predicted negative.
+        dec (int, optional): The number of decimal places to which the
+            resulting power should be rounded. Defaults to ``3``.
+
+    Returns:
+        float: The calculated statistical power, rounded to `dec` decimal
+            places.
+    """
+    y_bool = y.astype(bool)  # Or y == 1
+    y_hat_bool = y_hat.astype(bool)  # Or y_hat == 1
+
+    true_positives = np.sum(y_bool & y_hat_bool)
+    false_negatives = np.sum(y_bool & ~y_hat_bool)
+    total_actual_positives = true_positives + false_negatives
+
+    if total_actual_positives == 0:
+        power = 0.0
+    else:
+        power = true_positives / total_actual_positives
+
     return round(power, dec)

@@ -13,14 +13,27 @@ root = "unquad.data.datasets"
 def load_breast(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the breast cancer dataset.
+    """Loads the Breast Cancer Wisconsin (Diagnostic) dataset.
+
+    This dataset contains features computed from a digitized image of a
+    fine needle aspirate (FNA) of a breast mass. They describe
+    characteristics of the cell nuclei present in the image. The "Class"
+    column typically indicates malignant (1) or benign (0).
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("breast.parquet.gz")
     path = Path(str(file))
@@ -30,14 +43,27 @@ def load_breast(
 def load_fraud(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the fraud detection dataset.
+    """Loads a credit card fraud detection dataset.
+
+    This dataset typically contains transactions made by European cardholders.
+    It presents transactions that occurred in two days, where it has features
+    that are numerical input variables, the result of a PCA transformation.
+    The "Class" column indicates fraudulent (1) or legitimate (0) transactions.
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("fraud.parquet.gz")
     path = Path(str(file))
@@ -47,14 +73,28 @@ def load_fraud(
 def load_ionosphere(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the ionosphere dataset.
+    """Loads the Ionosphere dataset.
+
+    This radar data was collected by a system in Goose Bay, Labrador.
+    The targets were free electrons in the ionosphere. "Good" radar returns
+    are those showing evidence of some type of structure in the ionosphere.
+    "Bad" returns are those that do not; their signals pass through the
+    ionosphere. The "Class" column indicates "good" (0) or "bad" (1, anomaly).
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("ionosphere.parquet.gz")
     path = Path(str(file))
@@ -64,14 +104,27 @@ def load_ionosphere(
 def load_mammography(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the mammography dataset.
+    """Loads the Mammography dataset.
+
+    This dataset is used for detecting breast cancer based on mammographic
+    findings. It contains features related to BI-RADS assessment, age,
+    shape, margin, and density. The "Class" column usually indicates
+    benign (0) or malignant (1, anomaly).
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("mammography.parquet.gz")
     path = Path(str(file))
@@ -81,14 +134,28 @@ def load_mammography(
 def load_musk(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the musk dataset.
+    """Loads the Musk (Version 2) dataset.
+
+    This dataset describes a set of 102 molecules of which 39 are judged
+    by human experts to be musks and the remaining 63 molecules are
+    judged to be non-musks. The 166 features describe the three-dimensional
+    conformation of the molecules. The "Class" indicates musk (1, anomaly)
+    or non-musk (0).
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("musk.parquet.gz")
     path = Path(str(file))
@@ -98,14 +165,27 @@ def load_musk(
 def load_shuttle(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the shuttle dataset.
+    """Loads the Shuttle dataset.
+
+    This dataset contains data from a NASA space shuttle mission concerning
+    the position of radiators in the shuttle. The "Class" column indicates
+    normal (0) or anomalous (1) states. The original dataset has multiple
+    anomaly classes; this version typically simplifies it to binary.
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("shuttle.parquet.gz")
     path = Path(str(file))
@@ -115,14 +195,26 @@ def load_shuttle(
 def load_thyroid(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the thyroid dataset.
+    """Loads the Thyroid Disease (ann-thyroid) dataset.
+
+    This dataset is used for diagnosing thyroid conditions based on patient
+    attributes and test results. The "Class" column indicates normal (0)
+    or some form of thyroid disease (1, anomaly).
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("thyroid.parquet.gz")
     path = Path(str(file))
@@ -132,39 +224,64 @@ def load_thyroid(
 def load_wbc(
     setup: bool = False, random_state: int = 1
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the white blood cells (WBC) dataset.
+    """Loads the Wisconsin Breast Cancer (Original) (WBC) dataset.
+
+    This dataset contains features derived from clinical observations of
+    breast cancer, such as clump thickness, cell size uniformity, etc.
+    The "Class" column indicates benign (0) or malignant (1, anomaly).
+    Note: This is distinct from the "breast" dataset which is often the
+    Diagnostic version.
 
     Args:
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        setup (bool, optional): If ``True``, splits the data into training
+            and testing sets according to a specific experimental setup,
+            returning (x_train, x_test, y_test). `x_train` contains only
+            normal samples. Defaults to ``False``, which returns the full
+            DataFrame.
+        random_state (int, optional): Seed for random number generation used
+            in data splitting if `setup` is ``True``. Defaults to ``1``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
     """
     file = resources.files(root).joinpath("wbc.parquet.gz")
     path = Path(str(file))
     return _load_dataset(path, setup, random_state)
 
 
-def _load_dataset(file_path: Path, setup: bool, random_state: int):
-    """Loads a dataset from a gzipped parquet file.
+def _load_dataset(
+    file_path: Path, setup: bool, random_state: int
+) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
+    """Loads a dataset from a gzipped Parquet file and optionally sets it up.
+
+    This is a helper function used by the specific dataset loaders. It reads
+    a Parquet file compressed with gzip. If `setup` is true, it calls
+    `_create_setup` to split the data.
 
     Args:
-        file_path: Path to the dataset file.
-        setup: If True, creates an experimental setup as described in Bates (2023).
-        random_state: Seed for random number generation.
+        file_path (pathlib.Path): The full path to the gzipped Parquet file.
+        setup (bool): If ``True``, the data is processed by `_create_setup`
+            to produce training and testing sets.
+        random_state (int): Seed for random number generation, used if
+            `setup` is ``True``.
 
     Returns:
-        Either the full dataset or a tuple of (x_train, x_test, y_test).
+        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+            If `setup` is ``False``, returns the complete dataset as a
+            DataFrame. If `setup` is ``True``, returns a tuple:
+            (x_train, x_test, y_test).
 
     Raises:
-        FileNotFoundError: If the dataset file does not exist.
+        FileNotFoundError: If the dataset file at `file_path` does not exist.
     """
     if not file_path.exists():
-        raise FileNotFoundError(f"Dataset not found at {file_path}. ")
+        raise FileNotFoundError(f"Dataset not found at {file_path}.")
 
     with gzip.open(file_path, "rb") as f:
-        df = pd.read_parquet(f)  # noqa
+        df = pd.read_parquet(f)
 
     if setup:
         return _create_setup(df, random_state=random_state)
@@ -172,18 +289,36 @@ def _load_dataset(file_path: Path, setup: bool, random_state: int):
     return df
 
 
-def _create_setup(df: pd.DataFrame, random_state: int):
-    """Creates an experimental setup as described in Bates (2023).
+def _create_setup(
+    df: pd.DataFrame, random_state: int
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Creates an experimental train/test split from a dataset.
+
+    This setup aims to create a scenario for anomaly detection where:
+    - The training set (`x_train`) contains only normal samples (Class 0).
+    - The test set (`x_test`, `y_test`) contains a mix of normal samples
+      and a smaller proportion of outlier samples (Class 1).
+
+    The sizes are determined as follows:
+    - `n_train`: Half of the available normal samples.
+    - `n_test`: The minimum of 1000 or one-third of `n_train`.
+    - `n_test_outlier`: 10% of `n_test`.
+    - `n_test_normal`: The remaining 90% of `n_test`.
+
+    The "Class" column is dropped from `x_train` and `x_test`.
 
     Args:
-        df: The dataset to process.
-        random_state: Seed for random number generation.
+        df (pandas.DataFrame): The input DataFrame, expected to have a "Class"
+            column where 0 indicates normal and 1 indicates an outlier.
+        random_state (int): Seed for random number generation used in
+            splitting and sampling.
 
     Returns:
-        A tuple of (x_train, x_test, y_test), where:
-        - x_train: Training data (normal samples only).
-        - x_test: Test data (a mix of normal and outlier samples).
-        - y_test: Labels for the test data (1 for outliers, 0 for normal).
+        Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]:
+            A tuple (x_train, x_test, y_test):
+            - `x_train`: DataFrame of training features (normal samples only).
+            - `x_test`: DataFrame of test features.
+            - `y_test`: Series of test labels (0 for normal, 1 for outlier).
     """
     normal = df[df["Class"] == 0]
     n_train = len(normal) // 2
@@ -191,15 +326,24 @@ def _create_setup(df: pd.DataFrame, random_state: int):
     n_test_outlier = n_test // 10
     n_test_normal = n_test - n_test_outlier
 
-    x_train, test_set = train_test_split(
+    x_train_full, test_set_normal_pool = train_test_split(
         normal, train_size=n_train, random_state=random_state
     )
-    x_train = x_train.drop(columns=["Class"])
+    x_train = x_train_full.drop(columns=["Class"])
 
-    test_normal = test_set.sample(n=n_test_normal, random_state=random_state)
-    test_outliers = df[df["Class"] == 1].sample(
-        n=n_test_outlier, random_state=random_state
+    # Ensure enough samples are available for sampling
+    # These checks could raise errors or adjust sample sizes if needed
+    actual_n_test_normal = min(n_test_normal, len(test_set_normal_pool))
+    test_normal = test_set_normal_pool.sample(
+        n=actual_n_test_normal, random_state=random_state
     )
+
+    outliers_available = df[df["Class"] == 1]
+    actual_n_test_outlier = min(n_test_outlier, len(outliers_available))
+    test_outliers = outliers_available.sample(
+        n=actual_n_test_outlier, random_state=random_state
+    )
+
     test_set = pd.concat([test_normal, test_outliers], ignore_index=True)
 
     x_test = test_set.drop(columns=["Class"])

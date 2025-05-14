@@ -38,9 +38,28 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.optional-dependencies]
-dev = ["black", "ruff", "pre-commit"]
-dl = ["tensorflow>=2.16.1", "torch>=2.2.2"]
-all = ["black", "ruff", "pre-commit", "tensorflow>=2.16.1", "torch>=2.2.2"]
+dev = [
+    "black",
+    "ruff",
+    "pre-commit"
+]
+docs = [
+    "sphinx",
+    "furo",
+    "sphinx-autoapi",
+    "myst-parser"
+]
+dl = [
+    "tensorflow>=2.16.1",
+    "torch>=2.7.0"
+]
+all = [
+    "black",
+    "ruff",
+    "pre-commit",
+    "tensorflow>=2.16.1",
+    "torch>=2.7.0"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/OliverHennhoefer/unquad"
@@ -48,7 +67,9 @@ all = ["black", "ruff", "pre-commit", "tensorflow>=2.16.1", "torch>=2.2.2"]
 
 [tool.black]
 line-length = 88
-target-version = ['py312']
+target-version = [
+    'py312'
+]
 
 extend-exclude ='''
 /(
@@ -76,8 +97,15 @@ extend-exclude ='''
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-src = ["."]
-include = ["*.py", "*.pyi", "*.ipynb", "**/pyproject.toml"]
+src = [
+    "."
+]
+include = [
+    "*.py",
+    "*.pyi",
+    "*.ipynb",
+    "**/pyproject.toml"
+]
 exclude = [
     ".bzr",
     ".direnv",
@@ -107,8 +135,12 @@ exclude = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"unquad/estimation/conformal.py" = ["E402"]
-"unquad/estimation/weighted_conformal.py" = ["E402"]
+"unquad/estimation/conformal.py" = [
+    "E402"
+]
+"unquad/estimation/weighted_conformal.py" = [
+    "E402"
+]
 
 [tool.ruff.lint]
 select = [
@@ -116,7 +148,9 @@ select = [
     "F",  # Pyflakes
 ]
 ignore = []
-fixable = ["ALL"]
+fixable = [
+    "ALL"
+]
 unfixable = []
 
 [tool.ruff.format]

@@ -1,63 +1,125 @@
+from typing import Any
+
 import numpy as np
+from numpy import ndarray, dtype, bool_
 
 from unquad.utils.decorator import performance_conversion
 
 
 @performance_conversion("scores", "calibration_set")
-def calculate_p_val(scores: np.array, calibration_set: np.array) -> np.array:
-    """
-    Calculate p-values based on the given scores and calibration set.
+def calculate_p_val(scores: np.ndarray, calibration_set: np.ndarray) -> list[float]:
+    """Calculates p-values for scores based on a calibration set.
 
-    This function computes the p-value for each score by comparing it against
-    the calibration set. The p-value is calculated as the proportion of
-    calibration scores greater than or equal to the given scores.
+    This function computes a p-value for each score in the `scores` array by
+    comparing it against the distribution of scores in the `calibration_set`.
+    The p-value represents the proportion of calibration scores that are
+    greater than or equal to the given score, with a small adjustment.
+
+    The `@performance_conversion` decorator ensures that `scores` and
+    `calibration_set` are ``numpy.ndarray`` objects internally and that the
+    returned ``numpy.ndarray`` of p-values is converted to a ``list[float]``.
 
     Args:
-        scores (np.array): Test scores for which p-values need to be calculated.
-        calibration_set (np.array): Calibration scores used to compute p-values.
+        scores (numpy.ndarray): A 1D array of test scores for which p-values
+            are to be calculated. Can be passed as a list, which the
+            decorator will convert.
+        calibration_set (numpy.ndarray): A 1D array of calibration scores
+            used as the reference distribution. Can be passed as a list,
+            which the decorator will convert.
 
     Returns:
-        np.array: The array of p-values corresponding to the input scores.
+        list[float]: A list of p-values, each corresponding to an input score
+            from `scores`.
 
     Notes:
-        The p-value for each score is calculated using the formula:
-            p_val = (1 + number of calibration_set values >= score) /
-            (1 + number of calibration_set values)
+        The p-value for each score is computed using the formula:
+        p_value = (1 + count(calibration_score >= score)) / (1 + N_calibration)
+        where N_calibration is the total number of scores in `calibration_set`.
     """
+    # sum_smaller counts how many calibration_set values are >= each score
     sum_smaller = np.sum(calibration_set >= scores[:, np.newaxis], axis=1)
     return (1.0 + sum_smaller) / (1.0 + len(calibration_set))
 
 
 @performance_conversion("scores", "calibration_set")
 def calculate_weighted_p_val(
-    scores: np.array, calibration_set: np.array, w_scores: np.array, w_calib: np.array
-) -> np.array:
-    numerator = (calibration_set >= scores[:, np.newaxis]) * 1.0
-    numerator *= w_calib
-    numerator = np.sum(numerator, axis=1)  # weighted sum
-    numerator += abs(scores * w_scores)
-    denominator = np.sum(w_calib) + abs(scores * w_scores)
-    return numerator / denominator
+    scores: np.ndarray,
+    calibration_set: np.ndarray,
+    w_scores: np.ndarray,
+    w_calib: np.ndarray,
+) -> list[float]:
+    """Calculates weighted p-values for scores using a weighted calibration set.
+
+    This function computes p-values by comparing input `scores` (with
+    corresponding `w_scores` weights) against a `calibration_set` (with
+    `w_calib` weights). The calculation involves a weighted count of
+    calibration scores exceeding each test score, incorporating the weights
+    of both the test scores and calibration scores.
+
+    The `@performance_conversion` decorator handles `scores` and
+    `calibration_set`, converting them to ``numpy.ndarray`` if they are lists
+    and converting the ``numpy.ndarray`` result to ``list[float]``.
+    Note: `w_scores` and `w_calib` are NOT automatically converted by this
+    decorator instance and must be provided as ``numpy.ndarray`` objects.
+
+    Args:
+        scores (numpy.ndarray): A 1D array of test scores. The decorator
+            allows passing a list.
+        calibration_set (numpy.ndarray): A 1D array of calibration scores.
+            The decorator allows passing a list.
+        w_scores (numpy.ndarray): A 1D array of weights corresponding to each
+            score in `scores`. Must be a ``numpy.ndarray``.
+        w_calib (numpy.ndarray): A 1D array of weights corresponding to each
+            score in `calibration_set`. Must be a ``numpy.ndarray``.
+
+    Returns:
+        list[float]: A list of weighted p-values corresponding to the input
+            `scores`.
+    """
+    # Create a boolean matrix: True where calibration_set[j] >= scores[i]
+    comparison_matrix = calibration_set >= scores[:, np.newaxis]
+
+    # Weighted sum for the numerator part 1:
+    # sum over j ( (calibration_set[j] >= scores[i]) * w_calib[j] )
+    weighted_sum_calib_ge_score = np.sum(comparison_matrix * w_calib, axis=1)
+
+    # Add the weighted score part to the numerator
+    numerator = weighted_sum_calib_ge_score + np.abs(scores * w_scores)
+
+    # Denominator: sum of calibration weights + weighted score
+    denominator = np.sum(w_calib) + np.abs(scores * w_scores)
+
+    # Handle division by zero if denominator is zero for some scores
+    # np.divide handles this by returning np.nan or np.inf, then filter later if needed.
+    p_values = np.divide(
+        numerator, denominator, out=np.zeros_like(numerator), where=denominator != 0
+    )
+    return p_values
 
 
 @performance_conversion("scores")
-def get_decision(alpha: float, scores: np.array) -> [bool]:
-    """
-    Make a decision for each score based on the given significance level.
+def get_decision(alpha: float, scores: np.ndarray) -> ndarray[Any, dtype[bool_]]:
+    """Determines decisions based on scores and a significance level.
 
-    This function compares each score to the specified alpha threshold and
-    returns a decision indicating whether the score is less than or equal to alpha.
+    Compares each score against a given significance level (alpha). A decision
+    of ``True`` is made if a score is less than or equal to alpha,
+    indicating significance (e.g., anomaly detected, null hypothesis
+    rejected), and ``False`` otherwise.
+
+    The `@performance_conversion` decorator ensures that `scores` is a
+    ``numpy.ndarray`` internally (converting from a list if necessary) and
+    that the returned ``numpy.ndarray`` of booleans is converted to a
+    ``list[bool]``.
 
     Args:
-        alpha (float): The significance threshold used to make the decision.
-        scores (np.array): The array of test scores to evaluate.
+        alpha (float): The significance threshold (e.g., 0.05). Scores less
+            than or equal to this value are considered significant.
+        scores (numpy.ndarray): A 1D array of p-values or other scores to
+            evaluate. Can be passed as a list, which the decorator will
+            convert.
 
     Returns:
-        list[bool]: A list of boolean values indicating whether each score
-                    is less than or equal to the alpha threshold.
-
-    Notes:
-        The decision for each score is made as:
-            True if score <= alpha, otherwise False.
+        list[bool]: A list of boolean decisions. Each element is ``True`` if
+            the corresponding score is <= `alpha`, and ``False`` otherwise.
     """
     return scores <= alpha

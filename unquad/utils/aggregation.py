@@ -5,25 +5,30 @@ from unquad.utils.enums import Aggregation
 
 
 @performance_conversion("scores")
-def aggregate(method: Aggregation, scores: np.array) -> list[float]:
-    """
-    Aggregate anomaly scores using the specified aggregation method.
+def aggregate(method: Aggregation, scores: np.ndarray) -> list[float]:
+    """Aggregates anomaly scores using a specified method.
 
-    This function applies the chosen aggregation method to a set of anomaly scores.
-    It supports various methods such as mean, median, minimum, and maximum.
+    This function applies a chosen aggregation technique to a 2D array of
+    anomaly scores, where each row typically represents scores from a different
+    model or source, and each column corresponds to a data sample.
 
     Args:
-        method (Aggregation): The aggregation method to use. Must be one of the
-                               methods defined in the Aggregation enum
-                               (e.g., MEAN, MEDIAN, MINIMUM, MAXIMUM).
-        scores (np.array): A 2D NumPy array where each row represents an
-        individual model's anomaly scores.
+        method (Aggregation): The aggregation method to apply. Must be a
+            member of the :class:`~unquad.utils.enums.Aggregation` enum (e.g.,
+            ``Aggregation.MEAN``, ``Aggregation.MEDIAN``).
+        scores (numpy.ndarray): A 2D NumPy array of anomaly scores.
+            It is expected that scores are arranged such that rows correspond
+            to different sets of scores (e.g., from different models) and
+            columns correspond to individual data points/samples.
+            Aggregation is performed along ``axis=0``.
 
     Returns:
-        list[float]: The aggregated anomaly scores as a list.
+        list[float]: A list of aggregated anomaly scores. The length of the list
+            will correspond to the number of columns in the input `scores` array.
 
     Raises:
-        ValueError: If the provided aggregation method is not supported.
+        ValueError: If the `method` is not a supported aggregation type
+            defined in the internal mapping.
     """
     aggregation_methods = {
         Aggregation.MEAN: lambda x: np.mean(x, axis=0),
@@ -35,4 +40,6 @@ def aggregate(method: Aggregation, scores: np.array) -> list[float]:
     func = aggregation_methods.get(method)
     if not func:
         raise ValueError(f"Unsupported aggregation method: {method}")
-    return func(scores)
+
+    aggregated_scores: np.ndarray = func(scores)
+    return aggregated_scores

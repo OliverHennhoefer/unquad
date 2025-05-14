@@ -2,16 +2,19 @@ from enum import Enum
 
 
 class Adjustment(Enum):
-    """
-    Enumerates adjustment procedures for False Discovery Rate (FDR) control.
+    """Procedures for False Discovery Rate (FDR) control in multiple tests.
 
-    This enum represents different methods for adjusting p-values
-    when performing multiple hypothesis tests.
+    This enumeration defines methods for adjusting p-values or significance
+    levels when conducting multiple statistical hypothesis tests to manage
+    the overall error rate.
 
     Attributes:
-        BH (str): The Benjamini-Hochberg procedure.
-        BY (str): The Benjamini-Yekutieli procedure.
-        NONE: No adjustment.
+        BH: Represents the Benjamini-Hochberg procedure. The underlying value
+            is typically ``"bh"``.
+        BY: Represents the Benjamini-Yekutieli procedure. The underlying value
+            is typically ``"by"``.
+        NONE: Represents that no adjustment should be applied. The underlying
+            value is ``None``.
     """
 
     BH: str = "bh"
@@ -20,17 +23,20 @@ class Adjustment(Enum):
 
 
 class Aggregation(Enum):
-    """
-    Enumerates aggregation functions for ensemble methods.
+    """Aggregation functions for combining multiple model outputs or scores.
 
-    This enum defines different aggregation strategies for combining multiple
-    model outputs, typically used in ensemble methods.
+    This enumeration lists strategies for aggregating data, commonly employed
+    in ensemble methods to combine predictions or scores from several models.
 
     Attributes:
-        MEAN (str): The mean aggregation method.
-        MEDIAN (str): The median aggregation method.
-        MINIMUM (str): The minimum aggregation method.
-        MAXIMUM (str): The maximum aggregation method.
+        MEAN: Represents aggregation by calculating the arithmetic mean.
+            The underlying value is typically ``"mean"``.
+        MEDIAN: Represents aggregation by calculating the median.
+            The underlying value is typically ``"median"``.
+        MINIMUM: Represents aggregation by selecting the minimum value.
+            The underlying value is typically ``"minimum"``.
+        MAXIMUM: Represents aggregation by selecting the maximum value.
+            The underlying value is typically ``"maximum"``.
     """
 
     MEAN: str = "mean"
