@@ -1,12 +1,21 @@
 ![Logo](./docs/img/banner_dark.png#gh-dark-mode-only)
 ![Logo](./docs/img/banner_light.png#gh-light-mode-only)
 
-# *unquad*: Uncertainty-Quantified Anomaly Detection
+<p align="center">
+  <a href="https://pepy.tech/projects/unquad" style="text-decoration: none;">
+    <img src="https://static.pepy.tech/badge/unquad" alt="PyPI Downloads" style=""text-decoration: none; border: 0;" />
+  </a>
+  <a href="https://pepy.tech/projects/unquad" style="text-decoration: none;">
+    <img src="https://static.pepy.tech/badge/unquad/month" alt="PyPI Downloads (Monthly)" style="vertical-align: middle; border: 0;" />
+  </a>
+  <a href="https://opensource.org/licenses/BSD-3-Clause" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/License-BSD--3--Clause-blue.svg" alt="License: BSD-3-Clause" style="vertical-align: middle; border: 0;" />
+  </a>
+  <img src="https://img.shields.io/pypi/pyversions/unquad" alt="Python Versions" style="vertical-align: middle; border: 0;" />
+</p>
 
-[![PyPI Downloads](https://static.pepy.tech/badge/unquad)](https://pepy.tech/projects/unquad) [![PyPI Downloads](https://static.pepy.tech/badge/unquad/month)](https://pepy.tech/projects/unquad) [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/unquad)
 
-**unquad** is a wrapper applicable for most [*PyOD*](https://pyod.readthedocs.io/en/latest/) detectors (see [Supported Estimators](#supported-estimators)) enabling
-**uncertainty-quantified anomaly detection** based on one-class classification and the principles of **conformal inference**.
+**unquad** is a Python library that enhances anomaly detection by providing uncertainty quantification. It acts as a wrapper around most detectors from the popular [*PyOD*](https://pyod.readthedocs.io/en/latest/) library (see [Supported Estimators](#supported-estimators)). By leveraging one-class classification principles and **conformal inference**, **unquad** enables **statistically rigorous anomaly detection**.
 
 ```sh
 pip install unquad
