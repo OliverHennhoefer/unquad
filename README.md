@@ -1,43 +1,28 @@
 ![Logo](./docs/img/banner_dark.png#gh-dark-mode-only)
 ![Logo](./docs/img/banner_light.png#gh-light-mode-only)
 
-<p align="center">
-  <a href="https://pepy.tech/projects/unquad" style="text-decoration: none;">
-    <img src="https://static.pepy.tech/badge/unquad" alt="PyPI Downloads" style=""text-decoration: none; border: 0;" />
-  </a>
-  <a href="https://pepy.tech/projects/unquad" style="text-decoration: none;">
-    <img src="https://static.pepy.tech/badge/unquad/month" alt="PyPI Downloads (Monthly)" style="vertical-align: middle; border: 0;" />
-  </a>
-  <a href="https://opensource.org/licenses/BSD-3-Clause" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/License-BSD--3--Clause-blue.svg" alt="License: BSD-3-Clause" style="vertical-align: middle; border: 0;" />
-  </a>
-  <img src="https://img.shields.io/pypi/pyversions/unquad" alt="Python Versions" style="vertical-align: middle; border: 0;" />
-</p>
-
+[![PyPI Downloads](https://static.pepy.tech/badge/unquad)](https://pepy.tech/projects/unquad) [![PyPI Downloads](https://static.pepy.tech/badge/unquad/month)](https://pepy.tech/projects/unquad) [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/unquad) [![start with why](https://img.shields.io/badge/start%20with-why%3F-brightgreen.svg?style=flat)](https://www.diva-portal.org/smash/get/diva2:690997/FULLTEXT02.pdf)
 
 **unquad** is a Python library that enhances anomaly detection by providing uncertainty quantification. It acts as a wrapper around most detectors from the popular [*PyOD*](https://pyod.readthedocs.io/en/latest/) library (see [Supported Estimators](#supported-estimators)). By leveraging one-class classification principles and **conformal inference**, **unquad** enables **statistically rigorous anomaly detection**.
+
+# Key Features
+
+*   **Uncertainty Quantification:** Go beyond simple anomaly scores; get statistically valid _p_-values.
+*   **Error Control:** Reliably control metrics like the False Discovery Rate (FDR).
+*   **Broad PyOD Compatibility:** Works with a wide range of PyOD estimators (see [Supported Estimators](#supported-estimators)).
+*   **Flexible Strategies:** Implements various conformal strategies like Split-Conformal and Bootstrap-after-Jackknife+ (JaB+).
+
+# :hatching_chick: Getting Started
 
 ```sh
 pip install unquad
 ```
 
-Mind the **optional dependencies** for, e.g., using deep learning models (see [pyproject.toml](https://github.com/OliverHennhoefer/unquad/blob/main/pyproject.toml)).
+_For advanced features (e.g. deep learning models) you might need optional dependencies. Please refer to the [pyproject.toml](https://github.com/OliverHennhoefer/unquad/blob/main/pyproject.toml) for details._
 
-## What is *Conformal Anomaly Detection*?
+## Split-Conformal (also _Inductive_) Approach
 
-[![start with why](https://img.shields.io/badge/start%20with-why%3F-brightgreen.svg?style=flat)](https://www.diva-portal.org/smash/get/diva2:690997/FULLTEXT02.pdf)
-
-[*Conformal Anomaly Detection*](https://www.diva-portal.org/smash/get/diva2:690997/FULLTEXT02.pdf) applies the principles of conformal inference ([*conformal prediction*](https://en.wikipedia.org/wiki/Conformal_prediction#:~:text=Conformal%20prediction%20(CP)%20is%20a,assuming%20exchangeability%20of%20the%20data.)) to anomaly detection.
-*Conformal Anomaly Detection* focuses on controlling error metrics like the [*false discovery rate*](https://en.wikipedia.org/wiki/False_discovery_rate), while maintaining [*statistical power*](https://en.wikipedia.org/wiki/Power_of_a_test).
-
-CAD converts anomaly scores to _p_-values by comparing anomaly scores of test data against anomaly scores of calibration data as part of the training data (*normal* instances).
-The resulting _p_-value of the test score(s) is computed as the normalized rank among the calibration scores.
-These **statistically valid** _p_-values enable error control through methods like *Benjamini-Hochberg*, replacing traditional anomaly estimates that lack statistical guarantees.
-
-### Usage: Split-Conformal (Inductive Approach)
-
-Using the default behavior of `ConformalDetector()` with default `DetectorConfig()`.
-
+Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset with standard configuration (no `DetectorConfig()` set).
 
 ```python
 from pyod.models.gmm import GMM
@@ -68,19 +53,21 @@ Empirical FDR: 0.108
 Empirical Power: 0.99
 ```
 
-The behavior can be customized by changing the `DetectorConfig()`:
+The behavior can be customized by customizing the `DetectorConfig()`:
 
 ```python
 @dataclass
 class DetectorConfig:
-    alpha: float = 0.2  # Nominal FDR value
-    adjustment: Adjustment = Adjustment.BH  # Multiple testing procedure
-    aggregation: Aggregation = Aggregation.MEDIAN  # Score aggregation (if applicable)
-    seed: int = 1
-    silent: bool = True
+    alpha: float = 0.2                              # Nominal FDR value
+    adjustment: Adjustment = Adjustment.BH          # Multiple testing procedure
+    aggregation: Aggregation = Aggregation.MEDIAN   # Score aggregation (if applicable)
+    seed: int = 1                                   # Reproducibility
+    silent: bool = True                             # Verbosity
 ```
 
-### Usage: Bootstrap-after-Jackknife+ (JaB+)
+# :hatched_chick: Advanced Usage
+
+## Bootstrap-after-Jackknife+ (JaB+)
 
 The `BootstrapConformal()` strategy allows to set 2 of the 3 parameters `resampling_ratio`, `n_boostraps` and `n_calib`.
 For either combination, the remaining parameter will be filled automatically. This allows exact control of the
@@ -118,9 +105,46 @@ Empirical FDR: 0.067
 Empirical Power: 0.98
 ```
 
-### Citation
+## Weighted Conformal Anomaly Detection
 
-If you find this repository useful for your research, please consider citing these papers:
+The statistical validity of conformal anomaly detection depends on data *exchangability* (weakher than i.i.d.). This assumption can be slightly relaxed with weighted conformal _p_-values.
+
+```python
+from pyod.models.iforest import IForest
+
+from unquad.data.load import load_shuttle
+from unquad.estimation.properties.configuration import DetectorConfig
+from unquad.estimation.weighted_conformal import WeightedConformalDetector
+from unquad.strategy.split import Split
+from unquad.utils.enums import Aggregation
+from unquad.utils.enums import Adjustment
+from unquad.utils.metrics import false_discovery_rate, statistical_power
+
+x_train, x_test, y_test = load_shuttle(setup=True)
+
+model = IForest(behaviour="new")
+strategy = Split(calib_size=1_000)
+config = DetectorConfig(
+    alpha=0.1, adjustment=Adjustment.BH, aggregation=Aggregation.MEAN
+)
+
+ce = WeightedConformalDetector(detector=model, strategy=strategy, config=config)
+ce.fit(x_train)
+estimates = ce.predict(x_test)
+
+print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
+print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
+```
+
+Output:
+```text
+Empirical FDR: 0.0/7
+Empirical Power: 0.9&
+```
+
+# Citation
+
+If you find this repository useful for your research, please cite following papers:
 
 Resampling-based Conformal Anomaly Detectors:
 ```text
@@ -165,7 +189,7 @@ Weighted Conformal p-Values:
 }
 ```
 
-### Supported Estimators
+# Supported Estimators
 
 The package only supports anomaly estimators that are suitable for unsupervised one-class classification. As respective
 detectors are therefore exclusively fitted on *normal* (or *non-anomalous*) data, parameters like *threshold* are internally
@@ -201,5 +225,5 @@ Models that are **currently supported** include:
 * Subspace Outlier Detection (**SOD**)
 * Scalable Unsupervised Outlier Detection (**SUOD**)
 
-## Contact
+# Contact
 **Bug reporting:** [https://github.com/OliverHennhoefer/unquad/issues](https://github.com/OliverHennhoefer/unquad/issues)
