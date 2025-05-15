@@ -1,3 +1,6 @@
+![Logo](./docs/img/banner_dark.png#gh-dark-mode-only)
+![Logo](./docs/img/banner_light.png#gh-light-mode-only)
+
 # *unquad*: Uncertainty-Quantified Anomaly Detection
 
 [![PyPI Downloads](https://static.pepy.tech/badge/unquad)](https://pepy.tech/projects/unquad) [![PyPI Downloads](https://static.pepy.tech/badge/unquad/month)](https://pepy.tech/projects/unquad) [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/unquad)
