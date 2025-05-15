@@ -138,54 +138,53 @@ print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
 
 Output:
 ```text
-Empirical FDR: 0.0/7
-Empirical Power: 0.9&
+Empirical FDR: 0.077
+Empirical Power: 0.96
 ```
 
 # Citation
 
 If you find this repository useful for your research, please cite following papers:
 
-Resampling-based Conformal Anomaly Detectors:
+##### Leave-One-Out-, Bootstrap- and Cross-Conformal Anomaly Detectors
 ```text
-@INPROCEEDINGS {Hennhofer2024,
-author = { Hennhofer, Oliver and Preisach, Christine },
-booktitle = { 2024 IEEE International Conference on Knowledge Graph (ICKG) },
-title = {{ Leave-One-Out-, Bootstrap- and Cross-Conformal Anomaly Detectors }},
-year = {2024},
-volume = {},
-ISSN = {},
-pages = {110-119},
-doi = {10.1109/ICKG63256.2024.00022},
-url = {https://doi.ieeecomputersociety.org/10.1109/ICKG63256.2024.00022},
-publisher = {IEEE Computer Society},
-address = {Los Alamitos, CA, USA},
-month =Dec}
-```
-
-Statistical Validity of Conformal p-Values:
-```text
-@article{Bates2023,
-  title = {Testing for outliers with conformal p-values},
-  volume = {51},
-  ISSN = {0090-5364},
-  url = {http://dx.doi.org/10.1214/22-AOS2244},
-  DOI = {10.1214/22-aos2244},
-  number = {1},
-  journal = {The Annals of Statistics},
-  publisher = {Institute of Mathematical Statistics},
-  author = {Bates,  Stephen and Candès,  Emmanuel and Lei,  Lihua and Romano,  Yaniv and Sesia,  Matteo},
-  year = {2023},
-  month = feb 
+@inproceedings{Hennhofer2024,
+	title        = {{ Leave-One-Out-, Bootstrap- and Cross-Conformal Anomaly Detectors }},
+	author       = {Hennhofer, Oliver and Preisach, Christine},
+	year         = 2024,
+	month        = {Dec},
+	booktitle    = {2024 IEEE International Conference on Knowledge Graph (ICKG)},
+	publisher    = {IEEE Computer Society},
+	address      = {Los Alamitos, CA, USA},
+	pages        = {110--119},
+	doi          = {10.1109/ICKG63256.2024.00022},
+	url          = {https://doi.ieeecomputersociety.org/10.1109/ICKG63256.2024.00022}
 }
 ```
-Weighted Conformal p-Values:
+
+##### Testing for outliers with conformal p-values
+```text
+@article{Bates2023,
+	title        = {Testing for outliers with conformal p-values},
+	author       = {Bates,  Stephen and Candès,  Emmanuel and Lei,  Lihua and Romano,  Yaniv and Sesia,  Matteo},
+	year         = 2023,
+	month        = feb,
+	journal      = {The Annals of Statistics},
+	publisher    = {Institute of Mathematical Statistics},
+	volume       = 51,
+	number       = 1,
+	doi          = {10.1214/22-aos2244},
+	issn         = {0090-5364},
+	url          = {http://dx.doi.org/10.1214/22-AOS2244}
+}
+```
+##### Model-free selective inference under covariate shift via weighted conformal p-values
 ```text
 @inproceedings{Jin2023,
-  title={Model-free selective inference under covariate shift via weighted conformal p-values},
-  author={Ying Jin and Emmanuel J. Cand{\`e}s},
-  year={2023},
-  url={https://api.semanticscholar.org/CorpusID:259950903}
+	title        = {Model-free selective inference under covariate shift via weighted conformal p-values},
+	author       = {Ying Jin and Emmanuel J. Cand{\`e}s},
+	year         = 2023,
+	url          = {https://api.semanticscholar.org/CorpusID:259950903}
 }
 ```
 
