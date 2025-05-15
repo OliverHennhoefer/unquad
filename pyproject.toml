@@ -57,6 +57,10 @@ all = [
     "black",
     "ruff",
     "pre-commit",
+    "sphinx",
+    "furo",
+    "sphinx-autoapi",
+    "myst-parser",
     "tensorflow>=2.16.1",
     "torch>=2.7.0"
 ]
