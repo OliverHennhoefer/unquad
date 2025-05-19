@@ -53,7 +53,7 @@ Empirical FDR: 0.108
 Empirical Power: 0.99
 ```
 
-The behavior can be customized by customizing the `DetectorConfig()`:
+The behavior can be customized using `DetectorConfig()`:
 
 ```python
 @dataclass
@@ -107,7 +107,7 @@ Empirical Power: 0.98
 
 ## Weighted Conformal Anomaly Detection
 
-The statistical validity of conformal anomaly detection depends on data *exchangability* (weakher than i.i.d.). This assumption can be slightly relaxed with weighted conformal _p_-values.
+The statistical validity of conformal anomaly detection depends on data *exchangability* (weaker than i.i.d.). This assumption can be slightly relaxed by computing weighted conformal _p_-values.
 
 ```python
 from pyod.models.iforest import IForest
