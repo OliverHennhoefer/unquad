@@ -1,15 +1,30 @@
 # Installation
 
-Hier erfahren Sie, wie Sie das `unquad`-Paket installieren können.
+Here you will learn how to install the `unquad` package.
 
-## Voraussetzungen
+## Prerequisites
 
-- Python 3.12 oder höher empfohlen
-- pip
+- Python 3.12 or higher is recommended
 
-## Installation mit pip
+## Installation with pip
 
-Um `unquad` zu installieren, führen Sie folgenden Befehl in Ihrem Terminal aus:
+To install `unquad`, run the following command in your terminal:
 
 ```bash
 pip install unquad
+```
+## Optional dependencies
+
+Existing optional dependencies are grouped into `[dev]`, `[docs]`, `[dl]` and `[all]`:
+- `[dev]`: Development dependencies
+- `[docs]`: Documentation dependencies
+- `[dl]`: Deep Learning dependencies (`tensorflow`, `pytorch`)
+- `[all]`: All optional dependencies
+
+## Get started
+
+You are all set to find your first anomalies!
+
+```bash
+import unquad
+```

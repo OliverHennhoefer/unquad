@@ -11,16 +11,17 @@ maintainers = [
 license = { file = "LICENSE" }
 readme = { file = "README.md", content-type = "text/markdown" }
 keywords = [
-    "connformal inference",
+    "conformal inference",
     "anomaly detection",
     "uncertainty quantification",
-    "false discovery rate"
+    "false discovery rate",
+    "conformal anomaly detection"
 ]
 classifiers = [
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha"
+    "Development Status :: 4 - Beta"
 ]
 requires-python = ">=3.12"
 dependencies = [
