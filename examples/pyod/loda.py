@@ -1,5 +1,4 @@
 from pyod.models.loda import LODA
-
 from unquad.data.load import load_mammography
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation

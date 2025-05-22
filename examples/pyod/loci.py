@@ -1,8 +1,7 @@
 from pyod.models.loci import LOCI
-
 from unquad.data.load import load_thyroid
-from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.strategy.split import Split
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 

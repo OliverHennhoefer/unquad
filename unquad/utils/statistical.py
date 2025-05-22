@@ -1,14 +1,14 @@
 from typing import Any
 
 import numpy as np
-from numpy import ndarray, dtype, bool_
+from numpy import bool_, dtype, ndarray
 
 from unquad.utils.decorator import performance_conversion
 
 
 @performance_conversion("scores", "calibration_set")
 def calculate_p_val(scores: np.ndarray, calibration_set: np.ndarray) -> list[float]:
-    """Calculates p-values for scores based on a calibration set.
+    """Calculate p-values for scores based on a calibration set.
 
     This function computes a p-value for each score in the `scores` array by
     comparing it against the distribution of scores in the `calibration_set`.
@@ -27,11 +27,13 @@ def calculate_p_val(scores: np.ndarray, calibration_set: np.ndarray) -> list[flo
             used as the reference distribution. Can be passed as a list,
             which the decorator will convert.
 
-    Returns:
+    Returns
+    -------
         list[float]: A list of p-values, each corresponding to an input score
             from `scores`.
 
-    Notes:
+    Notes
+    -----
         The p-value for each score is computed using the formula:
         p_value = (1 + count(calibration_score >= score)) / (1 + N_calibration)
         where N_calibration is the total number of scores in `calibration_set`.
@@ -48,7 +50,7 @@ def calculate_weighted_p_val(
     w_scores: np.ndarray,
     w_calib: np.ndarray,
 ) -> list[float]:
-    """Calculates weighted p-values for scores using a weighted calibration set.
+    """Calculate weighted p-values for scores using a weighted calibration set.
 
     This function computes p-values by comparing input `scores` (with
     corresponding `w_scores` weights) against a `calibration_set` (with
@@ -72,7 +74,8 @@ def calculate_weighted_p_val(
         w_calib (numpy.ndarray): A 1D array of weights corresponding to each
             score in `calibration_set`. Must be a ``numpy.ndarray``.
 
-    Returns:
+    Returns
+    -------
         list[float]: A list of weighted p-values corresponding to the input
             `scores`.
     """
@@ -99,7 +102,7 @@ def calculate_weighted_p_val(
 
 @performance_conversion("scores")
 def get_decision(alpha: float, scores: np.ndarray) -> ndarray[Any, dtype[bool_]]:
-    """Determines decisions based on scores and a significance level.
+    """Determine decisions based on scores and a significance level.
 
     Compares each score against a given significance level (alpha). A decision
     of ``True`` is made if a score is less than or equal to alpha,
@@ -118,7 +121,8 @@ def get_decision(alpha: float, scores: np.ndarray) -> ndarray[Any, dtype[bool_]]
             evaluate. Can be passed as a list, which the decorator will
             convert.
 
-    Returns:
+    Returns
+    -------
         list[bool]: A list of boolean decisions. Each element is ``True`` if
             the corresponding score is <= `alpha`, and ``False`` otherwise.
     """

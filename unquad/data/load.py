@@ -1,10 +1,8 @@
 import gzip
-import pandas as pd
-
-from pathlib import Path
 from importlib import resources
-from typing import Union, Tuple
+from pathlib import Path
 
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
 root = "unquad.data.datasets"
@@ -12,8 +10,8 @@ root = "unquad.data.datasets"
 
 def load_breast(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Breast Cancer Wisconsin (Diagnostic) dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Breast Cancer Wisconsin (Diagnostic) dataset.
 
     This dataset contains features computed from a digitized image of a
     fine needle aspirate (FNA) of a breast mass. They describe
@@ -29,8 +27,9 @@ def load_breast(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -42,8 +41,8 @@ def load_breast(
 
 def load_fraud(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads a credit card fraud detection dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load a credit card fraud detection dataset.
 
     This dataset typically contains transactions made by European cardholders.
     It presents transactions that occurred in two days, where it has features
@@ -59,8 +58,9 @@ def load_fraud(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -72,8 +72,8 @@ def load_fraud(
 
 def load_ionosphere(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Ionosphere dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Ionosphere dataset.
 
     This radar data was collected by a system in Goose Bay, Labrador.
     The targets were free electrons in the ionosphere. "Good" radar returns
@@ -90,8 +90,9 @@ def load_ionosphere(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -103,8 +104,8 @@ def load_ionosphere(
 
 def load_mammography(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Mammography dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Mammography dataset.
 
     This dataset is used for detecting breast cancer based on mammographic
     findings. It contains features related to BI-RADS assessment, age,
@@ -120,8 +121,9 @@ def load_mammography(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -133,8 +135,8 @@ def load_mammography(
 
 def load_musk(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Musk (Version 2) dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Musk (Version 2) dataset.
 
     This dataset describes a set of 102 molecules of which 39 are judged
     by human experts to be musks and the remaining 63 molecules are
@@ -151,8 +153,9 @@ def load_musk(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -164,8 +167,8 @@ def load_musk(
 
 def load_shuttle(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Shuttle dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Shuttle dataset.
 
     This dataset contains data from a NASA space shuttle mission concerning
     the position of radiators in the shuttle. The "Class" column indicates
@@ -181,8 +184,9 @@ def load_shuttle(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -194,8 +198,8 @@ def load_shuttle(
 
 def load_thyroid(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Thyroid Disease (ann-thyroid) dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Thyroid Disease (ann-thyroid) dataset.
 
     This dataset is used for diagnosing thyroid conditions based on patient
     attributes and test results. The "Class" column indicates normal (0)
@@ -210,8 +214,9 @@ def load_thyroid(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -223,8 +228,8 @@ def load_thyroid(
 
 def load_wbc(
     setup: bool = False, random_state: int = 1
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads the Wisconsin Breast Cancer (Original) (WBC) dataset.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load the Wisconsin Breast Cancer (Original) (WBC) dataset.
 
     This dataset contains features derived from clinical observations of
     breast cancer, such as clump thickness, cell size uniformity, etc.
@@ -241,8 +246,9 @@ def load_wbc(
         random_state (int, optional): Seed for random number generation used
             in data splitting if `setup` is ``True``. Defaults to ``1``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
@@ -254,8 +260,8 @@ def load_wbc(
 
 def _load_dataset(
     file_path: Path, setup: bool, random_state: int
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
-    """Loads a dataset from a gzipped Parquet file and optionally sets it up.
+) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Load a dataset from a gzipped Parquet file and optionally sets it up.
 
     This is a helper function used by the specific dataset loaders. It reads
     a Parquet file compressed with gzip. If `setup` is true, it calls
@@ -268,13 +274,15 @@ def _load_dataset(
         random_state (int): Seed for random number generation, used if
             `setup` is ``True``.
 
-    Returns:
-        Union[pandas.DataFrame, Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]]:
+    Returns
+    -------
+        Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame, pd.Series]]:
             If `setup` is ``False``, returns the complete dataset as a
             DataFrame. If `setup` is ``True``, returns a tuple:
             (x_train, x_test, y_test).
 
-    Raises:
+    Raises
+    ------
         FileNotFoundError: If the dataset file at `file_path` does not exist.
     """
     if not file_path.exists():
@@ -291,8 +299,8 @@ def _load_dataset(
 
 def _create_setup(
     df: pd.DataFrame, random_state: int
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
-    """Creates an experimental train/test split from a dataset.
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
+    """Create an experimental train/test split from a dataset.
 
     This setup aims to create a scenario for anomaly detection where:
     - The training set (`x_train`) contains only normal samples (Class 0).
@@ -313,7 +321,8 @@ def _create_setup(
         random_state (int): Seed for random number generation used in
             splitting and sampling.
 
-    Returns:
+    Returns
+    -------
         Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]:
             A tuple (x_train, x_test, y_test):
             - `x_train`: DataFrame of training features (normal samples only).

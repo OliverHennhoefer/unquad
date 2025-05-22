@@ -1,5 +1,4 @@
 from pyod.models.kpca import KPCA
-
 from unquad.data.load import load_ionosphere
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation

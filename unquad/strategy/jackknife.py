@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from typing import Union, List, Tuple, Optional  # Added List, Tuple, Optional
 from pyod.models.base import BaseDetector
-
 from unquad.strategy.base import BaseStrategy
 from unquad.strategy.cross_val import CrossValidation
 
@@ -20,7 +18,8 @@ class Jackknife(BaseStrategy):
     It internally uses a :class:`~unquad.strategy.cross_val.CrossValidation`
     strategy, dynamically setting its `_k` parameter to the dataset size.
 
-    Attributes:
+    Attributes
+    ----------
         _plus (bool): If ``True``, each model trained (one for each left-out
             sample) is retained. If ``False``, a single model trained on the
             full dataset (after leave-one-out calibration) is retained. This
@@ -40,7 +39,7 @@ class Jackknife(BaseStrategy):
     """
 
     def __init__(self, plus: bool = False):
-        """Initializes the Jackknife strategy.
+        """Initialize the Jackknife strategy.
 
         Args:
             plus (bool, optional): If ``True``, instructs the internal
@@ -50,18 +49,18 @@ class Jackknife(BaseStrategy):
         super().__init__(plus)
         self._plus: bool = plus
         self._strategy: CrossValidation = CrossValidation(k=1, plus=plus)
-        self._calibration_ids: Optional[List[int]] = None
+        self._calibration_ids: list[int] | None = None
 
-        self._detector_list: List[BaseDetector] = []
-        self._calibration_set: List[float] = []
+        self._detector_list: list[BaseDetector] = []
+        self._calibration_set: list[float] = []
 
     def fit_calibrate(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
         weighted: bool = False,  # Parameter passed to internal strategy
         seed: int = 1,
-    ) -> Tuple[List[BaseDetector], List[float]]:
+    ) -> tuple[list[BaseDetector], list[float]]:
         """Fits detector(s) and gets calibration scores using jackknife.
 
         This method configures the internal
@@ -82,7 +81,8 @@ class Jackknife(BaseStrategy):
             seed (int, optional): Random seed, passed to the internal
                 `CrossValidation` strategy for reproducibility. Defaults to ``1``.
 
-        Returns:
+        Returns
+        -------
             Tuple[List[BaseDetector], List[float]]:
                 A tuple containing:
                 - A list of trained PyOD detector models.
@@ -97,14 +97,15 @@ class Jackknife(BaseStrategy):
         return self._detector_list, self._calibration_set
 
     @property
-    def calibration_ids(self) -> Optional[List[int]]:
+    def calibration_ids(self) -> list[int] | None:
         """Returns indices from `x` used for calibration via jackknife.
 
         These are the indices of samples used to obtain calibration scores.
         In jackknife (leave-one-out), each sample is used once for
         calibration. The list is populated after `fit_calibrate` is called.
 
-        Returns:
+        Returns
+        -------
             Optional[List[int]]: A list of integer indices, or ``None`` if
                 `fit_calibrate` has not been called.
         """

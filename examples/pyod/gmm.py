@@ -1,5 +1,4 @@
 from pyod.models.gmm import GMM
-
 from unquad.data.load import load_shuttle
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import Split

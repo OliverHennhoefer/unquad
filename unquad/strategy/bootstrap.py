@@ -1,13 +1,12 @@
 import math
+from copy import copy, deepcopy
+
 import numpy as np
 import pandas as pd
-
-from tqdm import tqdm
-from typing import Union, Optional, List, Tuple
-from copy import copy, deepcopy
-from pyod.models.base import BaseDetector
 from sklearn.model_selection import ShuffleSplit
+from tqdm import tqdm
 
+from pyod.models.base import BaseDetector
 from unquad.estimation.properties.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 
@@ -25,7 +24,8 @@ class Bootstrap(BaseStrategy):
     resampling ratio, number of bootstraps, or desired calibration set size,
     and the third will be calculated.
 
-    Attributes:
+    Attributes
+    ----------
         _resampling_ratio (Optional[float]): The proportion of the dataset
             to be used for training in each bootstrap split. If ``None``, it's
             calculated based on `_n_bootstraps` and `_n_calib`.
@@ -55,12 +55,12 @@ class Bootstrap(BaseStrategy):
 
     def __init__(
         self,
-        resampling_ratio: Optional[float] = None,
-        n_bootstraps: Optional[int] = None,
-        n_calib: Optional[int] = None,
+        resampling_ratio: float | None = None,
+        n_bootstraps: int | None = None,
+        n_calib: int | None = None,
         plus: bool = False,
     ):
-        """Initializes the Bootstrap strategy.
+        """Initialize the Bootstrap strategy.
 
         Exactly two of `resampling_ratio`, `n_bootstraps`, and `n_calib`
         should be provided. The third will be calculated by `_configure`.
@@ -79,22 +79,22 @@ class Bootstrap(BaseStrategy):
                 collected. Defaults to ``False``.
         """
         super().__init__(plus)
-        self._resampling_ratio: Optional[float] = resampling_ratio
-        self._n_bootstraps: Optional[int] = n_bootstraps
-        self._n_calib: Optional[int] = n_calib
+        self._resampling_ratio: float | None = resampling_ratio
+        self._n_bootstraps: int | None = n_bootstraps
+        self._n_calib: int | None = n_calib
         self._plus: bool = plus
 
-        self._detector_list: List[BaseDetector] = []
-        self._calibration_set: List[float] = []
-        self._calibration_ids: List[int] = []
+        self._detector_list: list[BaseDetector] = []
+        self._calibration_set: list[float] = []
+        self._calibration_ids: list[int] = []
 
     def fit_calibrate(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
         weighted: bool = False,
         seed: int = 1,
-    ) -> Tuple[List[BaseDetector], List[float]]:
+    ) -> tuple[list[BaseDetector], list[float]]:
         """Fits detector(s) and generates calibration scores using bootstrap.
 
         This method first configures bootstrap parameters (resampling ratio,
@@ -125,7 +125,8 @@ class Bootstrap(BaseStrategy):
                 splitting, model parameter setting, and potential subsampling.
                 Defaults to ``1``.
 
-        Returns:
+        Returns
+        -------
             Tuple[List[BaseDetector], List[float]]:
                 A tuple containing:
                 - A list of trained PyOD detector models.
@@ -178,23 +179,19 @@ class Bootstrap(BaseStrategy):
             self._calibration_set = [self._calibration_set[i] for i in ids]
             if weighted:
                 self._calibration_ids = [self._calibration_ids[i] for i in ids]
-            else:
-                # If not weighted, _calibration_ids might become inconsistent
-                # with a subsampled _calibration_set. Consider if this is intended.
-                # For now, it remains the full list of IDs if not weighted.
-                pass
 
         return self._detector_list, self._calibration_set
 
     def _sanity_check(self) -> None:
-        """Ensures that exactly two configuration parameters are provided.
+        """Ensure that exactly two configuration parameters are provided.
 
         Verifies that exactly two of `_resampling_ratio`, `_n_bootstraps`,
         and `_n_calib` have been set during initialization. The third
         parameter is derived from these two and the dataset size by
         `_configure`.
 
-        Raises:
+        Raises
+        ------
             ValueError: If not exactly two of the three parameters
                 (resampling_ratio, n_bootstraps, n_calib) are defined.
         """
@@ -208,8 +205,51 @@ class Bootstrap(BaseStrategy):
                 "must be defined."
             )
 
+    @staticmethod
+    def _calculate_n_calib_target(
+        n_data: int, num_bootstraps: int, res_ratio: float
+    ) -> int:
+        if not (0 < res_ratio < 1):
+            raise ValueError("Resampling ratio must be between 0 and 1.")
+        if num_bootstraps < 1:
+            raise ValueError("Number of bootstraps must be at least 1.")
+        return math.ceil(num_bootstraps * n_data * (1.0 - res_ratio))
+
+    @staticmethod
+    def _calculate_n_bootstraps_target(
+        n_data: int, num_calib_target: int, res_ratio: float
+    ) -> int:
+        if not (0 < res_ratio < 1):
+            raise ValueError("Resampling ratio must be between 0 and 1.")
+        if n_data * (1.0 - res_ratio) <= 0:
+            raise ValueError(
+                "Product n_data * (1 - res_ratio) must be positive for "
+                "calculating n_bootstraps."
+            )
+        n_b = math.ceil(num_calib_target / (n_data * (1.0 - res_ratio)))
+        if n_b < 1:
+            raise ValueError("Calculated number of bootstraps is less than 1.")
+        return n_b
+
+    @staticmethod
+    def _calculate_resampling_ratio_target(
+        n_data: int, num_bootstraps: int, num_calib_target: int
+    ) -> float:
+        if num_bootstraps < 1:
+            raise ValueError("Number of bootstraps must be at least 1.")
+        if n_data <= 0 or num_bootstraps * n_data == 0:
+            raise ValueError("Product n_data * num_bootstraps must be positive.")
+
+        val = 1.0 - (float(num_calib_target) / (num_bootstraps * n_data))
+        if not (0 < val < 1):
+            raise ValueError(
+                f"Calculated resampling_ratio ({val:.3f}) is not between 0 and 1. "
+                "Check input n_calib, n_bootstraps, and data size."
+            )
+        return val
+
     def _configure(self, n: int) -> None:
-        """Configures bootstrap parameters based on two provided settings.
+        """Configure bootstrap parameters based on two provided settings.
 
         Calculates and sets the third missing parameter among
         `_resampling_ratio`, `_n_bootstraps`, and `_n_calib` based on the
@@ -223,74 +263,35 @@ class Bootstrap(BaseStrategy):
         Args:
             n (int): The total number of samples in the dataset.
 
-        Raises:
+        Raises
+        ------
             ValueError: If `_sanity_check` fails (i.e., not exactly two
                 parameters were initially defined), or if calculated
                 `resampling_ratio` is not within (0, 1) or `n_bootstraps` < 1.
         """
         self._sanity_check()
 
-        def calculate_n_calib_target(
-            n_data: int, num_bootstraps: int, res_ratio: float
-        ) -> int:
-            if not (0 < res_ratio < 1):
-                raise ValueError("Resampling ratio must be between 0 and 1.")
-            if num_bootstraps < 1:
-                raise ValueError("Number of bootstraps must be at least 1.")
-            return math.ceil(num_bootstraps * n_data * (1.0 - res_ratio))
-
-        def calculate_n_bootstraps_target(
-            n_data: int, num_calib_target: int, res_ratio: float
-        ) -> int:
-            if not (0 < res_ratio < 1):
-                raise ValueError("Resampling ratio must be between 0 and 1.")
-            if n_data * (1.0 - res_ratio) <= 0:
-                raise ValueError(
-                    "Product n_data * (1 - res_ratio) must be positive for "
-                    "calculating n_bootstraps."
-                )
-            n_b = math.ceil(num_calib_target / (n_data * (1.0 - res_ratio)))
-            if n_b < 1:
-                raise ValueError("Calculated number of bootstraps is less than 1.")
-            return n_b
-
-        def calculate_resampling_ratio_target(
-            n_data: int, num_bootstraps: int, num_calib_target: int
-        ) -> float:
-            if num_bootstraps < 1:
-                raise ValueError("Number of bootstraps must be at least 1.")
-            if n_data <= 0 or num_bootstraps * n_data == 0:
-                raise ValueError("Product n_data * num_bootstraps must be positive.")
-
-            val = 1.0 - (float(num_calib_target) / (num_bootstraps * n_data))
-            if not (0 < val < 1):
-                raise ValueError(
-                    f"Calculated resampling_ratio ({val:.3f}) is not between 0 and 1. "
-                    "Check input n_calib, n_bootstraps, and data size."
-                )
-            return val
-
         if self._n_bootstraps is not None and self._resampling_ratio is not None:
-            self._n_calib = calculate_n_calib_target(
+            self._n_calib = self._calculate_n_calib_target(
                 n_data=n,
                 num_bootstraps=self._n_bootstraps,
                 res_ratio=self._resampling_ratio,
             )
         elif self._n_bootstraps is not None and self._n_calib is not None:
-            self._resampling_ratio = calculate_resampling_ratio_target(
+            self._resampling_ratio = self._calculate_resampling_ratio_target(
                 n_data=n,
                 num_bootstraps=self._n_bootstraps,
                 num_calib_target=self._n_calib,
             )
         elif self._resampling_ratio is not None and self._n_calib is not None:
-            self._n_bootstraps = calculate_n_bootstraps_target(
+            self._n_bootstraps = self._calculate_n_bootstraps_target(
                 n_data=n,
                 res_ratio=self._resampling_ratio,
                 num_calib_target=self._n_calib,
             )
 
     @property
-    def calibration_ids(self) -> List[int]:
+    def calibration_ids(self) -> list[int]:
         """Returns the list of indices used for calibration.
 
         These are indices relative to the original input data `x` provided to
@@ -300,7 +301,8 @@ class Bootstrap(BaseStrategy):
         be a subsample of all encountered IDs, corresponding to the
         subsampled `_calibration_set`.
 
-        Returns:
+        Returns
+        -------
             List[int]: A list of integer indices.
         """
         return self._calibration_ids

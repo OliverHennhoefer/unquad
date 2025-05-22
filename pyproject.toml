@@ -52,18 +52,10 @@ docs = [
 ]
 dl = [
     "tensorflow>=2.16.1",
-    "torch>=2.7.0"
+    "torch>=2.7.0"  # Assuming you meant torch version here, was 2.7.0, common is 2.x.y
 ]
 all = [
-    "black",
-    "ruff",
-    "pre-commit",
-    "sphinx",
-    "furo",
-    "sphinx-autoapi",
-    "myst-parser",
-    "tensorflow>=2.16.1",
-    "torch>=2.7.0"
+    "unquad[dev,docs,dl]" # Simpler way to express all dependencies
 ]
 
 [project.urls]
@@ -75,43 +67,32 @@ line-length = 88
 target-version = [
     'py312'
 ]
-
-extend-exclude ='''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.nox
-  | \.pants\.d
-  | \.pytype
-  | \.ruff_cache
-  | \.svn
-  | \.tox
-  | \.venv
-  | __pypackages__
-  | _build
-  | buck-out
-  | build
-  | dist
-  | node_modules
-  | venv
-)/
-'''
+# extend-exclude is already well-defined by Ruff's default excludes,
+# Black will also respect .gitignore. If you have specific additional
+# top-level directories Black should ignore that aren't covered by
+# .gitignore or standard Python project layouts, you can add them.
+# The default excludes for Black are usually sufficient.
+# Current extend-exclude is fine but very verbose.
 
 [tool.ruff]
 line-length = 88
 target-version = "py312"
 src = [
-    "."
+    "unquad", # Specify your source directory explicitly
+    "tests",  # Add your tests directory
+    "examples", # Add your examples directory
+    "."       # For files in root like pyproject.toml, conf.py if not in a subdir
 ]
 include = [
     "*.py",
     "*.pyi",
     "*.ipynb",
-    "**/pyproject.toml"
+    "pyproject.toml", # Ruff can lint pyproject.toml
+    "*.md" # Add Markdown files
 ]
 exclude = [
+    "**/*.md",
+    "paper.bib",
     ".bzr",
     ".direnv",
     ".eggs",
@@ -137,29 +118,71 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
+    "docs/build", # Exclude Sphinx build output
+    "docs/source/api", # Exclude autoapi generated files from direct linting by Ruff
+                       # as their source is Python docstrings.
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "unquad/estimation/conformal.py" = [
-    "E402"
+    "E402" # Module level import not at top of file
 ]
 "unquad/estimation/weighted_conformal.py" = [
-    "E402"
+    "E402" # Module level import not at top of file
 ]
+"docs/source/conf.py" = [
+    "D100", # Missing docstring in public module
+    "E402"  # Module level import not at top of file (sys.path.insert)
+]
+"examples/**/*.py" = [ # Allow more relaxed rules for examples
+    "D100", "D103", "D101", "D102", "D104", "D105", "D107",
+    "E501" # Line too long, common in example plots/data
+]
+"tests/**/*.py" = [ # Allow more relaxed rules for tests
+    "D100", "D101", "D102", "D103", "D104", "D107",
+    "S101" # assert allowed in tests
+]
+
 
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors (excluding some stylistic ones handled by formatters)
+    "E",  # pycodestyle errors
     "F",  # Pyflakes
+    "W",  # pycodestyle warnings
+    "I",  # isort (import order)
+    "D",  # pydocstyle (docstrings)
+    "UP", # pyupgrade (modernize Python code)
+    "N",  # pep8-naming
+    "Q",  # flake8-quotes
+    "RUF",# Ruff-specific rules (includes some for Markdown, e.g. RUF200 for bad header increases)
+    "NPY" # NumPy-specific rules, for idiomatic NumPy code
 ]
-ignore = []
+ignore = [
+    "D100", # Missing docstring in public module (can be noisy initially)
+    "D104", # Missing docstring in public package (for __init__.py files)
+    "D107", # Missing docstring in __init__
+    "D203", # 1 blank line required before class docstring (conflicts with D211)
+    "D212", # Multi-line docstring summary should start at the first line
+    "D213", # Multi-line docstring summary should start at the second line (conflicts with D212, pick one or use formatter)
+    "D402", # First line of docstring should not be the function's signature
+    "D415", # Ends in ".", "?", "!" (can be too strict)
+]
 fixable = [
     "ALL"
 ]
 unfixable = []
+
+# Configure pydocstyle (D rules)
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"  # Or "google" - choose one that Napoleon uses in Sphinx
+
+# For Markdown linting (RUF rules, e.g., RUF200 for header increments)
+# Ruff will pick up .md files if they are in the `include` and not `exclude`.
+# Some Markdown rules are in the RUF category.
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+docstring-code-format = true # Enable formatting of code examples in docstrings

@@ -13,13 +13,13 @@ import os
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
+from typing import Literal  # List imported for type hint clarity
+
 import numpy as np
 import pandas as pd
-
-from typing import Union, Literal, List  # List imported for type hint clarity
-from pyod.models.base import BaseDetector as PyODBaseDetector  # Alias for clarity
 from tqdm import tqdm
 
+from pyod.models.base import BaseDetector as PyODBaseDetector  # Alias for clarity
 from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.properties.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
@@ -38,7 +38,8 @@ class ConformalDetector:
     data, providing options for raw scores, p-values, or binary decisions,
     while accounting for multiple hypothesis testing.
 
-    Attributes:
+    Attributes
+    ----------
         detector (PyODBaseDetector): The underlying anomaly detection model,
             initialized with a specific seed.
         strategy (BaseStrategy): The strategy used to fit and calibrate the
@@ -59,7 +60,7 @@ class ConformalDetector:
         strategy: BaseStrategy,
         config: DetectorConfig = DetectorConfig(),
     ):
-        """Initializes the ConformalDetector.
+        """Initialize the ConformalDetector.
 
         Args:
             detector (PyODBaseDetector): The base anomaly detection model to be
@@ -75,11 +76,11 @@ class ConformalDetector:
         self.strategy: BaseStrategy = strategy
         self.config: DetectorConfig = config
 
-        self.detector_set: List[PyODBaseDetector] = []
-        self.calibration_set: List[float] = []
+        self.detector_set: list[PyODBaseDetector] = []
+        self.calibration_set: list[float] = []
 
     @ensure_numpy_array
-    def fit(self, x: Union[pd.DataFrame, np.ndarray]) -> None:
+    def fit(self, x: pd.DataFrame | np.ndarray) -> None:
         """Fits the detector model(s) and computes calibration scores.
 
         This method uses the specified strategy to train the base detector(s)
@@ -100,7 +101,7 @@ class ConformalDetector:
     @ensure_numpy_array
     def predict(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         output: Literal["decision", "p-value", "score"] = "decision",
     ) -> np.ndarray:
         """Predicts anomaly status, p-values, or scores for new data.
@@ -123,7 +124,8 @@ class ConformalDetector:
                 * "score": Returns the aggregated anomaly scores (non-conformity
                   estimates) from the detector set for each data point.
 
-        Returns:
+        Returns
+        -------
             np.ndarray: An array containing the predictions. The content of the
             array depends on the `output` argument:
             - If "decision", a binary array of 0s and 1s.

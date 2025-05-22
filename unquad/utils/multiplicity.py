@@ -1,5 +1,4 @@
 import numpy as np
-
 from scipy.stats import false_discovery_control
 
 from unquad.utils.decorator import performance_conversion
@@ -10,7 +9,7 @@ from unquad.utils.enums import Adjustment
 def multiplicity_correction(
     method: Adjustment, scores: np.ndarray
 ) -> list:  # Adjusted return type based on actual behavior
-    """Applies multiplicity correction to scores using a specified method.
+    """Apply multiplicity correction to scores using a specified method.
 
     This function processes an array of p-values (or scores from multiple tests)
     to account for the multiplicity of comparisons. It can apply the
@@ -35,7 +34,8 @@ def multiplicity_correction(
             between 0 and 1) or scores from multiple statistical tests that
             require adjustment.
 
-    Returns:
+    Returns
+    -------
         list: A list representing the outcome of the multiplicity correction.
             - If `method` is ``Adjustment.BH`` or ``Adjustment.BY``, this is a
               list of booleans (``True`` if the null hypothesis for the
@@ -44,7 +44,8 @@ def multiplicity_correction(
               the original scores.
             The type of elements in the list depends on the method applied.
 
-    Raises:
+    Raises
+    ------
         ValueError: If an unsupported `method` is provided (i.e., not defined
             in the function's internal mapping for adjustments).
     """

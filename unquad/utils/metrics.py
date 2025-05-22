@@ -5,7 +5,7 @@ from unquad.utils.decorator import performance_conversion
 
 @performance_conversion("y", "y_hat")
 def false_discovery_rate(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> float:
-    """Calculates the False Discovery Rate (FDR) for binary classification.
+    """Calculate the False Discovery Rate (FDR) for binary classification.
 
     The False Discovery Rate is the proportion of false positives among all
     instances predicted as positive. It is calculated as:
@@ -22,7 +22,8 @@ def false_discovery_rate(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> floa
         dec (int, optional): The number of decimal places to which the
             resulting FDR should be rounded. Defaults to ``3``.
 
-    Returns:
+    Returns
+    -------
         float: The calculated False Discovery Rate, rounded to `dec`
             decimal places.
     """
@@ -44,7 +45,7 @@ def false_discovery_rate(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> floa
 
 @performance_conversion("y", "y_hat")
 def statistical_power(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> float:
-    """Calculates statistical power (recall or true positive rate).
+    """Calculate statistical power (recall or true positive rate).
 
     Statistical power, also known as recall or true positive rate (TPR),
     measures the proportion of actual positives that are correctly identified
@@ -63,7 +64,8 @@ def statistical_power(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> float:
         dec (int, optional): The number of decimal places to which the
             resulting power should be rounded. Defaults to ``3``.
 
-    Returns:
+    Returns
+    -------
         float: The calculated statistical power, rounded to `dec` decimal
             places.
     """

@@ -1,6 +1,5 @@
 from pyod.models.lscp import LSCP
 from pyod.models.pca import PCA
-
 from unquad.data.load import load_fraud
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation

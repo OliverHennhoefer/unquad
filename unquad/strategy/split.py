@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
-
-from typing import Union, List, Tuple, Optional  # Added List, Tuple, Optional
-from pyod.models.base import BaseDetector
 from sklearn.model_selection import train_test_split
 
+from pyod.models.base import BaseDetector
 from unquad.strategy.base import BaseStrategy
 
 
@@ -16,7 +14,8 @@ class Split(BaseStrategy):
     detector is trained on the training set, and its non-conformity scores
     are then obtained from the calibration set.
 
-    Attributes:
+    Attributes
+    ----------
         _calib_size (Union[float, int]): Defines the size of the calibration
             set. If a float between 0.0 and 1.0, it represents the
             proportion of the dataset to allocate to the calibration set.
@@ -29,8 +28,8 @@ class Split(BaseStrategy):
             :attr:`calibration_ids` property.
     """
 
-    def __init__(self, calib_size: Union[float, int] = 0.1) -> None:
-        """Initializes the Split strategy.
+    def __init__(self, calib_size: float | int = 0.1) -> None:
+        """Initialize the Split strategy.
 
         Args:
             calib_size (Union[float, int], optional): The size or proportion
@@ -40,16 +39,16 @@ class Split(BaseStrategy):
                 absolute number of samples. Defaults to ``0.1`` (10%).
         """
         super().__init__()  # `plus` is not relevant for a single split
-        self._calib_size: Union[float, int] = calib_size
-        self._calibration_ids: Optional[List[int]] = None
+        self._calib_size: float | int = calib_size
+        self._calibration_ids: list[int] | None = None
 
     def fit_calibrate(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
         weighted: bool = False,
         seed: int = 1,
-    ) -> Tuple[List[BaseDetector], List[float]]:
+    ) -> tuple[list[BaseDetector], list[float]]:
         """Fits a detector and generates calibration scores using a data split.
 
         The input data `x` is split into a training set and a calibration
@@ -70,7 +69,8 @@ class Split(BaseStrategy):
             seed (int, optional): Random seed for reproducibility of the
                 train-test split. Defaults to ``1``.
 
-        Returns:
+        Returns
+        -------
             Tuple[List[BaseDetector], List[float]]:
                 A tuple containing:
                 - A list containing the single trained PyOD detector instance.
@@ -91,7 +91,7 @@ class Split(BaseStrategy):
         return [detector], calibration_set.tolist()  # Ensure list return
 
     @property
-    def calibration_ids(self) -> Optional[List[int]]:
+    def calibration_ids(self) -> list[int] | None:
         """Returns indices from `x` used for the calibration set.
 
         This property provides the list of indices corresponding to the samples
@@ -99,7 +99,8 @@ class Split(BaseStrategy):
         method. It will be ``None`` if `fit_calibrate` was called with
         `weighted=False` or if `fit_calibrate` has not yet been called.
 
-        Returns:
+        Returns
+        -------
             Optional[List[int]]: A list of integer indices, or ``None``.
         """
         return self._calibration_ids

@@ -1,8 +1,7 @@
 from pyod.models.sod import SOD
-
 from unquad.data.load import load_shuttle
-from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 

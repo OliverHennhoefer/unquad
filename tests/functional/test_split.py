@@ -1,7 +1,6 @@
 import unittest
 
 from pyod.models.iforest import IForest
-
 from unquad.data.load import load_fraud, load_shuttle
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import Split

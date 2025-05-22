@@ -5,7 +5,8 @@ including handling a list of models that are restricted or unsupported.
 It dynamically checks for the availability of TensorFlow-dependent models
 and updates the list of forbidden models accordingly.
 
-Attributes:
+Attributes
+----------
     forbidden_model_list (list[type[BaseDetector]]): A list of PyOD detector
         classes that are considered unsupported or restricted for use by
         the `set_params` function. This list is initially populated with
@@ -37,10 +38,10 @@ forbidden_model_list: list[type[BaseDetector]] = [
 tf: bool = True
 try:
     from pyod.models.alad import ALAD  # noqa
-    from pyod.models.deep_svdd import DeepSVDD  # noqa
-    from pyod.models.so_gaal import SO_GAAL  # noqa
-    from pyod.models.mo_gaal import MO_GAAL  # noqa
-    from pyod.models.vae import VAE  # noqa
+    from pyod.models.deep_svdd import DeepSVDD
+    from pyod.models.so_gaal import SO_GAAL
+    from pyod.models.mo_gaal import MO_GAAL
+    from pyod.models.vae import VAE
 
     forbidden_model_list += [ALAD, DeepSVDD, SO_GAAL, MO_GAAL, VAE]
 except ImportError:
@@ -53,7 +54,7 @@ def set_params(
     random_iteration: bool = False,
     iteration: int | None = None,
 ) -> BaseDetector:
-    """Configures a PyOD detector with specific default and dynamic parameters.
+    """Configure a PyOD detector with specific default and dynamic parameters.
 
     This function modifies the provided PyOD detector instance by setting common
     parameters. It sets 'contamination' to a very small value (effectively
@@ -77,10 +78,12 @@ def set_params(
             conjunction with `random_iteration` to generate a dynamic
             `random_state`. Defaults to ``None``.
 
-    Returns:
+    Returns
+    -------
         BaseDetector: The configured detector instance with updated parameters.
 
-    Raises:
+    Raises
+    ------
         ValueError: If the class of the `detector` is found in the
             `forbidden_model_list`.
     """

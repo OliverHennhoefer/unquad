@@ -6,7 +6,7 @@ from unquad.utils.enums import Aggregation
 
 @performance_conversion("scores")
 def aggregate(method: Aggregation, scores: np.ndarray) -> list[float]:
-    """Aggregates anomaly scores using a specified method.
+    """Aggregate anomaly scores using a specified method.
 
     This function applies a chosen aggregation technique to a 2D array of
     anomaly scores, where each row typically represents scores from a different
@@ -22,11 +22,13 @@ def aggregate(method: Aggregation, scores: np.ndarray) -> list[float]:
             columns correspond to individual data points/samples.
             Aggregation is performed along ``axis=0``.
 
-    Returns:
+    Returns
+    -------
         list[float]: A list of aggregated anomaly scores. The length of the list
             will correspond to the number of columns in the input `scores` array.
 
-    Raises:
+    Raises
+    ------
         ValueError: If the `method` is not a supported aggregation type
             defined in the internal mapping.
     """

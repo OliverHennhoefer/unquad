@@ -1,5 +1,4 @@
 from pyod.models.copod import COPOD
-
 from unquad.data.load import load_breast
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife

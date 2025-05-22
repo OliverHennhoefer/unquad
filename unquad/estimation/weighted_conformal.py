@@ -6,20 +6,20 @@ from sklearn.preprocessing import StandardScaler
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
+from typing import Literal  # Added List, Tuple
+
 import numpy as np
 import pandas as pd
-
-from typing import Union, Literal, List, Tuple  # Added List, Tuple
-from pyod.models.base import BaseDetector
 from tqdm import tqdm
 
+from pyod.models.base import BaseDetector
 from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.properties.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 from unquad.utils.aggregation import aggregate
 from unquad.utils.decorator import ensure_numpy_array
 from unquad.utils.multiplicity import multiplicity_correction
-from unquad.utils.statistical import get_decision, calculate_weighted_p_val
+from unquad.utils.statistical import calculate_weighted_p_val, get_decision
 
 
 class WeightedConformalDetector:
@@ -38,7 +38,8 @@ class WeightedConformalDetector:
     The methodology is inspired by concepts for handling covariate shift in
     conformal prediction, adapted for anomaly detection.
 
-    Attributes:
+    Attributes
+    ----------
         detector (BaseDetector): The underlying PyOD anomaly detection model,
             initialized with parameters from the config.
         strategy (BaseStrategy): The calibration strategy (e.g., Bootstrap,
@@ -62,7 +63,7 @@ class WeightedConformalDetector:
         strategy: BaseStrategy,
         config: DetectorConfig = DetectorConfig(),
     ):
-        """Initializes the WeightedConformalDetector.
+        """Initialize the WeightedConformalDetector.
 
         Args:
             detector (BaseDetector): A PyOD anomaly detector instance. It will
@@ -75,12 +76,12 @@ class WeightedConformalDetector:
         self.strategy: BaseStrategy = strategy
         self.config: DetectorConfig = config
 
-        self.detector_set: List[BaseDetector] = []
-        self.calibration_set: List[float] = []
+        self.detector_set: list[BaseDetector] = []
+        self.calibration_set: list[float] = []
         self.calibration_samples: np.ndarray = np.array([])  # Initialize as empty
 
     @ensure_numpy_array
-    def fit(self, x: Union[pd.DataFrame, np.ndarray]) -> None:
+    def fit(self, x: pd.DataFrame | np.ndarray) -> None:
         """Fits the detector and prepares for conformal prediction.
 
         This method uses the provided strategy to fit the underlying detector(s)
@@ -111,7 +112,7 @@ class WeightedConformalDetector:
     @ensure_numpy_array
     def predict(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         output: Literal["decision", "p-value", "score"] = "decision",
     ) -> np.ndarray:
         """Predicts anomaly status, p-values, or scores for new data.
@@ -139,7 +140,8 @@ class WeightedConformalDetector:
                 - ``"score"``: Aggregated anomaly scores.
                 Defaults to ``"decision"``.
 
-        Returns:
+        Returns
+        -------
             numpy.ndarray: An array containing the predictions. The data type
             and shape depend on the `output` type.
         """
@@ -174,8 +176,8 @@ class WeightedConformalDetector:
 
     def _compute_weights(
         self, test_instances: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """Computes importance weights for calibration and test instances.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Compute importance weights for calibration and test instances.
 
         This method trains a logistic regression classifier to distinguish
         between samples from the calibration distribution and samples from the
@@ -189,13 +191,15 @@ class WeightedConformalDetector:
             test_instances (numpy.ndarray): The test data instances for which
                 weights need to be computed.
 
-        Returns:
+        Returns
+        -------
             Tuple[numpy.ndarray, numpy.ndarray]:
                 A tuple containing:
                 - ``clipped_w_calib``: Clipped weights for calibration samples.
                 - ``clipped_w_tests``: Clipped weights for test instances.
 
-        Raises:
+        Raises
+        ------
             ValueError: If `self.calibration_samples` is empty, as weights
                 cannot be computed without calibration data.
         """

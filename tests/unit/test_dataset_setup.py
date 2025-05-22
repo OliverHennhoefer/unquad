@@ -1,13 +1,13 @@
 import unittest
-import pandas as pd
-from pandas._testing import assert_frame_equal, assert_series_equal  # noqa
 
-from unquad.data.load import load_wbc, load_fraud
+import pandas as pd
+from pandas._testing import assert_frame_equal, assert_series_equal
+
+from unquad.data.load import load_fraud, load_wbc
 
 
 class TestDatasetSetup(unittest.TestCase):
     def test_dataset_setup_wbc(self):
-
         x_train, x_test, y_test = load_wbc(setup=True)
 
         data = {
@@ -48,7 +48,6 @@ class TestDatasetSetup(unittest.TestCase):
         assert_series_equal(y_test.iloc[31:], y_test_ref)
 
     def test_dataset_setup_fraud(self):
-
         x_train, x_test, y_test = load_fraud(setup=True)
 
         data = {

@@ -1,5 +1,4 @@
 from pyod.models.lof import LOF
-
 from unquad.data.load import load_musk
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife

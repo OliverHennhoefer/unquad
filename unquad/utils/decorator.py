@@ -1,12 +1,12 @@
+from collections.abc import Callable
+from functools import wraps
+
 import numpy as np
 import pandas as pd
 
-from typing import Callable, Union
-from functools import wraps
-
 
 def performance_conversion(*arg_names: str) -> Callable:
-    """Creates a decorator to convert specified arguments and return values.
+    """Create a decorator to convert specified arguments and return values.
 
     This decorator factory produces a decorator that, when applied to a
     function, automatically converts specified input arguments from Python
@@ -25,7 +25,8 @@ def performance_conversion(*arg_names: str) -> Callable:
             decorated function that should be converted from lists to
             ``numpy.ndarray``.
 
-    Returns:
+    Returns
+    -------
         Callable: The actual decorator that can be applied to a function.
     """
 
@@ -81,7 +82,7 @@ def performance_conversion(*arg_names: str) -> Callable:
 
 
 def ensure_numpy_array(func: Callable) -> Callable:
-    """Decorator to ensure a specific input argument is a ``numpy.ndarray``.
+    """Ensure a specific input argument is a ``numpy.ndarray``.
 
     This decorator is designed for methods where the first argument after
     `self` (conventionally named `x`) is expected to be a ``numpy.ndarray``.
@@ -93,13 +94,14 @@ def ensure_numpy_array(func: Callable) -> Callable:
         func (Callable): The method to be decorated. It is assumed to have
             `self` as its first parameter, followed by the data argument `x`.
 
-    Returns:
+    Returns
+    -------
         Callable: The wrapped method, which will receive `x` as a
             ``numpy.ndarray``.
     """
 
     @wraps(func)
-    def wrapper(self, x: Union[pd.DataFrame, np.ndarray], *args, **kwargs):
+    def wrapper(self, x: pd.DataFrame | np.ndarray, *args, **kwargs):
         # Convert pandas.DataFrame to numpy.ndarray if necessary
         if isinstance(x, pd.DataFrame):
             x_converted = x.values

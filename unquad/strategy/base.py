@@ -1,7 +1,8 @@
 import abc
+
 import numpy as np
 import pandas as pd
-from typing import Union, Optional, List  # Corrected List import
+
 from pyod.models.base import BaseDetector
 
 
@@ -12,32 +13,30 @@ class BaseStrategy(abc.ABC):
     applied to anomaly detectors. Subclasses must implement the core
     calibration logic and define how calibration data is identified and used.
 
-    Attributes:
+    Attributes
+    ----------
         _plus (bool): A flag, typically set during initialization, that may
             influence calibration behavior in subclasses (e.g., by applying
             an adjustment).
     """
 
     def __init__(self, plus: bool = False):
-        """Initializes the base calibration strategy.
+        """Initialize the base calibration strategy.
 
         Args:
             plus (bool, optional): A flag that can be used by subclasses to
                 modify their calibration behavior. Defaults to ``False``.
         """
         self._plus: bool = plus
-        self._calibration_ids: List[int]  # Corrected type hint
+        self._calibration_ids: list[int]  # Corrected type hint
 
     @abc.abstractmethod
     def fit_calibrate(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
-        weighted: Optional[bool],
-        seed: Optional[int],
-    ) -> (
-        None
-    ):  # Assuming abstract method primarily for side effects or subclass defined returns
+        seed: int | None,
+    ) -> None:
         """Fits the detector and performs calibration.
 
         This abstract method must be implemented by subclasses to define the
@@ -57,7 +56,8 @@ class BaseStrategy(abc.ABC):
             seed (Optional[int]): A random seed for ensuring reproducibility
                 in stochastic parts of the fitting or calibration process.
 
-        Raises:
+        Raises
+        ------
             NotImplementedError: If the subclass does not implement this method.
         """
         raise NotImplementedError(
@@ -66,7 +66,7 @@ class BaseStrategy(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def calibration_ids(self) -> List[int]:
+    def calibration_ids(self) -> list[int]:
         """Provides the indices of the data points used for calibration.
 
         This abstract property must be implemented by subclasses. It should
@@ -74,10 +74,12 @@ class BaseStrategy(abc.ABC):
         original input data (provided to `fit_calibrate`) were selected or
         designated as the calibration set.
 
-        Returns:
+        Returns
+        -------
             List[int]: A list of integer indices for the calibration data.
 
-        Raises:
+        Raises
+        ------
             NotImplementedError: If the subclass does not implement this
                 property.
         """

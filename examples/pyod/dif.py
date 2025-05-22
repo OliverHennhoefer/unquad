@@ -1,5 +1,4 @@
 from pyod.models.dif import DIF
-
 from unquad.data.load import load_shuttle
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap

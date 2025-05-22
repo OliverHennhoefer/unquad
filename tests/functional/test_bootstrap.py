@@ -1,7 +1,6 @@
 import unittest
 
 from pyod.models.iforest import IForest
-
 from unquad.data.load import load_shuttle
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
@@ -10,7 +9,6 @@ from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 class TestCaseBootstrapConformal(unittest.TestCase):
     def test_bootstrap_conformal_compute_n_bootstraps(self):
-
         x_train, x_test, y_test = load_shuttle(setup=True)
 
         ce = ConformalDetector(

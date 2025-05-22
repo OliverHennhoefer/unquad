@@ -1,7 +1,6 @@
 import unittest
 
 from pyod.models.iforest import IForest
-
 from unquad.data.load import load_fraud
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.cross_val import CrossValidation

@@ -8,7 +8,8 @@ class Adjustment(Enum):
     levels when conducting multiple statistical hypothesis tests to manage
     the overall error rate.
 
-    Attributes:
+    Attributes
+    ----------
         BH: Represents the Benjamini-Hochberg procedure. The underlying value
             is typically ``"bh"``.
         BY: Represents the Benjamini-Yekutieli procedure. The underlying value
@@ -28,7 +29,8 @@ class Aggregation(Enum):
     This enumeration lists strategies for aggregating data, commonly employed
     in ensemble methods to combine predictions or scores from several models.
 
-    Attributes:
+    Attributes
+    ----------
         MEAN: Represents aggregation by calculating the arithmetic mean.
             The underlying value is typically ``"mean"``.
         MEDIAN: Represents aggregation by calculating the median.

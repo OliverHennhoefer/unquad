@@ -1,11 +1,9 @@
 from pyod.models.iforest import IForest
-
 from unquad.data.load import load_shuttle
-from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.enums import Aggregation
-from unquad.utils.enums import Adjustment
+from unquad.utils.enums import Adjustment, Aggregation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":

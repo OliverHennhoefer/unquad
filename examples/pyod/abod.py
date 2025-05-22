@@ -1,12 +1,10 @@
 from pyod.models.abod import ABOD
-
 from unquad.data.load import load_breast
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
-
     x_train, x_test, y_test = load_breast(setup=True)
 
     ce = ConformalDetector(detector=ABOD(), strategy=CrossValidation(k=20))

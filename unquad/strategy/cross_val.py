@@ -1,12 +1,11 @@
+from copy import copy, deepcopy
+
 import numpy as np
 import pandas as pd
-
-from tqdm import tqdm
-from typing import Union, List, Tuple  # Added List, Tuple
-from copy import copy, deepcopy
-from pyod.models.base import BaseDetector
 from sklearn.model_selection import KFold
+from tqdm import tqdm
 
+from pyod.models.base import BaseDetector
 from unquad.estimation.properties.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 
@@ -23,7 +22,8 @@ class CrossValidation(BaseStrategy):
     is ``True``) or train a single final model on the entire dataset after
     collecting calibration scores from all folds (if `plus` is ``False``).
 
-    Attributes:
+    Attributes
+    ----------
         _k (int): The number of folds to use in the k-fold cross-validation.
         _plus (bool): If ``True``, each model trained on a fold is retained
             in `_detector_list`. If ``False``, only a single model trained on
@@ -42,7 +42,7 @@ class CrossValidation(BaseStrategy):
     """
 
     def __init__(self, k: int, plus: bool = False):
-        """Initializes the CrossValidation strategy.
+        """Initialize the CrossValidation strategy.
 
         Args:
             k (int): The number of folds for cross-validation. Must be at
@@ -56,17 +56,17 @@ class CrossValidation(BaseStrategy):
         self._k: int = k
         self._plus: bool = plus
 
-        self._detector_list: List[BaseDetector] = []
-        self._calibration_set: List[float] = []
-        self._calibration_ids: List[int] = []
+        self._detector_list: list[BaseDetector] = []
+        self._calibration_set: list[float] = []
+        self._calibration_ids: list[int] = []
 
     def fit_calibrate(
         self,
-        x: Union[pd.DataFrame, np.ndarray],
+        x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
-        weighted: bool = False,  # This argument is present but not used in current logic
+        weighted: bool = False,
         seed: int = 1,
-    ) -> Tuple[List[BaseDetector], List[float]]:
+    ) -> tuple[list[BaseDetector], list[float]]:
         """Fits detector(s) and generates calibration scores using k-fold CV.
 
         This method divides the data `x` into `_k` folds. For each fold:
@@ -95,7 +95,8 @@ class CrossValidation(BaseStrategy):
                 shuffling in k-fold splitting and model parameter setting.
                 Defaults to ``1``.
 
-        Returns:
+        Returns
+        -------
             Tuple[List[BaseDetector], List[float]]:
                 A tuple containing:
                 - A list of trained PyOD detector models.
@@ -139,7 +140,7 @@ class CrossValidation(BaseStrategy):
         return self._detector_list, self._calibration_set
 
     @property
-    def calibration_ids(self) -> List[int]:
+    def calibration_ids(self) -> list[int]:
         """Returns the list of indices from `x` used for calibration.
 
         In k-fold cross-validation, every sample in the input data `x` is
@@ -148,7 +149,8 @@ class CrossValidation(BaseStrategy):
         typically covering all indices from 0 to len(x)-1, but ordered by
         fold processing.
 
-        Returns:
+        Returns
+        -------
             List[int]: A list of integer indices.
         """
         return self._calibration_ids

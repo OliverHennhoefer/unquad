@@ -21,12 +21,12 @@ release = "0.1.9"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
     "autoapi.extension",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
     "myst_parser",
+    "sphinx.ext.mathjax",
 ]
 
 templates_path = ["_templates"]
@@ -43,15 +43,24 @@ html_static_path = ["_static"]
 autoapi_type = "python"
 autoapi_dirs = ["../../unquad"]
 autoapi_root = "api"
-autoapi_options = [
-    "members",
-    "undoc-members",
-    "show-inheritance",
-    "show-module-summary",
-    "special-members",
-]
+
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".txt": "markdown",
+    ".md": "markdown",
+}
+
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": False,
+    "private-members": False,
+    "special-members": False,
+    "show-inheritance": True,
+}
 
 autoapi_generate_api_docs = True
 autoapi_add_toctree_entry = False
 autoapi_root = "api"
 autoapi_keep_files = False
+
+master_doc = "index"

@@ -1,5 +1,4 @@
 from pyod.models.hbos import HBOS
-
 from unquad.data.load import load_shuttle
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation
