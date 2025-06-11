@@ -1,5 +1,5 @@
 ---
-title: 'unquad: Uncertainty Quantification in Anomaly Detection via Conformal Inference'
+title: 'unquad: Conformal Anomaly Detection'
 tags:
   - Python
   - anomaly detection
@@ -9,14 +9,12 @@ tags:
   - false discovery rate
 authors:
   - name: Oliver N. Hennhöfer
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0001-9834-4685
     affiliation: 1
-  - name: Author Without ORCID
-    affiliation: 2
 affiliations:
  - name: ISRG, Karlsruhe University of Applied Sciences
    index: 1
-date: 15 May 20125
+date: 29 May 20125
 bibliography: paper.bib
 ---
 
@@ -35,7 +33,7 @@ Discovery Rate (FDR) [@Benjamini1995] within a set of tested instances [@Bates20
 The Python library `unquad` is an open-source software package that provides
 a range of tools to enable conformal inference [@Papadopoulos2002; Vovk2005; Lei2012] for one-class classification [@Petsche1994].
 The library computes classical and weighted conformal $p$-values [@Jin2023] by a set of
-different conformalization strategies  that make them suitable for application
+different conformalization strategies that make them suitable for application
 even in low-data regimes [@Hennhofer2024]. The library integrates with the majority of `pyod`
 anomaly detection models [@Zhao2019; Zhao2024].
 
@@ -46,13 +44,13 @@ The field of anomaly detection comprises methods for identifying observations th
 from the majority of observations or do otherwise no *conform* to an expected state of *normality*.
 The typical procedure leverages anomaly scores and thresholds to distinct in-distribution data from
 out-of-distribution data. However, this approach does not come with any statistical guarantees regarding
-its estimates. Major concerns in anomaly detection, especially in practical applications, are the
+its estimates. Major concerns in anomaly detection are the
 rates of False Positives among the proclaimed discoveries. Depending on the domain,
 False Positives can be expensive. Triggering *false alarms*
 too often will result in *alert fatigue* and eventually deem the detection system
 as ineffective and impractical.<br>
 In those contexts, it is necessary to control the proportion of False Positives to the
-entirety of proclaimed discoveries (the number of triggered alerts). In practice, this desire is
+entirety of proclaimed discoveries (the number of triggered alerts). In practice, this is
 measured by the FDR which translates to:
 $$
 FDR=\frac{\text{Efforts Wasted on False Alarms}}{\text{Total Efforts}}
@@ -121,5 +119,5 @@ Weighted conformal $p$-values "relax" this assumption for a specific, yet common
 
 # Acknowledgements
 
-This work was partly conducted within the research projects *Biflex Industrie* (grant number 01MV23020A) and
+This work was in parts conducted within the research projects *Biflex Industrie* (grant number 01MV23020A) and
 *AutoDiagCM* (grant number 03EE2046B) funded by the *German Federal Ministry of Economic Affairs and Climate Action* (*BMWK*).
