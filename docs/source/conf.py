@@ -37,12 +37,12 @@ autosectionlabel_maxdepth = 2
 
 # Intersphinx configuration
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
-    'sklearn': ('https://scikit-learn.org/stable/', None),
-    'pandas': ('https://pandas.pydata.org/docs/', None),
-    'matplotlib': ('https://matplotlib.org/stable/', None),
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 
 # Napoleon settings for better docstring parsing
@@ -122,12 +122,12 @@ source_suffix = {
 }
 
 autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
-    'exclude-members': '__weakref__',
-    'noindex': True,  # Add this to prevent duplicate object descriptions
+    "members": True,
+    "member-order": "bysource",
+    "special-members": "__init__",
+    "undoc-members": True,
+    "exclude-members": "__weakref__",
+    "noindex": True,  # Add this to prevent duplicate object descriptions
 }
 
 autoapi_generate_api_docs = True
