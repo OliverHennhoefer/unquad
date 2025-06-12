@@ -133,17 +133,17 @@ class WeightedConformalDetector:
                 decorator converts `x` to a ``numpy.ndarray`` internally.
             output (Literal["decision", "p-value", "score"], optional):
                 Determines the type of output:
-                - ``"decision"``: Binary decisions (0 or 1, or ``False``/``True``
+                * "decision": Binary decisions (0 or 1, or False/True
                   depending on `get_decision`) based on adjusted p-values
                   and `config.alpha`.
-                - ``"p-value"``: Raw (unadjusted) weighted p-values.
-                - ``"score"``: Aggregated anomaly scores.
-                Defaults to ``"decision"``.
+                * "p-value": Raw (unadjusted) weighted p-values.
+                * "score": Aggregated anomaly scores.
+                Defaults to "decision".
 
         Returns
         -------
             numpy.ndarray: An array containing the predictions. The data type
-            and shape depend on the `output` type.
+                and shape depend on the `output` type.
         """
         scores_list = [
             model.decision_function(x)
@@ -156,9 +156,7 @@ class WeightedConformalDetector:
         ]
 
         w_cal, w_x = self._compute_weights(x)
-        estimates = aggregate(
-            self.config.aggregation, np.array(scores_list)
-        )  # Ensure scores_list is array for aggregate
+        estimates = aggregate(self.config.aggregation, np.array(scores_list))
         p_val = calculate_weighted_p_val(
             np.array(estimates),
             np.array(self.calibration_set),
@@ -195,13 +193,8 @@ class WeightedConformalDetector:
         -------
             Tuple[numpy.ndarray, numpy.ndarray]:
                 A tuple containing:
-                - ``clipped_w_calib``: Clipped weights for calibration samples.
-                - ``clipped_w_tests``: Clipped weights for test instances.
-
-        Raises
-        ------
-            ValueError: If `self.calibration_samples` is empty, as weights
-                cannot be computed without calibration data.
+                * clipped_w_calib: Clipped weights for calibration samples.
+                * clipped_w_tests: Clipped weights for test instances.
         """
         if self.calibration_samples.shape[0] == 0:
             raise ValueError(

@@ -11,34 +11,22 @@ from unquad.strategy.base import BaseStrategy
 
 
 class CrossValidation(BaseStrategy):
-    """Cross-validation based conformal anomaly detection strategy.
+    """Implements k-fold cross-validation for conformal anomaly detection.
 
-    This strategy employs k-fold cross-validation to generate calibration
-    scores for conformal prediction. In each fold, a portion of the data
-    is used for training a detector, and the remaining part is used for
-    calibration (i.e., to obtain non-conformity scores).
-
-    The strategy can either retain all models trained on each fold (if `plus`
-    is ``True``) or train a single final model on the entire dataset after
-    collecting calibration scores from all folds (if `plus` is ``False``).
+    This strategy splits the data into k folds and uses each fold as a calibration
+    set while training on the remaining folds. This approach provides more robust
+    calibration scores by utilizing all available data. The strategy can operate
+    in two modes:
+    1. Standard mode: Uses a single model trained on all data for prediction
+    2. Plus mode: Uses an ensemble of k models, each trained on k-1 folds
 
     Attributes
     ----------
-        _k (int): The number of folds to use in the k-fold cross-validation.
-        _plus (bool): If ``True``, each model trained on a fold is retained
-            in `_detector_list`. If ``False``, only a single model trained on
-            the full dataset (after cross-validation for calibration) is
-            retained.
-        _detector_list (List[BaseDetector]): A list of trained detector models.
-            Populated by the :meth:`fit_calibrate` method.
-        _calibration_set (List[float]): A list of calibration scores obtained
-            from the hold-out sets in each fold. Populated by
-            :meth:`fit_calibrate`.
-        _calibration_ids (List[int]): Indices of the samples from the input
-            data `x` that were used to form the `_calibration_set` (i.e., all
-            samples are used for calibration across the folds). Populated by
-            :meth:`fit_calibrate` and accessible via the
-            :attr:`calibration_ids` property.
+        _k (int): Number of folds for cross-validation
+        _plus (bool): Whether to use the plus variant (ensemble of models)
+        _detector_list (list[BaseDetector]): List of trained detectors
+        _calibration_set (list[float]): List of calibration scores
+        _calibration_ids (list[int]): Indices of samples used for calibration
     """
 
     def __init__(self, k: int, plus: bool = False):
@@ -46,11 +34,14 @@ class CrossValidation(BaseStrategy):
 
         Args:
             k (int): The number of folds for cross-validation. Must be at
-                least 2.
+                least 2. Higher values provide more robust calibration but
+                increase computational cost.
             plus (bool, optional): If ``True``, appends each fold-trained model
-                to `_detector_list`. If ``False``, `_detector_list` will contain
-                one model trained on all data after calibration scores are
-                collected. Defaults to ``False``.
+                to `_detector_list`, creating an ensemble. If ``False``,
+                `_detector_list` will contain one model trained on all data
+                after calibration scores are collected. The plus variant
+                typically provides better performance but requires more memory.
+                Defaults to ``False``.
         """
         super().__init__(plus)
         self._k: int = k
@@ -67,41 +58,38 @@ class CrossValidation(BaseStrategy):
         weighted: bool = False,
         seed: int = 1,
     ) -> tuple[list[BaseDetector], list[float]]:
-        """Fits detector(s) and generates calibration scores using k-fold CV.
+        """Fit and calibrate the detector using k-fold cross-validation.
 
-        This method divides the data `x` into `_k` folds. For each fold:
-        1. The fold is used as a calibration set, and the remaining `_k-1`
-           folds are used as the training set.
-        2. A copy of the `detector` is trained on the training set.
-        3. If `self._plus` is ``True``, the trained model is stored.
-        4. Decision scores from the trained model on the current fold's
-           calibration data are collected.
-        5. Indices of these calibration samples are stored.
+        This method implements the cross-validation strategy by:
+        1. Splitting the data into k folds
+        2. For each fold:
+           - Train the detector on k-1 folds
+           - Use the remaining fold for calibration
+           - Store calibration scores and optionally the trained model
+        3. If not in plus mode, train a final model on all data
 
-        After all folds are processed, if `self._plus` is ``False``, a final
-        model is trained on the entire dataset `x` and stored. The
-        calibration set comprises scores from all samples, each obtained when
-        its respective fold was used for calibration.
+        The method ensures that each sample is used exactly once for calibration,
+        providing a more robust estimate of the calibration scores.
 
         Args:
-            x (Union[pandas.DataFrame, numpy.ndarray]): The input data for
-                training and calibration.
-            detector (BaseDetector): The PyOD base detector instance to be
-                trained.
-            weighted (bool, optional): This parameter is accepted but not
-                currently utilized in the cross-validation logic.
-                Defaults to ``False``.
-            seed (int, optional): Random seed for reproducibility of data
-                shuffling in k-fold splitting and model parameter setting.
-                Defaults to ``1``.
+            x (Union[pd.DataFrame, np.ndarray]): Input data matrix of shape
+                (n_samples, n_features).
+            detector (BaseDetector): The base anomaly detector to be used.
+            weighted (bool, optional): Whether to use weighted calibration.
+                Currently not implemented for cross-validation. Defaults to False.
+            seed (int, optional): Random seed for reproducibility. Defaults to 1.
 
         Returns
         -------
-            Tuple[List[BaseDetector], List[float]]:
-                A tuple containing:
-                - A list of trained PyOD detector models.
-                - A list of calibration scores, where each score corresponds to
-                  a sample in `x` obtained when it was in a hold-out fold.
+            tuple[list[BaseDetector], list[float]]: A tuple containing:
+                * List of trained detectors (either k models in plus mode or
+                  a single model in standard mode)
+                * List of calibration scores from all folds
+
+        Raises
+        ------
+            ValueError: If k is less than 2 or if the data size is too small
+                for the specified number of folds.
         """
         _detector = detector
 
@@ -151,6 +139,6 @@ class CrossValidation(BaseStrategy):
 
         Returns
         -------
-            List[int]: A list of integer indices.
+            list[int]: A list of integer indices.
         """
         return self._calibration_ids

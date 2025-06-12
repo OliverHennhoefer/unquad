@@ -71,10 +71,9 @@ class Split(BaseStrategy):
 
         Returns
         -------
-            Tuple[List[BaseDetector], List[float]]:
-                A tuple containing:
-                - A list containing the single trained PyOD detector instance.
-                - A list of calibration scores from the calibration set.
+            tuple[list[BaseDetector], list[float]]: A tuple containing:
+                * A list containing the single trained PyOD detector instance.
+                * A list of calibration scores from the calibration set.
         """
         x_id = np.arange(len(x))
         train_id, calib_id = train_test_split(
@@ -101,6 +100,6 @@ class Split(BaseStrategy):
 
         Returns
         -------
-            Optional[List[int]]: A list of integer indices, or ``None``.
+            list[int] | None: A list of integer indices, or ``None``.
         """
         return self._calibration_ids

@@ -83,10 +83,9 @@ class Jackknife(BaseStrategy):
 
         Returns
         -------
-            Tuple[List[BaseDetector], List[float]]:
-                A tuple containing:
-                - A list of trained PyOD detector models.
-                - A list of calibration scores (one per sample in `x`).
+            tuple[list[BaseDetector], list[float]]: A tuple containing:
+                * A list of trained PyOD detector models.
+                * A list of calibration scores (one per sample in `x`).
         """
         self._strategy._k = len(x)
         (
@@ -106,7 +105,7 @@ class Jackknife(BaseStrategy):
 
         Returns
         -------
-            Optional[List[int]]: A list of integer indices, or ``None`` if
+            list[int] | None: A list of integer indices, or ``None`` if
                 `fit_calibrate` has not been called.
         """
         return self._calibration_ids

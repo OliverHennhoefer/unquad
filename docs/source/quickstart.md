@@ -174,5 +174,5 @@ print(f"Empirical FDR: {false_positives / max(1, discoveries.sum()):.3f}")
 ## Next Steps
 
 - Read the [User Guide](user_guide/conformal_inference.md) for detailed explanations
-- Check out the [Examples](examples/index.md) for more complex use cases
+- Check out the [Examples](examples/index.rst) for more complex use cases
 - Explore the [API Reference](api/unquad/index.rst) for detailed documentation

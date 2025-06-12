@@ -12,45 +12,28 @@ from unquad.strategy.base import BaseStrategy
 
 
 class Bootstrap(BaseStrategy):
-    """Bootstrap-based conformal anomaly detection strategy.
+    """Implements bootstrap-based conformal anomaly detection.
 
-    This strategy implements conformal prediction using bootstrap resampling.
-    It involves training multiple instances of a base anomaly detector on
-    different bootstrap samples of the data. A portion of the data not used
-    for training in each bootstrap iteration is used to form a calibration set.
-    The final calibration scores are derived from these out-of-bag samples.
+    This strategy uses bootstrap resampling to create multiple training sets
+    and calibration sets. For each bootstrap iteration:
+    1. A random subset of the data is sampled with replacement for training
+    2. The remaining samples are used for calibration
+    3. Optionally, a fixed number of calibration samples can be selected
 
-    The configuration allows specifying two of the following three parameters:
-    resampling ratio, number of bootstraps, or desired calibration set size,
-    and the third will be calculated.
+    The strategy can operate in two modes:
+    1. Standard mode: Uses a single model trained on all data for prediction
+    2. Plus mode: Uses an ensemble of models, each trained on a bootstrap sample
 
     Attributes
     ----------
-        _resampling_ratio (Optional[float]): The proportion of the dataset
-            to be used for training in each bootstrap split. If ``None``, it's
-            calculated based on `_n_bootstraps` and `_n_calib`.
-        _n_bootstraps (Optional[int]): The number of bootstrap iterations,
-            which typically corresponds to the number of models trained (if
-            `_plus` is ``True``) or contributes to a diverse calibration set.
-            If ``None``, it's calculated.
-        _n_calib (Optional[int]): The desired size of the final calibration
-            set, sampled from all collected out-of-bag scores. If ``None``,
-            it's determined by the other parameters. If set, the collected
-            calibration scores and potentially `_calibration_ids` are
-            subsampled to this size.
-        _plus (bool): If ``True``, each model trained on a bootstrap sample is
-            retained in `_detector_list`. If ``False``, only a single model
-            trained on the full dataset (after bootstrap iterations for
-            calibration) is retained.
-        _detector_list (List[BaseDetector]): A list of trained detector models.
-            Populated by the :meth:`fit_calibrate` method.
-        _calibration_set (List[float]): A list of calibration scores obtained
-            from out-of-bag samples. Populated by :meth:`fit_calibrate`.
-        _calibration_ids (List[int]): Indices of the samples from the input
-            data `x` that were used to form the `_calibration_set`.
-            Populated by :meth:`fit_calibrate` and accessible via the
-            :attr:`calibration_ids` property. This list might be subsampled
-            if `_n_calib` is set and `weighted` is ``True``.
+        _resampling_ratio (float): Proportion of data to use for training in each
+            bootstrap iteration
+        _n_bootstraps (int): Number of bootstrap iterations
+        _n_calib (int | None): Optional fixed number of calibration samples to use
+        _plus (bool): Whether to use the plus variant (ensemble of models)
+        _detector_list (list[BaseDetector]): List of trained detectors
+        _calibration_set (list[float]): List of calibration scores
+        _calibration_ids (list[int]): Indices of samples used for calibration
     """
 
     def __init__(
@@ -95,42 +78,42 @@ class Bootstrap(BaseStrategy):
         weighted: bool = False,
         seed: int = 1,
     ) -> tuple[list[BaseDetector], list[float]]:
-        """Fits detector(s) and generates calibration scores using bootstrap.
+        """Fit and calibrate the detector using bootstrap resampling.
 
-        This method first configures bootstrap parameters (resampling ratio,
-        number of bootstraps, calibration size) by calling `_configure`.
-        It then performs `_n_bootstraps` iterations using `ShuffleSplit`.
-        In each iteration:
-        1. Data is split into a training set and a calibration (out-of-bag) set.
-        2. A copy of the `detector` is trained on the training set.
-        3. If `self._plus` is ``True``, the trained model is stored.
-        4. Decision scores from the model on the calibration part are collected.
-        5. Indices of these calibration samples are stored in `_calibration_ids`.
+        This method implements the bootstrap strategy by:
+        1. Creating multiple bootstrap samples of the data
+        2. For each bootstrap iteration:
+           - Train the detector on the bootstrap sample
+           - Use the out-of-bootstrap samples for calibration
+           - Store calibration scores and optionally the trained model
+        3. If not in plus mode, train a final model on all data
+        4. Optionally subsample the calibration set to a fixed size
 
-        After iterations, if `self._plus` is ``False``, a final model is
-        trained on the entire dataset `x` and stored.
-        If `_n_calib` is set and less than the number of collected calibration
-        scores, `_calibration_set` is randomly subsampled. If `weighted` is
-        also ``True``, `_calibration_ids` is subsampled consistently.
+        The method provides robust calibration scores by using multiple
+        bootstrap iterations, which helps account for the variability in
+        the data and model training.
 
         Args:
-            x (Union[pandas.DataFrame, numpy.ndarray]): The input data for
-                training and calibration.
-            detector (BaseDetector): The PyOD base detector instance to be
-                trained.
-            weighted (bool, optional): If ``True`` and `_n_calib` is specified
-                for subsampling, `_calibration_ids` will also be subsampled.
-                Defaults to ``False``.
-            seed (int, optional): Random seed for reproducibility of data
-                splitting, model parameter setting, and potential subsampling.
-                Defaults to ``1``.
+            x (Union[pd.DataFrame, np.ndarray]): Input data matrix of shape
+                (n_samples, n_features).
+            detector (BaseDetector): The base anomaly detector to be used.
+            weighted (bool, optional): Whether to use weighted calibration.
+                If True, calibration scores are weighted by their sample
+                indices. Defaults to False.
+            seed (int, optional): Random seed for reproducibility. Defaults to 1.
 
         Returns
         -------
-            Tuple[List[BaseDetector], List[float]]:
-                A tuple containing:
-                - A list of trained PyOD detector models.
-                - A list of calibration scores.
+            tuple[list[BaseDetector], list[float]]: A tuple containing:
+                * List of trained detectors (either n_bootstraps models in plus
+                  mode or a single model in standard mode)
+                * List of calibration scores from all bootstrap iterations
+
+        Raises
+        ------
+            ValueError: If resampling_ratio is not between 0 and 1, or if
+                n_bootstraps is less than 1, or if n_calib is less than 1
+                when specified.
         """
         self._configure(len(x))
 
@@ -144,9 +127,7 @@ class Bootstrap(BaseStrategy):
         )
 
         n_folds = folds.get_n_splits()
-        last_iteration_index = (
-            0  # To ensure unique iteration for final model if not _plus
-        )
+        last_iteration_index = 0  # To ensure unique iteration for final model if not _plus
         for i, (train_idx, calib_idx) in enumerate(
             tqdm(folds.split(x), total=n_folds, desc="Training", disable=False)
         ):
@@ -209,6 +190,22 @@ class Bootstrap(BaseStrategy):
     def _calculate_n_calib_target(
         n_data: int, num_bootstraps: int, res_ratio: float
     ) -> int:
+        """Calculate the target number of calibration samples.
+
+        Args:
+            n_data (int): Total number of data points.
+            num_bootstraps (int): Number of bootstrap iterations.
+            res_ratio (float): Resampling ratio for training.
+
+        Returns
+        -------
+            int: Target number of calibration samples.
+
+        Raises
+        ------
+            ValueError: If resampling ratio is not between 0 and 1, or if
+                number of bootstraps is less than 1.
+        """
         if not (0 < res_ratio < 1):
             raise ValueError("Resampling ratio must be between 0 and 1.")
         if num_bootstraps < 1:
