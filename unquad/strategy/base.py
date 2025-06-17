@@ -36,7 +36,8 @@ class BaseStrategy(abc.ABC):
         x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
         seed: int | None,
-    ) -> None:
+        weighted: bool = False,
+    ) -> tuple[list[BaseDetector], list[float]]:
         """Fits the detector and performs calibration.
 
         This abstract method must be implemented by subclasses to define the
