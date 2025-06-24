@@ -34,6 +34,10 @@ class DetectorConfig:
     def __post_init__(self):
         """Validate the configuration after initialization."""
         if not (0 < self.alpha < 1):
-            raise ValueError("alpha must be between 0 and 1, exclusive.")
+            raise ValueError(f"alpha must be between 0 and 1 (exclusive), got {self.alpha}")
         if self.seed < 0:
-            raise ValueError("seed must be a non-negative integer.")
+            raise ValueError(f"seed must be a non-negative integer, got {self.seed}")
+        if not isinstance(self.adjustment, Adjustment):
+            raise TypeError(f"adjustment must be an Adjustment enum, got {type(self.adjustment)}")
+        if not isinstance(self.aggregation, Aggregation):
+            raise TypeError(f"aggregation must be an Aggregation enum, got {type(self.aggregation)}")

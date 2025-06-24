@@ -1,5 +1,7 @@
+import inspect
 from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -32,9 +34,9 @@ def performance_conversion(*arg_names: str) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             # Internal helper to convert values to numpy arrays
-            def convert_to_array(value):
+            def convert_to_array(value: Any) -> Any:
                 if isinstance(value, list):
                     try:
                         return np.array(value)
@@ -52,11 +54,12 @@ def performance_conversion(*arg_names: str) -> Callable:
             }
 
             # Convert specified positional arguments
-            # Requires introspection to match arg_names with positional args
-            func_arg_names = func.__code__.co_varnames[: func.__code__.co_argcount]
+            # Use inspect module for more robust parameter inspection
+            sig = inspect.signature(func)
+            param_names = list(sig.parameters.keys())
             new_args = []
             for i, arg_val in enumerate(args):
-                if i < len(func_arg_names) and func_arg_names[i] in arg_names:
+                if i < len(param_names) and param_names[i] in arg_names:
                     new_args.append(convert_to_array(arg_val))
                 else:
                     new_args.append(arg_val)
@@ -65,7 +68,7 @@ def performance_conversion(*arg_names: str) -> Callable:
             result = func(*args, **new_kwargs)
 
             # Internal helper to convert numpy arrays in results back to lists
-            def convert_result(r):
+            def convert_result(r: Any) -> Any:
                 if isinstance(r, np.ndarray):
                     return r.tolist()
                 elif isinstance(r, tuple):
@@ -101,7 +104,7 @@ def ensure_numpy_array(func: Callable) -> Callable:
     """
 
     @wraps(func)
-    def wrapper(self, x: pd.DataFrame | np.ndarray, *args, **kwargs):
+    def wrapper(self, x: pd.DataFrame | np.ndarray, *args, **kwargs) -> Any:
         # Convert pandas.DataFrame to numpy.ndarray if necessary
         if isinstance(x, pd.DataFrame):
             x_converted = x.values

@@ -1,4 +1,5 @@
 import abc
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -28,7 +29,7 @@ class BaseStrategy(abc.ABC):
                 modify their calibration behavior. Defaults to ``False``.
         """
         self._plus: bool = plus
-        self._calibration_ids: list[int]  # Corrected type hint
+        self._calibration_ids: list[int]
 
     @abc.abstractmethod
     def fit_calibrate(

@@ -18,8 +18,8 @@ class Adjustment(Enum):
             value is ``None``.
     """
 
-    BH: str = "bh"
-    BY: str = "by"
+    BH = "bh"
+    BY = "by"
     NONE = None
 
 
@@ -41,7 +41,7 @@ class Aggregation(Enum):
             The underlying value is typically ``"maximum"``.
     """
 
-    MEAN: str = "mean"
-    MEDIAN: str = "median"
-    MINIMUM: str = "minimum"
-    MAXIMUM: str = "maximum"
+    MEAN = "mean"
+    MEDIAN = "median"
+    MINIMUM = "minimum"
+    MAXIMUM = "maximum"

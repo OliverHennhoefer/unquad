@@ -1,3 +1,6 @@
+# Operating System
+.DS_STORE
+
 # Global directories
 __pycache__/
 
@@ -20,3 +23,6 @@ __pycache__
 docs/build/
 docs/source/api/ # If using sphinx-apidoc and generating into source
 docs/source/_autosummary_generated/ # If using autosummary
+
+# Claude Code
+.claudeignore
