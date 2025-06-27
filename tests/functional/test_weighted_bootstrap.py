@@ -1,6 +1,7 @@
 import unittest
 
 from pyod.models.iforest import IForest
+from scipy.stats import false_discovery_control
 from unquad.data.load import load_shuttle
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
@@ -18,9 +19,10 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
 
         wce.fit(x_train)
         est = wce.predict(x_test)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(len(wce.calibration_set), 1_000)
         self.assertEqual(fdr, 0.067)
@@ -36,9 +38,10 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
 
         wce.fit(x_train)
         est = wce.predict(x_test)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(len(wce.calibration_set), 3419)
         self.assertEqual(fdr, 0.154)
@@ -54,9 +57,10 @@ class TestCaseBootstrapConformalWeighted(unittest.TestCase):
 
         wce.fit(x_train)
         est = wce.predict(x_test)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(len(wce.calibration_set), 1000)
         self.assertEqual(fdr, 0.067)

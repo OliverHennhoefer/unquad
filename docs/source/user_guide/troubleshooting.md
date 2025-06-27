@@ -4,30 +4,101 @@ This guide addresses common issues you might encounter while using unquad and pr
 
 ## Common Issues and Solutions
 
-### 1. Memory Issues
+### 1. ImportError: Cannot import DetectorConfig
+
+**Problem**: Getting import errors when trying to use DetectorConfig.
+
+**Solution**: DetectorConfig has been removed. Use direct parameters instead:
+
+```python
+# Old API (deprecated)
+from unquad.estimation.configuration import DetectorConfig
+detector = ConformalDetector(
+    detector=LOF(),
+    strategy=Split(calib_size=0.2),
+    config=DetectorConfig(alpha=0.1)
+)
+
+# New API
+from unquad.estimation.conformal import ConformalDetector
+from unquad.strategy.split import SplitStrategy
+from unquad.utils.enums import Aggregation
+
+detector = ConformalDetector(
+    detector=LOF(),
+    strategy=SplitStrategy(calibration_size=0.2),
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False
+)
+```
+
+### 2. AttributeError: predict() has no parameter 'output'
+
+**Problem**: Using the old output parameter in predict() method.
+
+**Solution**: Replace `output` with `raw` parameter:
+
+```python
+# Old API (deprecated)
+p_values = detector.predict(X, output="p-value")
+scores = detector.predict(X, output="score")
+
+# New API
+p_values = detector.predict(X, raw=False)  # Get p-values
+scores = detector.predict(X, raw=True)     # Get raw scores
+```
+
+### 3. Memory Issues
 
 **Problem**: Running out of memory when using large datasets or certain detectors.
 
 **Solutions**:
 - Use batch processing for large datasets
-- Consider using more memory-efficient detectors (e.g., IForest instead of KNN)
+- Consider using more memory-efficient detectors (e.g., IsolationForest instead of KNN)
 - Reduce the calibration set size
 - Use sparse data structures when possible
 
-### 2. Slow Performance
+```python
+def process_in_batches(detector, X, batch_size=1000):
+    """Process large datasets in batches."""
+    results = []
+    for i in range(0, len(X), batch_size):
+        batch = X[i:i + batch_size]
+        batch_results = detector.predict(batch, raw=False)
+        results.extend(batch_results)
+    return np.array(results)
+```
+
+### 4. Slow Performance
 
 **Problem**: Processing takes too long, especially with large datasets.
 
 **Solutions**:
-- Use faster detectors (e.g., IForest, LOF)
+- Use faster detectors (e.g., IsolationForest, LOF)
 - Reduce the calibration set size
 - Use batch processing
-- Consider using GPU-accelerated detectors when available
+- Set `silent=True` to disable progress bars
 - Profile your code to identify bottlenecks
 
-### 3. Invalid P-values
+```python
+import time
 
-**Problem**: P-values don't seem to be properly calibrated.
+# Time your detector
+start_time = time.time()
+detector.fit(X_train)
+fit_time = time.time() - start_time
+
+start_time = time.time()
+p_values = detector.predict(X_test, raw=False)
+predict_time = time.time() - start_time
+
+print(f"Fit time: {fit_time:.2f}s, Predict time: {predict_time:.2f}s")
+```
+
+### 5. Invalid P-values
+
+**Problem**: P-values don't seem to be properly calibrated or all values are extreme.
 
 **Solutions**:
 - Ensure your calibration data is representative of the normal class
@@ -36,111 +107,339 @@ This guide addresses common issues you might encounter while using unquad and pr
 - Consider using a different conformal strategy
 - Check for violations of the exchangeability assumption
 
-### 4. High False Discovery Rate
+```python
+def validate_p_values(p_values):
+    """Validate p-value distribution."""
+    print(f"P-value range: [{p_values.min():.4f}, {p_values.max():.4f}]")
+    print(f"P-value mean: {p_values.mean():.4f}")
+    print(f"P-value std: {p_values.std():.4f}")
+    
+    # Check for uniform distribution (expected under null hypothesis)
+    from scipy.stats import kstest
+    ks_stat, ks_p = kstest(p_values, 'uniform')
+    print(f"KS test for uniformity: stat={ks_stat:.4f}, p={ks_p:.4f}")
+    
+    if ks_p < 0.05:
+        print("WARNING: P-values may not be well-calibrated")
+```
+
+### 6. High False Discovery Rate
 
 **Problem**: Too many false positives even with FDR control.
 
 **Solutions**:
 - Increase the calibration set size
-- Use a more conservative α level
+- Use a more conservative α level for FDR control
 - Consider using weighted conformal p-values if there's covariate shift
 - Try different detectors
 - Check for data quality issues
 
-### 5. Low Detection Power
+```python
+from scipy.stats import false_discovery_control
+
+# Use more conservative FDR control
+adjusted_p_values = false_discovery_control(p_values, method='by', alpha=0.01)  # More conservative
+discoveries = adjusted_p_values < 0.01
+
+# Monitor empirical FDR if ground truth is available
+if y_true is not None:
+    false_positives = np.sum(discoveries & (y_true == 0))
+    empirical_fdr = false_positives / max(1, discoveries.sum())
+    print(f"Empirical FDR: {empirical_fdr:.3f}")
+```
+
+### 7. Low Detection Power
 
 **Problem**: Missing too many anomalies.
 
 **Solutions**:
-- Decrease the α level
+- Use less conservative α levels
 - Use more powerful detectors
 - Consider using ensemble methods
-- Try different conformal strategies
+- Try different conformal strategies (e.g., bootstrap, cross-validation)
 - Check if the anomalies are well-separated from normal data
 
-### 6. Integration Issues
+```python
+# Try multiple strategies for comparison
+from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.strategy.cross_val import CrossValidationStrategy
+
+strategies = {
+    'Split': SplitStrategy(calibration_size=0.2),
+    'Bootstrap': BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8),
+    'CV': CrossValidationStrategy(n_splits=5)
+}
+
+for name, strategy in strategies.items():
+    detector = ConformalDetector(
+        detector=base_detector,
+        strategy=strategy,
+        aggregation=Aggregation.MEDIAN,
+        seed=42
+    )
+    detector.fit(X_train)
+    p_vals = detector.predict(X_test, raw=False)
+    detections = (p_vals < 0.05).sum()
+    print(f"{name}: {detections} detections")
+```
+
+### 8. Strategy Import Issues
+
+**Problem**: Cannot import strategy classes with old import paths.
+
+**Solution**: Update import statements to use new module structure:
+
+```python
+# Old imports (deprecated)
+from unquad.strategy import Split, CrossValidation, Jackknife, Bootstrap
+
+# New imports
+from unquad.strategy.split import SplitStrategy
+from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.bootstrap import BootstrapStrategy
+```
+
+### 9. Parameter Name Changes
+
+**Problem**: Using old parameter names that have been renamed.
+
+**Solution**: Update parameter names:
+
+```python
+# Old parameter names
+SplitStrategy(calib_size=0.2)           # -> calibration_size=0.2
+CrossValidationStrategy(k=5)            # -> n_splits=5
+BootstrapStrategy(resampling_ratio=0.8) # -> sample_ratio=0.8
+```
+
+### 10. Integration Issues
 
 **Problem**: Problems integrating with other libraries or custom detectors.
 
 **Solutions**:
-- Ensure your detector implements the required interface
+- Ensure your detector implements the PyOD BaseDetector interface
 - Check for version compatibility
 - Verify that the detector's output format matches expectations
-- Consider using the adapter pattern for custom detectors
+- Use the correct aggregation enum values
+
+```python
+from unquad.utils.enums import Aggregation
+
+# Correct usage of aggregation enums
+detector = ConformalDetector(
+    detector=custom_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,  # Not "median"
+    seed=42
+)
+```
 
 ## Debugging Tips
 
-1. **Enable Verbose Mode**:
-```python
-from unquad.estimation.properties.configuration import DetectorConfig
+### 1. Enable Verbose Mode
 
-config = DetectorConfig(silent=False)
+```python
+# Enable progress bars and detailed output
+detector = ConformalDetector(
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False  # Enable verbose output
+)
 ```
 
-2. **Check Intermediate Results**:
+### 2. Check Intermediate Results
+
 ```python
 # Get raw scores before p-value conversion
-raw_scores = detector.decision_function(X_test)
+raw_scores = detector.predict(X_test, raw=True)
+p_values = detector.predict(X_test, raw=False)
+
+print(f"Raw scores range: [{raw_scores.min():.4f}, {raw_scores.max():.4f}]")
+print(f"P-values range: [{p_values.min():.4f}, {p_values.max():.4f}]")
+
+# Check calibration set
+print(f"Calibration set size: {len(detector.calibration_set)}")
+print(f"Calibration scores range: [{min(detector.calibration_set):.4f}, {max(detector.calibration_set):.4f}]")
 ```
 
-3. **Validate Data**:
+### 3. Validate Data
+
 ```python
-# Check for NaN values
-print(f"NaN values in data: {np.isnan(X).any()}")
+def validate_input_data(X):
+    """Validate input data for common issues."""
+    print("=== Data Validation ===")
+    print(f"Shape: {X.shape}")
+    print(f"Data type: {X.dtype}")
+    
+    # Check for NaN values
+    nan_count = np.isnan(X).sum()
+    print(f"NaN values: {nan_count}")
+    
+    # Check for infinite values
+    inf_count = np.isinf(X).sum()
+    print(f"Infinite values: {inf_count}")
+    
+    # Check data ranges
+    print(f"Data range: [{X.min():.4f}, {X.max():.4f}]")
+    
+    # Check for constant features
+    constant_features = np.sum(X.std(axis=0) == 0)
+    print(f"Constant features: {constant_features}")
+    
+    if nan_count > 0 or inf_count > 0:
+        print("WARNING: Data contains NaN or infinite values")
+    
+    if constant_features > 0:
+        print("WARNING: Data contains constant features")
 
-# Check data ranges
-print(f"Data range: [{X.min()}, {X.max()}]")
+# Example usage
+validate_input_data(X_train)
+validate_input_data(X_test)
 ```
 
-4. **Monitor Memory Usage**:
+### 4. Monitor Memory Usage
+
 ```python
 import psutil
 import os
 
-def print_memory_usage():
+def print_memory_usage(label=""):
+    """Print current memory usage."""
     process = psutil.Process(os.getpid())
-    print(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+    memory_mb = process.memory_info().rss / 1024 / 1024
+    print(f"Memory usage {label}: {memory_mb:.2f} MB")
+
+# Monitor memory during processing
+print_memory_usage("before fitting")
+detector.fit(X_train)
+print_memory_usage("after fitting")
+p_values = detector.predict(X_test, raw=False)
+print_memory_usage("after prediction")
+```
+
+### 5. Debug Weighted Conformal Issues
+
+```python
+def debug_weighted_conformal(detector, X_train, X_test):
+    """Debug weighted conformal detection specifically."""
+    print("=== Weighted Conformal Debug ===")
+    
+    # Check if it's actually a weighted detector
+    from unquad.estimation.weighted_conformal import WeightedConformalDetector
+    if not isinstance(detector, WeightedConformalDetector):
+        print("WARNING: Not a WeightedConformalDetector")
+        return
+    
+    # Fit and check calibration samples
+    detector.fit(X_train)
+    
+    if hasattr(detector, 'calibration_samples'):
+        print(f"Calibration samples stored: {len(detector.calibration_samples)}")
+        if len(detector.calibration_samples) == 0:
+            print("ERROR: No calibration samples stored")
+    
+    # Check for distribution shift
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import cross_val_score
+    
+    X_combined = np.vstack([X_train, X_test])
+    y_combined = np.hstack([np.zeros(len(X_train)), np.ones(len(X_test))])
+    
+    clf = LogisticRegression(random_state=42)
+    scores = cross_val_score(clf, X_combined, y_combined, cv=5)
+    shift_score = scores.mean()
+    
+    print(f"Distribution shift score: {shift_score:.3f}")
+    if shift_score > 0.7:
+        print("Significant shift detected - weighted conformal recommended")
+    elif shift_score < 0.6:
+        print("Minimal shift - standard conformal may suffice")
 ```
 
 ## Performance Optimization
 
-1. **Batch Processing**:
+### 1. Batch Processing
+
 ```python
-def process_in_batches(X, batch_size=1000):
-    for i in range(0, len(X), batch_size):
-        batch = X[i:i + batch_size]
-        # Process batch
-```
-
-2. **Caching**:
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=128)
-def expensive_computation(x):
-    # Your computation here
-    pass
-```
-
-3. **Parallel Processing**:
-```python
-from joblib import Parallel, delayed
-
-def parallel_process(X, n_jobs=-1):
-    results = Parallel(n_jobs=n_jobs)(
-        delayed(process_item)(x) for x in X
-    )
+def optimized_batch_processing(detector, X, batch_size=1000):
+    """Optimized batch processing for large datasets."""
+    n_samples = len(X)
+    n_batches = (n_samples + batch_size - 1) // batch_size
+    
+    results = np.empty(n_samples)
+    
+    for i in range(n_batches):
+        start_idx = i * batch_size
+        end_idx = min((i + 1) * batch_size, n_samples)
+        batch = X[start_idx:end_idx]
+        
+        batch_results = detector.predict(batch, raw=False)
+        results[start_idx:end_idx] = batch_results
+        
+        if i % 10 == 0:  # Progress update
+            print(f"Processed {i + 1}/{n_batches} batches")
+    
     return results
+```
+
+### 2. Strategy-Specific Optimizations
+
+```python
+# For large datasets, use split strategy with smaller calibration
+strategy = SplitStrategy(calibration_size=0.1)  # Smaller calibration set
+
+# For small datasets, use bootstrap for stability
+strategy = BootstrapStrategy(n_bootstraps=50, sample_ratio=0.8)
+
+# For medium datasets, use cross-validation
+strategy = CrossValidationStrategy(n_splits=5)
+```
+
+### 3. Detector Selection for Performance
+
+```python
+# Fast detectors for large datasets
+fast_detectors = [
+    IsolationForest(contamination=0.1, n_jobs=-1),  # Parallel processing
+    LOF(contamination=0.1, n_jobs=-1),
+    OCSVM(contamination=0.1)
+]
+
+# Avoid expensive detectors for large datasets
+# - KNN with large k
+# - Complex neural networks
+# - High-dimensional methods without dimensionality reduction
 ```
 
 ## Getting Help
 
 If you encounter issues not covered in this guide:
 
-1. Check the [GitHub Issues](https://github.com/OliverHennhoefer/unquad/issues) for similar problems
-2. Search the [Discussions](https://github.com/OliverHennhoefer/unquad/discussions) for solutions
-3. Create a new issue with:
-   - A minimal reproducible example
+1. **Check the New API**: Ensure you're using the updated API with direct parameters instead of DetectorConfig
+2. **Update Import Statements**: Use the new module structure for strategy imports
+3. **Verify Parameter Names**: Check that parameter names match the new API
+4. **Check the [GitHub Issues](https://github.com/OliverHennhoefer/unquad/issues)** for similar problems
+5. **Search the [Discussions](https://github.com/OliverHennhoefer/unquad/discussions)** for solutions
+6. **Create a new issue** with:
+   - A minimal reproducible example using the new API
    - Expected vs actual behavior
-   - System information
-   - Relevant error messages 
+   - System information (Python version, unquad version, etc.)
+   - Relevant error messages
+   - Whether you're migrating from the old API
+
+## Migration Checklist
+
+When migrating from older versions of unquad:
+
+- [ ] Remove `DetectorConfig` imports and usage
+- [ ] Update detector initialization to use direct parameters
+- [ ] Change `output="p-value"` to `raw=False`
+- [ ] Change `output="score"` to `raw=True`
+- [ ] Update strategy imports to use new module structure
+- [ ] Replace old parameter names with new ones
+- [ ] Add FDR control using `scipy.stats.false_discovery_control`
+- [ ] Test with small datasets first
+- [ ] Update any custom code that depends on the old API

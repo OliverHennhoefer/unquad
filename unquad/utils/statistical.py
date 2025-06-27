@@ -98,32 +98,3 @@ def calculate_weighted_p_val(
         numerator, denominator, out=np.zeros_like(numerator), where=denominator != 0
     )
     return p_values
-
-
-@performance_conversion("scores")
-def get_decision(alpha: float, scores: np.ndarray) -> ndarray[Any, dtype[bool_]]:
-    """Determine decisions based on scores and a significance level.
-
-    Compares each score against a given significance level (alpha). A decision
-    of ``True`` is made if a score is less than or equal to alpha,
-    indicating significance (e.g., anomaly detected, null hypothesis
-    rejected), and ``False`` otherwise.
-
-    The `@performance_conversion` decorator ensures that `scores` is a
-    ``numpy.ndarray`` internally (converting from a list if necessary) and
-    that the returned ``numpy.ndarray`` of booleans is converted to a
-    ``list[bool]``.
-
-    Args:
-        alpha (float): The significance threshold (e.g., 0.05). Scores less
-            than or equal to this value are considered significant.
-        scores (numpy.ndarray): A 1D array of p-values or other scores to
-            evaluate. Can be passed as a list, which the decorator will
-            convert.
-
-    Returns
-    -------
-        list[bool]: A list of boolean decisions. Each element is ``True`` if
-            the corresponding score is <= `alpha`, and ``False`` otherwise.
-    """
-    return scores <= alpha

@@ -6,56 +6,133 @@ This example demonstrates how to use classical conformal prediction for anomaly 
 
 ```python
 import numpy as np
-from pyod.models import LOF
-from unquad.estimation import ConformalDetector
-from unquad.strategy import Split
-from unquad.estimation.properties.configuration import DetectorConfig
-from unquad.data import load_breast
+from pyod.models.lof import LOF
+from sklearn.datasets import load_breast_cancer
+from scipy.stats import false_discovery_control
+from unquad.estimation.conformal import ConformalDetector
+from unquad.strategy.split import SplitStrategy
+from unquad.utils.enums import Aggregation
 
 # Load example data
-x, y = load_breast()
+data = load_breast_cancer()
+X = data.data
+y = data.target
 ```
 
 ## Basic Usage
 
 ```python
-# Initialize detector
+# Initialize base detector
+base_detector = LOF(contamination=0.1)
+
+# Create conformal detector with split strategy
+strategy = SplitStrategy(calibration_size=0.2)
 detector = ConformalDetector(
-    detector=LOF(),
-    strategy=Split(calib_size=0.2),
-    config=DetectorConfig(alpha=0.1)
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False
 )
 
-# Fit and predict
-detector.fit(x)
-predictions = detector.predict(x)
+# Fit the detector
+detector.fit(X)
 
 # Get p-values
-p_values = detector.predict(x, output="p-value")
+p_values = detector.predict(X, raw=False)
 
-# Get raw scores
-scores = detector.predict(x, output="score")
+# Get raw anomaly scores
+scores = detector.predict(X, raw=True)
+
+# Simple anomaly detection at 5% significance level
+anomalies = p_values < 0.05
+print(f"Number of anomalies detected: {anomalies.sum()}")
 ```
 
-## Advanced Usage
+## FDR Control
 
 ```python
-# Use cross-validation instead of split
-from unquad.strategy import CrossValidation
+# Control False Discovery Rate at 5%
+adjusted_p_values = false_discovery_control(p_values, method='bh')
+discoveries = adjusted_p_values < 0.05
 
-detector = ConformalDetector(
-    detector=LOF(),
-    strategy=CrossValidation(k=5),
-    config=DetectorConfig(alpha=0.1)
+print(f"Number of discoveries with FDR control: {discoveries.sum()}")
+print(f"Empirical FDR: {(discoveries & (y == 0)).sum() / max(1, discoveries.sum()):.3f}")
+```
+
+## Advanced Usage with Cross-Validation
+
+```python
+from unquad.strategy.cross_val import CrossValidationStrategy
+
+# Use cross-validation strategy for better calibration
+cv_strategy = CrossValidationStrategy(n_splits=5)
+cv_detector = ConformalDetector(
+    detector=base_detector,
+    strategy=cv_strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
 )
 
 # Fit and predict with cross-validation
-detector.fit(x)
-predictions = detector.predict(x)
+cv_detector.fit(X)
+cv_p_values = cv_detector.predict(X, raw=False)
+
+# Compare with split strategy
+print(f"Split strategy detections: {(p_values < 0.05).sum()}")
+print(f"Cross-validation detections: {(cv_p_values < 0.05).sum()}")
+```
+
+## Comparing Different Aggregation Methods
+
+```python
+# Try different aggregation methods
+aggregation_methods = [Aggregation.MEAN, Aggregation.MEDIAN, Aggregation.MAX]
+
+for agg_method in aggregation_methods:
+    detector = ConformalDetector(
+        detector=base_detector,
+        strategy=strategy,
+        aggregation=agg_method,
+        seed=42
+    )
+    detector.fit(X)
+    p_vals = detector.predict(X, raw=False)
+    
+    print(f"{agg_method.value} aggregation: {(p_vals < 0.05).sum()} detections")
+```
+
+## Visualization
+
+```python
+import matplotlib.pyplot as plt
+
+# Plot p-value distribution
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.hist(p_values, bins=50, alpha=0.7, color='blue', edgecolor='black')
+plt.axvline(x=0.05, color='red', linestyle='--', label='α=0.05')
+plt.xlabel('p-value')
+plt.ylabel('Frequency')
+plt.title('P-value Distribution')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.scatter(range(len(p_values)), p_values, c=p_values < 0.05, 
+            cmap='coolwarm', alpha=0.6)
+plt.axhline(y=0.05, color='red', linestyle='--', label='α=0.05')
+plt.xlabel('Sample Index')
+plt.ylabel('p-value')
+plt.title('P-values by Sample')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
 ```
 
 ## Next Steps
 
 - Try [weighted conformal detection](weighted_conformal.md) for handling distribution shift
 - Learn about [FDR control](fdr_control.md) for multiple testing
-- Explore [bootstrap-based detection](bootstrap_conformal.md) for uncertainty estimation 
+- Explore [bootstrap-based detection](bootstrap_conformal.md) for uncertainty estimation

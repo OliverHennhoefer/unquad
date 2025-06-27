@@ -6,52 +6,203 @@ This example demonstrates how to use bootstrap resampling for conformal anomaly 
 
 ```python
 import numpy as np
-from pyod.models import LOF
-from unquad.estimation import ConformalDetector
-from unquad.strategy import Bootstrap
-from unquad.estimation.properties.configuration import DetectorConfig
-from unquad.data import load_breast
+from pyod.models.lof import LOF
+from sklearn.datasets import load_breast_cancer
+from scipy.stats import false_discovery_control
+from unquad.estimation.conformal import ConformalDetector
+from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.utils.enums import Aggregation
 
 # Load example data
-x, y = load_breast()
+data = load_breast_cancer()
+X = data.data
+y = data.target
 ```
 
 ## Basic Usage
 
 ```python
+# Initialize base detector
+base_detector = LOF(contamination=0.1)
+
+# Create bootstrap strategy
+bootstrap_strategy = BootstrapStrategy(
+    n_bootstraps=100,
+    sample_ratio=0.8
+)
+
 # Initialize detector with bootstrap strategy
 detector = ConformalDetector(
-    detector=LOF(),
-    strategy=Bootstrap(n_bootstraps=100, resampling_ratio=0.8),
-    config=DetectorConfig(alpha=0.1)
+    detector=base_detector,
+    strategy=bootstrap_strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False
 )
 
 # Fit and predict
-detector.fit(x)
-predictions = detector.predict(x)
+detector.fit(X)
+p_values = detector.predict(X, raw=False)
+
+# Detect anomalies
+anomalies = p_values < 0.05
+print(f"Number of anomalies detected: {anomalies.sum()}")
 ```
 
-## Plus Mode
+## Bootstrap Plus Mode
 
 ```python
-# Use plus mode to retain all bootstrap models
+# Use bootstrap plus mode for better calibration
+bootstrap_plus_strategy = BootstrapStrategy(
+    n_bootstraps=100,
+    sample_ratio=0.8,
+    plus=True
+)
+
 detector_plus = ConformalDetector(
-    detector=LOF(),
-    strategy=Bootstrap(
-        n_bootstraps=100,
-        resampling_ratio=0.8,
-        plus=True
-    ),
-    config=DetectorConfig(alpha=0.1)
+    detector=base_detector,
+    strategy=bootstrap_plus_strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
 )
 
 # Fit and predict with ensemble
-detector_plus.fit(x)
-predictions_plus = detector_plus.predict(x)
+detector_plus.fit(X)
+p_values_plus = detector_plus.predict(X, raw=False)
+
+print(f"Bootstrap detections: {(p_values < 0.05).sum()}")
+print(f"Bootstrap+ detections: {(p_values_plus < 0.05).sum()}")
+```
+
+## Comparing Different Bootstrap Configurations
+
+```python
+# Try different bootstrap configurations
+configurations = [
+    {"n_bootstraps": 50, "sample_ratio": 0.7},
+    {"n_bootstraps": 100, "sample_ratio": 0.8},
+    {"n_bootstraps": 200, "sample_ratio": 0.9}
+]
+
+results = {}
+for config in configurations:
+    strategy = BootstrapStrategy(**config)
+    detector = ConformalDetector(
+        detector=base_detector,
+        strategy=strategy,
+        aggregation=Aggregation.MEDIAN,
+        seed=42,
+        silent=True
+    )
+    detector.fit(X)
+    p_vals = detector.predict(X, raw=False)
+    
+    key = f"B={config['n_bootstraps']}, r={config['sample_ratio']}"
+    results[key] = (p_vals < 0.05).sum()
+    print(f"{key}: {results[key]} detections")
+```
+
+## FDR Control with Bootstrap
+
+```python
+# Apply FDR control to bootstrap p-values
+adjusted_p_values = false_discovery_control(p_values, method='bh')
+discoveries = adjusted_p_values < 0.05
+
+print(f"\nFDR Control Results:")
+print(f"Discoveries: {discoveries.sum()}")
+print(f"Original detections: {(p_values < 0.05).sum()}")
+print(f"Reduction: {(p_values < 0.05).sum() - discoveries.sum()}")
+```
+
+## Uncertainty Quantification
+
+```python
+# Get raw scores for uncertainty analysis
+raw_scores = detector.predict(X, raw=True)
+
+# Analyze score distribution
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(12, 4))
+
+# Score distribution
+plt.subplot(1, 3, 1)
+plt.hist(raw_scores, bins=50, alpha=0.7, color='blue', edgecolor='black')
+plt.xlabel('Anomaly Score')
+plt.ylabel('Frequency')
+plt.title('Bootstrap Anomaly Score Distribution')
+
+# P-value vs Score relationship
+plt.subplot(1, 3, 2)
+plt.scatter(raw_scores, p_values, alpha=0.5)
+plt.xlabel('Anomaly Score')
+plt.ylabel('p-value')
+plt.title('Score vs P-value Relationship')
+
+# Bootstrap stability analysis
+plt.subplot(1, 3, 3)
+# Run multiple bootstrap iterations
+stability_results = []
+for _ in range(10):
+    det = ConformalDetector(
+        detector=base_detector,
+        strategy=BootstrapStrategy(n_bootstraps=50, sample_ratio=0.8),
+        aggregation=Aggregation.MEDIAN,
+        seed=np.random.randint(1000)
+    )
+    det.fit(X)
+    p_vals = det.predict(X, raw=False)
+    stability_results.append((p_vals < 0.05).sum())
+
+plt.boxplot(stability_results)
+plt.ylabel('Number of Detections')
+plt.title('Bootstrap Detection Stability')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Comparison with Other Strategies
+
+```python
+from unquad.strategy.split import SplitStrategy
+from unquad.strategy.jackknife import JackknifeStrategy
+
+# Compare bootstrap with other strategies
+strategies = {
+    'Bootstrap': BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8),
+    'Split': SplitStrategy(calibration_size=0.2),
+    'Jackknife': JackknifeStrategy()
+}
+
+comparison_results = {}
+for name, strategy in strategies.items():
+    detector = ConformalDetector(
+        detector=base_detector,
+        strategy=strategy,
+        aggregation=Aggregation.MEDIAN,
+        seed=42,
+        silent=True
+    )
+    detector.fit(X)
+    p_vals = detector.predict(X, raw=False)
+    comparison_results[name] = {
+        'detections': (p_vals < 0.05).sum(),
+        'min_p': p_vals.min(),
+        'mean_p': p_vals.mean()
+    }
+
+print("\nStrategy Comparison:")
+for name, results in comparison_results.items():
+    print(f"{name}:")
+    print(f"  Detections: {results['detections']}")
+    print(f"  Min p-value: {results['min_p']:.4f}")
+    print(f"  Mean p-value: {results['mean_p']:.4f}")
 ```
 
 ## Next Steps
 
 - Try [classical conformal detection](classical_conformal.md) for standard scenarios
 - Learn about [weighted conformal detection](weighted_conformal.md) for handling distribution shift
-- Explore [cross-validation detection](cross_val_conformal.md) for robust calibration 
+- Explore [cross-validation detection](cross_val_conformal.md) for robust calibration

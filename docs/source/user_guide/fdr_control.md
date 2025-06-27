@@ -1,47 +1,279 @@
 # False Discovery Rate Control
 
-This guide explains how to use False Discovery Rate (FDR) control in `unquad` for multiple testing scenarios.
+This guide explains how to use False Discovery Rate (FDR) control in `unquad` for multiple testing scenarios using scipy.stats.false_discovery_control.
 
 ## Overview
 
-FDR control is a statistical method for handling multiple hypothesis testing. In anomaly detection, it helps control the proportion of false positives among all detected anomalies.
+FDR control is a statistical method for handling multiple hypothesis testing. In anomaly detection, it helps control the proportion of false positives among all detected anomalies. Instead of using a fixed significance level α for all tests, FDR control adjusts the threshold to maintain a desired false discovery rate.
 
-## Usage
+## Basic Usage
 
 ```python
-from unquad.estimation import ConformalDetector
-from unquad.strategy import Split
-from unquad.estimation.properties.configuration import DetectorConfig
-from pyod.models import LOF
+import numpy as np
+from scipy.stats import false_discovery_control
+from unquad.estimation.conformal import ConformalDetector
+from unquad.strategy.split import SplitStrategy
+from unquad.utils.enums import Aggregation
+from pyod.models.lof import LOF
 
-# Initialize detector with FDR control
+# Initialize detector
+base_detector = LOF(contamination=0.1)
+strategy = SplitStrategy(calibration_size=0.2)
+
 detector = ConformalDetector(
-    detector=LOF(),
-    strategy=Split(calib_size=0.2),
-    config=DetectorConfig(
-        alpha=0.1,  # Target FDR level
-        adjustment="bh"  # Benjamini-Hochberg procedure
-    )
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
 )
 
-# Fit and predict
-detector.fit(x_train)
-predictions = detector.predict(x_test)
+# Fit detector and get p-values
+detector.fit(X_train)
+p_values = detector.predict(X_test, raw=False)
+
+# Apply FDR control
+adjusted_p_values = false_discovery_control(p_values, method='bh', alpha=0.05)
+discoveries = adjusted_p_values < 0.05
+
+print(f"Original detections: {(p_values < 0.05).sum()}")
+print(f"FDR-controlled discoveries: {discoveries.sum()}")
 ```
 
 ## Available Methods
 
-- **BH**: Benjamini-Hochberg procedure (default)
-- **BY**: Benjamini-Yekutieli procedure
-- **None**: No adjustment
+The `scipy.stats.false_discovery_control` function supports several methods:
 
-## When to Use
+### Benjamini-Hochberg (BH)
+- **Method**: `'bh'`
+- **Description**: Most commonly used FDR control method
+- **Assumptions**: Independent or positively dependent tests
+- **Usage**: `false_discovery_control(p_values, method='bh')`
 
-- When testing multiple hypotheses simultaneously
-- When you need to control the proportion of false positives
-- In high-dimensional anomaly detection
+### Benjamini-Yekutieli (BY)
+- **Method**: `'by'`
+- **Description**: More conservative method for arbitrary dependence
+- **Assumptions**: Works under any dependency structure
+- **Usage**: `false_discovery_control(p_values, method='by')`
+
+```python
+# Compare different methods
+bh_adjusted = false_discovery_control(p_values, method='bh', alpha=0.05)
+by_adjusted = false_discovery_control(p_values, method='by', alpha=0.05)
+
+bh_discoveries = (bh_adjusted < 0.05).sum()
+by_discoveries = (by_adjusted < 0.05).sum()
+
+print(f"BH discoveries: {bh_discoveries}")
+print(f"BY discoveries: {by_discoveries}")
+```
+
+## Setting FDR Levels
+
+You can control the desired FDR level using the `alpha` parameter:
+
+```python
+# Different FDR levels
+fdr_levels = [0.01, 0.05, 0.1, 0.2]
+
+for alpha in fdr_levels:
+    adjusted_p_vals = false_discovery_control(p_values, method='bh', alpha=alpha)
+    discoveries = (adjusted_p_vals < alpha).sum()
+    print(f"FDR level {alpha}: {discoveries} discoveries")
+```
+
+## When to Use FDR Control
+
+### Multiple Testing Scenarios
+Use FDR control when:
+- Testing multiple hypotheses simultaneously
+- Analyzing high-dimensional data
+- Processing multiple datasets or time series
+- Running ensemble methods with multiple detectors
+
+### Benefits
+1. **Controlled False Discovery Rate**: Maintains the expected proportion of false positives
+2. **Increased Power**: Often more powerful than family-wise error rate (FWER) control
+3. **Scalability**: Works well with large numbers of tests
+
+### Practical Examples
+
+#### High-dimensional Anomaly Detection
+```python
+# When analyzing many features independently
+n_features = X.shape[1]
+feature_p_values = []
+
+for i in range(n_features):
+    # Analyze each feature separately
+    X_feature = X[:, [i]]
+    detector.fit(X_feature)
+    p_vals = detector.predict(X_feature, raw=False)
+    feature_p_values.extend(p_vals)
+
+# Apply FDR control across all features
+all_adjusted = false_discovery_control(feature_p_values, method='bh', alpha=0.05)
+```
+
+#### Multiple Time Series
+```python
+# When analyzing multiple time series
+time_series_data = [ts1, ts2, ts3, ...]  # Multiple time series
+all_p_values = []
+
+for ts in time_series_data:
+    detector.fit(ts)
+    p_vals = detector.predict(ts, raw=False)
+    all_p_values.extend(p_vals)
+
+# Control FDR across all time series
+adjusted_p_vals = false_discovery_control(all_p_values, method='bh', alpha=0.05)
+```
+
+## Integration with Conformal Prediction
+
+FDR control works naturally with conformal prediction p-values:
+
+```python
+from unquad.estimation.weighted_conformal import WeightedConformalDetector
+
+# Use with weighted conformal detection
+weighted_detector = WeightedConformalDetector(
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
+)
+
+weighted_detector.fit(X_train)
+weighted_p_values = weighted_detector.predict(X_test, raw=False)
+
+# Apply FDR control to weighted p-values
+weighted_adjusted = false_discovery_control(weighted_p_values, method='bh', alpha=0.05)
+weighted_discoveries = weighted_adjusted < 0.05
+```
+
+## Performance Evaluation
+
+Evaluate the effectiveness of FDR control:
+
+```python
+def evaluate_fdr_control(p_values, true_labels, alpha=0.05):
+    """Evaluate FDR control performance."""
+    # Apply FDR control
+    adjusted_p_vals = false_discovery_control(p_values, method='bh', alpha=alpha)
+    discoveries = adjusted_p_vals < alpha
+    
+    # Calculate metrics
+    true_positives = np.sum(discoveries & (true_labels == 1))
+    false_positives = np.sum(discoveries & (true_labels == 0))
+    
+    if discoveries.sum() > 0:
+        empirical_fdr = false_positives / discoveries.sum()
+        precision = true_positives / discoveries.sum()
+    else:
+        empirical_fdr = 0
+        precision = 0
+    
+    recall = true_positives / np.sum(true_labels == 1) if np.sum(true_labels == 1) > 0 else 0
+    
+    return {
+        'discoveries': discoveries.sum(),
+        'true_positives': true_positives,
+        'false_positives': false_positives,
+        'empirical_fdr': empirical_fdr,
+        'precision': precision,
+        'recall': recall
+    }
+
+# Example usage
+results = evaluate_fdr_control(p_values, y_true, alpha=0.05)
+print(f"Empirical FDR: {results['empirical_fdr']:.3f}")
+print(f"Precision: {results['precision']:.3f}")
+print(f"Recall: {results['recall']:.3f}")
+```
+
+## Best Practices
+
+### 1. Choose Appropriate FDR Level
+- **Conservative**: α = 0.01 for critical applications
+- **Standard**: α = 0.05 for most applications
+- **Liberal**: α = 0.1 when false positives are less costly
+
+### 2. Method Selection
+- Use **BH** for most applications (independent or positively dependent tests)
+- Use **BY** when tests may have negative dependence or when more conservative control is needed
+
+### 3. Combine with Domain Knowledge
+```python
+# Incorporate prior knowledge about anomaly prevalence
+expected_anomaly_rate = 0.02  # 2% expected anomalies
+adjusted_alpha = min(0.05, expected_anomaly_rate * 2)  # Adjust FDR level
+
+adjusted_p_vals = false_discovery_control(p_values, method='bh', alpha=adjusted_alpha)
+```
+
+### 4. Monitor Performance
+```python
+# Track FDR control performance over time
+fdr_history = []
+for batch in data_batches:
+    p_vals = detector.predict(batch, raw=False)
+    adj_p_vals = false_discovery_control(p_vals, method='bh', alpha=0.05)
+    discoveries = adj_p_vals < 0.05
+    
+    if len(true_labels_batch) > 0:  # If ground truth available
+        metrics = evaluate_fdr_control(p_vals, true_labels_batch)
+        fdr_history.append(metrics['empirical_fdr'])
+```
+
+## Common Pitfalls
+
+### 1. Inappropriate Independence Assumptions
+- BH assumes independence or positive dependence
+- Use BY if negative dependence is suspected
+
+### 2. Multiple Rounds of Testing
+- Don't apply FDR control multiple times to the same data
+- If doing sequential testing, use specialized methods
+
+### 3. Ignoring Effect Sizes
+- FDR control doesn't consider magnitude of anomalies
+- Consider combining with effect size thresholds
+
+## Advanced Usage
+
+### Combining Multiple Detection Methods
+```python
+from scipy.stats import combine_pvalues
+
+# Get p-values from multiple detectors
+detectors = [LOF(), KNN(), OCSVM()]
+p_values_list = []
+
+for detector in detectors:
+    conf_detector = ConformalDetector(
+        detector=detector,
+        strategy=strategy,
+        aggregation=Aggregation.MEDIAN,
+        seed=42
+    )
+    conf_detector.fit(X_train)
+    p_vals = conf_detector.predict(X_test, raw=False)
+    p_values_list.append(p_vals)
+
+# Combine p-values using Fisher's method
+combined_stats, combined_p_values = combine_pvalues(
+    np.array(p_values_list).T, 
+    method='fisher'
+)
+
+# Apply FDR control to combined p-values
+final_adjusted = false_discovery_control(combined_p_values, method='bh', alpha=0.05)
+final_discoveries = final_adjusted < 0.05
+```
 
 ## Next Steps
 
-- Learn about [weighted conformal p-values](weighted_conformal.md)
-- Explore [different conformalization strategies](conformalization_strategies.md) 
+- Learn about [weighted conformal p-values](weighted_conformal.md) for handling distribution shift
+- Explore [different conformalization strategies](conformalization_strategies.md) for various scenarios
+- Read about [best practices](best_practices.md) for robust anomaly detection

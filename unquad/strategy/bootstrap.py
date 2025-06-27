@@ -7,7 +7,7 @@ from sklearn.model_selection import ShuffleSplit
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector
-from unquad.estimation.properties.parameterization import set_params
+from unquad.utils.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 
 
@@ -75,8 +75,8 @@ class Bootstrap(BaseStrategy):
         self,
         x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
-        weighted: bool = False,
         seed: int = 1,
+        weighted: bool = False,
     ) -> tuple[list[BaseDetector], list[float]]:
         """Fit and calibrate the detector using bootstrap resampling.
 
@@ -127,7 +127,9 @@ class Bootstrap(BaseStrategy):
         )
 
         n_folds = folds.get_n_splits()
-        last_iteration_index = 0  # To ensure unique iteration for final model if not _plus
+        last_iteration_index = (
+            0  # To ensure unique iteration for final model if not _plus
+        )
         for i, (train_idx, calib_idx) in enumerate(
             tqdm(folds.split(x), total=n_folds, desc="Training", disable=False)
         ):

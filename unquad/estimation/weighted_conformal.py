@@ -6,29 +6,27 @@ from sklearn.preprocessing import StandardScaler
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-from typing import Literal  # Added List, Tuple
-
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector
-from unquad.estimation.properties.configuration import DetectorConfig
-from unquad.estimation.properties.parameterization import set_params
+from unquad.estimation.base import BaseConformalDetector
+from unquad.utils.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 from unquad.utils.aggregation import aggregate
 from unquad.utils.decorator import ensure_numpy_array
-from unquad.utils.multiplicity import multiplicity_correction
-from unquad.utils.statistical import calculate_weighted_p_val, get_decision
+from unquad.utils.enums import Aggregation
+from unquad.utils.statistical import calculate_weighted_p_val
 
 
-class WeightedConformalDetector:
+class WeightedConformalDetector(BaseConformalDetector):
     """Weighted conformal anomaly detector with covariate shift adaptation.
 
-    This detector implements a conformal prediction framework for anomaly
-    detection, incorporating weights to adapt to potential covariate shifts
-    between calibration and test data. It leverages an underlying PyOD
-    detector, a calibration strategy, and a configuration object.
+    This detector inherits from BaseConformalDetector and implements a conformal
+    prediction framework for anomaly detection, incorporating weights to adapt to
+    potential covariate shifts between calibration and test data. It leverages an
+    underlying PyOD detector and a calibration strategy.
 
     The weighting mechanism estimates the density ratio between calibration
     and test instances using a logistic regression model trained to
@@ -41,13 +39,14 @@ class WeightedConformalDetector:
     Attributes
     ----------
         detector (BaseDetector): The underlying PyOD anomaly detection model,
-            initialized with parameters from the config.
+            initialized with the specified seed.
         strategy (BaseStrategy): The calibration strategy (e.g., Bootstrap,
             CrossValidation) used to generate calibration scores and identify
             calibration samples.
-        config (DetectorConfig): Configuration settings including significance
-            level (alpha), p-value adjustment method, aggregation method,
-            random seed, and verbosity.
+        aggregation (Aggregation): Method used for aggregating scores from
+            multiple detector models.
+        seed (int): Random seed for reproducibility in stochastic processes.
+        silent (bool): Whether to suppress progress bars and logs.
         detector_set (List[BaseDetector]): A list of one or more trained
             detector instances, populated by the `fit` method via the strategy.
         calibration_set (List[float]): A list of non-conformity scores obtained
@@ -61,20 +60,38 @@ class WeightedConformalDetector:
         self,
         detector: BaseDetector,
         strategy: BaseStrategy,
-        config: DetectorConfig = DetectorConfig(),
+        aggregation: Aggregation = Aggregation.MEDIAN,
+        seed: int = 1,
+        silent: bool = True,
     ):
         """Initialize the WeightedConformalDetector.
 
         Args:
             detector (BaseDetector): A PyOD anomaly detector instance. It will
-                be configured with the seed from `config`.
+                be configured with the specified seed.
             strategy (BaseStrategy): A calibration strategy instance.
-            config (DetectorConfig, optional): Configuration for the detector.
-                Defaults to ``DetectorConfig()``.
+            aggregation (Aggregation, optional): Method used for aggregating
+                scores from multiple detector models. Defaults to Aggregation.MEDIAN.
+            seed (int, optional): Random seed for reproducibility. Defaults to 1.
+            silent (bool, optional): Whether to suppress progress bars and logs.
+                Defaults to True.
+
+        Raises:
+            ValueError: If seed is negative.
+            TypeError: If aggregation is not an Aggregation enum.
         """
-        self.detector: BaseDetector = set_params(detector, config.seed)
+        if seed < 0:
+            raise ValueError(f"seed must be a non-negative integer, got {seed}")
+        if not isinstance(aggregation, Aggregation):
+            raise TypeError(
+                f"aggregation must be an Aggregation enum, got {type(aggregation)}"
+            )
+
+        self.detector: BaseDetector = set_params(detector, seed)
         self.strategy: BaseStrategy = strategy
-        self.config: DetectorConfig = config
+        self.aggregation: Aggregation = aggregation
+        self.seed: int = seed
+        self.silent: bool = silent
 
         self.detector_set: list[BaseDetector] = []
         self.calibration_set: list[float] = []
@@ -97,7 +114,7 @@ class WeightedConformalDetector:
                 ``numpy.ndarray`` internally.
         """
         self.detector_set, self.calibration_set = self.strategy.fit_calibrate(
-            x=x, detector=self.detector, weighted=True, seed=self.config.seed
+            x=x, detector=self.detector, weighted=True, seed=self.seed
         )
         if (
             self.strategy.calibration_ids is not None
@@ -113,37 +130,36 @@ class WeightedConformalDetector:
     def predict(
         self,
         x: pd.DataFrame | np.ndarray,
-        output: Literal["decision", "p-value", "score"] = "decision",
+        raw: bool = False,
     ) -> np.ndarray:
-        """Predicts anomaly status, p-values, or scores for new data.
+        """Generates weighted anomaly estimates (p-values or raw scores) for new data.
 
         For each test instance in `x`:
         1. Anomaly scores are obtained from each detector in `detector_set`.
-        2. These scores are aggregated using the method specified in `config`.
+        2. These scores are aggregated using the method specified in `self.aggregation`.
         3. Importance weights are computed for calibration and test instances
            to account for covariate shift, using `_compute_weights`.
-        4. Weighted p-values are calculated using the aggregated scores,
+        4. Based on the `raw` parameter, either returns the aggregated scores
+           or weighted p-values calculated using the aggregated scores,
            calibration scores, and computed weights.
-        5. P-values are adjusted for multiplicity if specified in `config`.
-        6. The final output (decision, p-value, or score) is returned.
 
         Args:
             x (Union[pandas.DataFrame, numpy.ndarray]): The input data for which
-                predictions are to be made. The `@ensure_numpy_array`
+                anomaly estimates are to be generated. The `@ensure_numpy_array`
                 decorator converts `x` to a ``numpy.ndarray`` internally.
-            output (Literal["decision", "p-value", "score"], optional):
-                Determines the type of output:
-                * "decision": Binary decisions (0 or 1, or False/True
-                  depending on `get_decision`) based on adjusted p-values
-                  and `config.alpha`.
-                * "p-value": Raw (unadjusted) weighted p-values.
-                * "score": Aggregated anomaly scores.
-                Defaults to "decision".
+            raw (bool, optional): Whether to return raw anomaly scores or
+                weighted p-values. Defaults to False.
+                * If True: Returns the aggregated anomaly scores from the
+                  detector set for each data point.
+                * If False: Returns the weighted p-values for each data point,
+                  accounting for covariate shift between calibration and test data.
 
         Returns
         -------
-            numpy.ndarray: An array containing the predictions. The data type
-                and shape depend on the `output` type.
+            numpy.ndarray: An array containing the anomaly estimates. The content of the
+            array depends on the `raw` argument:
+            - If raw=True, an array of anomaly scores (float).
+            - If raw=False, an array of weighted p-values (float).
         """
         scores_list = [
             model.decision_function(x)
@@ -151,26 +167,23 @@ class WeightedConformalDetector:
                 self.detector_set,
                 total=len(self.detector_set),
                 desc="Inference",
-                disable=self.config.silent,
+                disable=self.silent,
             )
         ]
 
         w_cal, w_x = self._compute_weights(x)
-        estimates = aggregate(self.config.aggregation, np.array(scores_list))
-        p_val = calculate_weighted_p_val(
-            np.array(estimates),
-            np.array(self.calibration_set),
-            np.array(w_x),
-            np.array(w_cal),
-        )
-        p_val_adj = multiplicity_correction(self.config.adjustment, p_val)
+        estimates = aggregate(self.aggregation, np.array(scores_list))
 
-        if output == "score":
-            return np.array(estimates)
-        elif output == "p-value":
-            return np.array(p_val)
-        else:
-            return get_decision(self.config.alpha, np.array(p_val_adj))
+        return (
+            estimates
+            if raw
+            else calculate_weighted_p_val(
+                np.array(estimates),
+                np.array(self.calibration_set),
+                np.array(w_x),
+                np.array(w_cal),
+            )
+        )
 
     def _compute_weights(
         self, test_instances: np.ndarray
@@ -210,7 +223,7 @@ class WeightedConformalDetector:
         )
 
         joint_labeled = np.vstack((calib_labeled, tests_labeled))
-        rng = np.random.default_rng(seed=self.config.seed)
+        rng = np.random.default_rng(seed=self.seed)
         rng.shuffle(joint_labeled)
 
         x_joint = joint_labeled[:, :-1]
@@ -220,7 +233,7 @@ class WeightedConformalDetector:
             StandardScaler(),
             LogisticRegression(
                 max_iter=1_000,
-                random_state=self.config.seed,
+                random_state=self.seed,
                 verbose=0,
                 class_weight="balanced",
             ),

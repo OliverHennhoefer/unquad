@@ -1,28 +1,6 @@
 from enum import Enum
 
 
-class Adjustment(Enum):
-    """Procedures for False Discovery Rate (FDR) control in multiple tests.
-
-    This enumeration defines methods for adjusting p-values or significance
-    levels when conducting multiple statistical hypothesis tests to manage
-    the overall error rate.
-
-    Attributes
-    ----------
-        BH: Represents the Benjamini-Hochberg procedure. The underlying value
-            is typically ``"bh"``.
-        BY: Represents the Benjamini-Yekutieli procedure. The underlying value
-            is typically ``"by"``.
-        NONE: Represents that no adjustment should be applied. The underlying
-            value is ``None``.
-    """
-
-    BH = "bh"
-    BY = "by"
-    NONE = None
-
-
 class Aggregation(Enum):
     """Aggregation functions for combining multiple model outputs or scores.
 

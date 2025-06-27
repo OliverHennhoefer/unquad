@@ -12,7 +12,9 @@ The most straightforward way to use unquad is with classical conformal anomaly d
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
-from unquad.conformal import ClassicalCAD
+from unquad.estimation.conformal import ConformalDetector
+from unquad.strategy.split import SplitStrategy
+from unquad.utils.enums import Aggregation
 
 # Generate some example data
 X_normal, _ = make_blobs(n_samples=1000, centers=1, random_state=42)
@@ -22,17 +24,24 @@ X_test, _ = make_blobs(n_samples=100, centers=1, random_state=123)
 X_anomalies = np.random.uniform(-10, 10, (20, X_test.shape[1]))
 X_test = np.vstack([X_test, X_anomalies])
 
-# Initialize detector
-detector = IsolationForest(contamination=0.1, random_state=42)
+# Initialize base detector
+base_detector = IsolationForest(contamination=0.1, random_state=42)
 
-# Create conformal anomaly detector
-cad = ClassicalCAD(detector)
+# Create conformal anomaly detector with split strategy
+strategy = SplitStrategy(calibration_size=0.3)
+detector = ConformalDetector(
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False
+)
 
 # Fit on normal data
-cad.fit(X_normal)
+detector.fit(X_normal)
 
 # Get p-values for test instances
-p_values = cad.predict_proba(X_test)
+p_values = detector.predict(X_test, raw=False)
 
 print(f"P-values range: {p_values.min():.4f} - {p_values.max():.4f}")
 print(f"Number of potential anomalies (p < 0.05): {(p_values < 0.05).sum()}")
@@ -40,13 +49,14 @@ print(f"Number of potential anomalies (p < 0.05): {(p_values < 0.05).sum()}")
 
 ### 2. False Discovery Rate Control
 
-Control the False Discovery Rate using the Benjamini-Hochberg procedure:
+Control the False Discovery Rate using scipy's Benjamini-Hochberg procedure:
 
 ```python
-from unquad.multiple_testing import benjamini_hochberg
+from scipy.stats import false_discovery_control
 
 # Control FDR at 5% level
-discoveries, adjusted_p_values = benjamini_hochberg(p_values, alpha=0.05)
+adjusted_p_values = false_discovery_control(p_values, method='bh')
+discoveries = adjusted_p_values < 0.05
 
 print(f"Number of discoveries: {discoveries.sum()}")
 print(f"Adjusted p-values range: {adjusted_p_values.min():.4f} - {adjusted_p_values.max():.4f}")
@@ -61,22 +71,35 @@ print(f"Discovered anomaly indices: {anomaly_indices}")
 For better performance in low-data regimes, use resampling-based strategies:
 
 ```python
-from unquad.conformal import LOOCAD, CrossConformalCAD
+from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.cross_val import CrossValidationStrategy
 
-# Leave-One-Out Conformal Anomaly Detection
-loo_cad = LOOCAD(detector)
-loo_cad.fit(X_normal)
-loo_p_values = loo_cad.predict_proba(X_test)
+# Jackknife (Leave-One-Out) Conformal Anomaly Detection
+jackknife_strategy = JackknifeStrategy()
+jackknife_detector = ConformalDetector(
+    detector=base_detector,
+    strategy=jackknife_strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
+)
+jackknife_detector.fit(X_normal)
+jackknife_p_values = jackknife_detector.predict(X_test, raw=False)
 
-# Cross-Conformal Anomaly Detection
-cv_cad = CrossConformalCAD(detector, cv_folds=5)
-cv_cad.fit(X_normal)
-cv_p_values = cv_cad.predict_proba(X_test)
+# Cross-Validation Conformal Anomaly Detection
+cv_strategy = CrossValidationStrategy(n_splits=5)
+cv_detector = ConformalDetector(
+    detector=base_detector,
+    strategy=cv_strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
+)
+cv_detector.fit(X_normal)
+cv_p_values = cv_detector.predict(X_test, raw=False)
 
 print("Comparison of strategies:")
-print(f"Classical: {(p_values < 0.05).sum()} detections")
-print(f"LOO: {(loo_p_values < 0.05).sum()} detections")
-print(f"Cross-Conformal: {(cv_p_values < 0.05).sum()} detections")
+print(f"Split: {(p_values < 0.05).sum()} detections")
+print(f"Jackknife: {(jackknife_p_values < 0.05).sum()} detections")
+print(f"Cross-Validation: {(cv_p_values < 0.05).sum()} detections")
 ```
 
 ## Weighted Conformal p-values
@@ -84,18 +107,22 @@ print(f"Cross-Conformal: {(cv_p_values < 0.05).sum()} detections")
 When dealing with covariate shift, use weighted conformal p-values:
 
 ```python
-from unquad.conformal import WeightedCAD
-
-# Assume we have importance weights for test instances
-# In practice, these would be estimated from domain knowledge or methods
-weights = np.ones(len(X_test))  # Placeholder weights
+from unquad.estimation.weighted_conformal import WeightedConformalDetector
+from unquad.strategy.split import SplitStrategy
 
 # Create weighted conformal anomaly detector
-weighted_cad = WeightedCAD(detector)
-weighted_cad.fit(X_normal)
+weighted_strategy = SplitStrategy(calibration_size=0.3)
+weighted_detector = WeightedConformalDetector(
+    detector=base_detector,
+    strategy=weighted_strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
+)
+weighted_detector.fit(X_normal)
 
 # Get weighted p-values
-weighted_p_values = weighted_cad.predict_proba(X_test, weights=weights)
+# The detector automatically estimates importance weights internally
+weighted_p_values = weighted_detector.predict(X_test, raw=False)
 
 print(f"Weighted p-values range: {weighted_p_values.min():.4f} - {weighted_p_values.max():.4f}")
 ```
@@ -108,6 +135,7 @@ unquad integrates seamlessly with PyOD detectors:
 from pyod.models.knn import KNN
 from pyod.models.lof import LOF
 from pyod.models.ocsvm import OCSVM
+from unquad.strategy.split import SplitStrategy
 
 # Try different PyOD detectors
 detectors = {
@@ -116,11 +144,18 @@ detectors = {
     'OCSVM': OCSVM(contamination=0.1)
 }
 
+strategy = SplitStrategy(calibration_size=0.3)
 results = {}
-for name, detector in detectors.items():
-    cad = ClassicalCAD(detector)
-    cad.fit(X_normal)
-    p_vals = cad.predict_proba(X_test)
+
+for name, base_det in detectors.items():
+    detector = ConformalDetector(
+        detector=base_det,
+        strategy=strategy,
+        aggregation=Aggregation.MEDIAN,
+        seed=42
+    )
+    detector.fit(X_normal)
+    p_vals = detector.predict(X_test, raw=False)
     detections = (p_vals < 0.05).sum()
     results[name] = detections
     print(f"{name}: {detections} detections")
@@ -135,8 +170,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
-from unquad.conformal import ClassicalCAD
-from unquad.multiple_testing import benjamini_hochberg
+from scipy.stats import false_discovery_control
+from unquad.estimation.conformal import ConformalDetector
+from unquad.strategy.split import SplitStrategy
+from unquad.utils.enums import Aggregation
 
 # Generate data
 np.random.seed(42)
@@ -149,13 +186,21 @@ X_test = np.vstack([X_test_normal, X_test_anomalies])
 y_true = np.hstack([np.zeros(80), np.ones(20)])
 
 # Setup and fit detector
-detector = IsolationForest(contamination=0.1, random_state=42)
-cad = ClassicalCAD(detector)
-cad.fit(X_normal)
+base_detector = IsolationForest(contamination=0.1, random_state=42)
+strategy = SplitStrategy(calibration_size=0.3)
+detector = ConformalDetector(
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False
+)
+detector.fit(X_normal)
 
 # Get p-values and control FDR
-p_values = cad.predict_proba(X_test)
-discoveries, _ = benjamini_hochberg(p_values, alpha=0.05)
+p_values = detector.predict(X_test, raw=False)
+adjusted_p_values = false_discovery_control(p_values, method='bh')
+discoveries = adjusted_p_values < 0.05
 
 # Evaluate results
 true_positives = np.sum(discoveries & (y_true == 1))

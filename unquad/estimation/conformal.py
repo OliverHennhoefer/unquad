@@ -13,30 +13,27 @@ import os
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-from typing import Literal  # List imported for type hint clarity
-
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector as PyODBaseDetector  # Alias for clarity
-from unquad.estimation.properties.configuration import DetectorConfig
-from unquad.estimation.properties.parameterization import set_params
+from unquad.estimation.base import BaseConformalDetector
+from unquad.utils.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 from unquad.utils.aggregation import aggregate
 from unquad.utils.decorator import ensure_numpy_array
-from unquad.utils.multiplicity import multiplicity_correction
-from unquad.utils.statistical import calculate_p_val, get_decision
+from unquad.utils.enums import Aggregation
+from unquad.utils.statistical import calculate_p_val
 
 
-class ConformalDetector:
-    """Applies conformal prediction to an anomaly detector.
+class ConformalDetector(BaseConformalDetector):
+    """Calibrates an anomaly detector using conformal prediction.
 
-    This detector uses an underlying anomaly detection model and a specified
-    strategy (e.g., split conformal, CV+) to calibrate non-conformity
-    scores. It then uses these calibrated scores to make predictions on new
-    data, providing options for raw scores, p-values, or binary decisions,
-    while accounting for multiple hypothesis testing.
+    This detector inherits from BaseConformalDetector and uses an underlying
+    anomaly detection model and a specified strategy (e.g., split conformal, CV+)
+    to calibrate non-conformity scores. It then uses these calibrated scores to
+    generate anomaly estimates on new data, providing options for raw scores or p-values.
 
     Attributes
     ----------
@@ -44,8 +41,10 @@ class ConformalDetector:
             initialized with a specific seed.
         strategy (BaseStrategy): The strategy used to fit and calibrate the
             detector (e.g., split conformal, cross-validation).
-        config (DetectorConfig): Configuration object containing parameters like
-            alpha, seed, and adjustment methods.
+        aggregation (Aggregation): Method used for aggregating scores from
+            multiple detector models.
+        seed (int): Random seed for reproducibility in stochastic processes.
+        silent (bool): Whether to suppress progress bars and logs.
         detector_set (List[PyODBaseDetector]): A list of trained anomaly detector
             models. Populated after the `fit` method is called. Depending on
             the strategy, this might contain one or multiple models.
@@ -58,7 +57,9 @@ class ConformalDetector:
         self,
         detector: PyODBaseDetector,
         strategy: BaseStrategy,
-        config: DetectorConfig = DetectorConfig(),
+        aggregation: Aggregation = Aggregation.MEDIAN,
+        seed: int = 1,
+        silent: bool = True,
     ):
         """Initialize the ConformalDetector.
 
@@ -67,14 +68,28 @@ class ConformalDetector:
                 used (e.g., an instance of a PyOD detector).
             strategy (BaseStrategy): The conformal strategy to apply for fitting
                 and calibration.
-            config (DetectorConfig, optional): Configuration settings for the
-                detector, including significance level (alpha), random seed,
-                and correction methods. Defaults to a standard `DetectorConfig`
-                instance.
+            aggregation (Aggregation, optional): Method used for aggregating
+                scores from multiple detector models. Defaults to Aggregation.MEDIAN.
+            seed (int, optional): Random seed for reproducibility. Defaults to 1.
+            silent (bool, optional): Whether to suppress progress bars and logs.
+                Defaults to True.
+
+        Raises:
+            ValueError: If seed is negative.
+            TypeError: If aggregation is not an Aggregation enum.
         """
-        self.detector: PyODBaseDetector = set_params(detector, config.seed)
+        if seed < 0:
+            raise ValueError(f"seed must be a non-negative integer, got {seed}")
+        if not isinstance(aggregation, Aggregation):
+            raise TypeError(
+                f"aggregation must be an Aggregation enum, got {type(aggregation)}"
+            )
+
+        self.detector: PyODBaseDetector = set_params(detector, seed)
         self.strategy: BaseStrategy = strategy
-        self.config: DetectorConfig = config
+        self.aggregation: Aggregation = aggregation
+        self.seed: int = seed
+        self.silent: bool = silent
 
         self.detector_set: list[PyODBaseDetector] = []
         self.calibration_set: list[float] = []
@@ -95,42 +110,37 @@ class ConformalDetector:
                 The strategy will dictate how this data is split or used.
         """
         self.detector_set, self.calibration_set = self.strategy.fit_calibrate(
-            x=x, detector=self.detector, weighted=False, seed=self.config.seed
+            x=x, detector=self.detector, weighted=False, seed=self.seed
         )
 
     @ensure_numpy_array
     def predict(
         self,
         x: pd.DataFrame | np.ndarray,
-        output: Literal["decision", "p-value", "score"] = "decision",
+        raw: bool = False,
     ) -> np.ndarray:
-        """Predicts anomaly status, p-values, or scores for new data.
+        """Generates anomaly estimates (p-values or raw scores) for new data.
 
         Based on the fitted models and calibration scores, this method evaluates
-        new data points. It can return raw anomaly scores, p-values indicating
-        how unusual each point is, or binary anomaly decisions based on the
-        configured alpha level.
+        new data points. It can return either raw anomaly scores or p-values
+        indicating how unusual each point is.
 
         Args:
             x (typing.Union[pd.DataFrame, np.ndarray]): The new data instances
-                for which to make predictions.
-            output (typing.Literal["decision", "p-value", "score"], optional):
-                The type of output desired. Defaults to "decision".
-                * "decision": Returns binary decisions (0 for normal, 1 for
-                  anomaly) based on adjusted p-values and the configured
-                  alpha.
-                * "p-value": Returns the raw, unadjusted p-values for each
-                  data point.
-                * "score": Returns the aggregated anomaly scores (non-conformity
+                for which to generate anomaly estimates.
+            raw (bool, optional): Whether to return raw anomaly scores or
+                p-values. Defaults to False.
+                * If True: Returns the aggregated anomaly scores (non-conformity
                   estimates) from the detector set for each data point.
+                * If False: Returns the p-values for each data point based on
+                  the calibration set.
 
         Returns
         -------
-            np.ndarray: An array containing the predictions. The content of the
-            array depends on the `output` argument:
-            - If "decision", a binary array of 0s and 1s.
-            - If "p-value", an array of p-values (float).
-            - If "score", an array of anomaly scores (float).
+            np.ndarray: An array containing the anomaly estimates. The content of the
+            array depends on the `raw` argument:
+            - If raw=True, an array of anomaly scores (float).
+            - If raw=False, an array of p-values (float).
         """
         scores_list = [
             model.decision_function(x)
@@ -138,17 +148,13 @@ class ConformalDetector:
                 self.detector_set,
                 total=len(self.detector_set),
                 desc="Inference",
-                disable=self.config.silent,
+                disable=self.silent,
             )
         ]
 
-        estimates = aggregate(self.config.aggregation, scores_list)
-        p_val = calculate_p_val(estimates, self.calibration_set)
-        p_val_adj = multiplicity_correction(self.config.adjustment, p_val)
-
-        if output == "score":
-            return estimates
-        elif output == "p-value":
-            return p_val
-        else:  # Default case is "decision"
-            return get_decision(self.config.alpha, p_val_adj)
+        estimates = aggregate(method=self.aggregation, scores=scores_list)
+        return (
+            estimates
+            if raw
+            else calculate_p_val(scores=estimates, calibration_set=self.calibration_set)
+        )

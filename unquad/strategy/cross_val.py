@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector
-from unquad.estimation.properties.parameterization import set_params
+from unquad.utils.parameterization import set_params
 from unquad.strategy.base import BaseStrategy
 
 
@@ -55,8 +55,8 @@ class CrossValidation(BaseStrategy):
         self,
         x: pd.DataFrame | np.ndarray,
         detector: BaseDetector,
-        weighted: bool = False,
         seed: int = 1,
+        weighted: bool = False,
     ) -> tuple[list[BaseDetector], list[float]]:
         """Fit and calibrate the detector using k-fold cross-validation.
 

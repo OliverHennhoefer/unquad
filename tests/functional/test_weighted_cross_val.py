@@ -1,6 +1,7 @@
 import unittest
 
 from pyod.models.iforest import IForest
+from scipy.stats import false_discovery_control
 from unquad.data.load import load_fraud
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.cross_val import CrossValidation
@@ -17,9 +18,10 @@ class TestCaseSplitConformalWeighted(unittest.TestCase):
 
         ce.fit(x_train)
         est = ce.predict(x_test)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(fdr, 0.0)
         self.assertEqual(power, 0.25)
@@ -34,9 +36,10 @@ class TestCaseSplitConformalWeighted(unittest.TestCase):
 
         wce.fit(x_train)
         est = wce.predict(x_test)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(fdr, 0.0)
         self.assertEqual(power, 0.25)

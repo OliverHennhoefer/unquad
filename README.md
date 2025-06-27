@@ -22,7 +22,7 @@ _For advanced features (e.g. deep learning models) you might need optional depen
 
 ## Split-Conformal (also _Inductive_) Approach
 
-Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset with standard configuration (no `DetectorConfig()` set).
+Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset:
 
 ```python
 from pyod.models.gmm import GMM
@@ -53,18 +53,6 @@ Empirical FDR: 0.108
 Empirical Power: 0.99
 ```
 
-The behavior can be customized using `DetectorConfig()`:
-
-```python
-@dataclass
-class DetectorConfig:
-    alpha: float = 0.2                              # Nominal FDR value
-    adjustment: Adjustment = Adjustment.BH          # Multiple testing procedure
-    aggregation: Aggregation = Aggregation.MEDIAN   # Score aggregation (if applicable)
-    seed: int = 1                                   # Reproducibility
-    silent: bool = True                             # Verbosity
-```
-
 # :hatched_chick: Advanced Usage
 
 ## Bootstrap-after-Jackknife+ (JaB+)
@@ -76,10 +64,9 @@ calibration procedure when using a bootstrap strategy.
 ```python
 from pyod.models.iforest import IForest
 
-from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.enums import Aggregation, Adjustment
+from unquad.utils.enums import Aggregation
 
 from unquad.data.load import load_shuttle
 from unquad.utils.metrics import false_discovery_rate, statistical_power
@@ -88,8 +75,7 @@ x_train, x_test, y_test = load_shuttle(setup=True)
 
 ce = ConformalDetector(
     detector=IForest(behaviour="new"),
-    strategy=Bootstrap(resampling_ratio=0.99, n_bootstraps=20, plus=True),
-    config=DetectorConfig(alpha=0.1, adjustment=Adjustment.BH, aggregation=Aggregation.MEAN),
+    strategy=Bootstrap(resampling_ratio=0.99, n_bootstraps=20, plus=True)
 )
 
 ce.fit(x_train)
@@ -113,22 +99,17 @@ The statistical validity of conformal anomaly detection depends on data *exchang
 from pyod.models.iforest import IForest
 
 from unquad.data.load import load_shuttle
-from unquad.estimation.properties.configuration import DetectorConfig
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.enums import Aggregation
-from unquad.utils.enums import Adjustment
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
 model = IForest(behaviour="new")
 strategy = Split(calib_size=1_000)
-config = DetectorConfig(
-    alpha=0.1, adjustment=Adjustment.BH, aggregation=Aggregation.MEAN
-)
 
-ce = WeightedConformalDetector(detector=model, strategy=strategy, config=config)
+ce = WeightedConformalDetector(detector=model, strategy=strategy)
 ce.fit(x_train)
 estimates = ce.predict(x_test)
 

@@ -1,6 +1,8 @@
 import unittest
 
 from pyod.models.iforest import IForest
+from scipy.stats import false_discovery_control
+
 from unquad.data.load import load_shuttle
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
@@ -19,8 +21,10 @@ class TestCaseBootstrapConformal(unittest.TestCase):
         ce.fit(x_train)
         est = ce.predict(x_test)
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
+
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(len(ce.calibration_set), 1_000)
         self.assertEqual(fdr, 0.075)
@@ -37,8 +41,10 @@ class TestCaseBootstrapConformal(unittest.TestCase):
         ce.fit(x_train)
         est = ce.predict(x_test)
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
+
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(len(ce.calibration_set), 3419)
         self.assertEqual(fdr, 0.261)
@@ -55,8 +61,10 @@ class TestCaseBootstrapConformal(unittest.TestCase):
         ce.fit(x_train)
         est = ce.predict(x_test)
 
-        fdr = false_discovery_rate(y=y_test, y_hat=est)
-        power = statistical_power(y=y_test, y_hat=est)
+        decisions = false_discovery_control(est, method="bh") <= 0.2
+
+        fdr = false_discovery_rate(y=y_test, y_hat=decisions)
+        power = statistical_power(y=y_test, y_hat=decisions)
 
         self.assertEqual(len(ce.calibration_set), 1000)
         self.assertEqual(fdr, 0.175)
