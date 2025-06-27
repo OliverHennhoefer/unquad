@@ -26,10 +26,10 @@ Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset:
 
 ```python
 from pyod.models.gmm import GMM
+from scipy.stats import false_discovery_control
 
 from unquad.strategy.split import Split
 from unquad.estimation.conformal import ConformalDetector
-
 from unquad.data.load import load_shuttle
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
@@ -43,8 +43,10 @@ ce = ConformalDetector(
 ce.fit(x_train)
 estimates = ce.predict(x_test)
 
-print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
-print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
+decisions = false_discovery_control(estimates, method='bh') <= 0.2
+
+print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=decisions)}")
+print(f"Empirical Power: {statistical_power(y=y_test, y_hat=decisions)}")
 ```
 
 Output:
@@ -63,11 +65,10 @@ calibration procedure when using a bootstrap strategy.
 
 ```python
 from pyod.models.iforest import IForest
+from scipy.stats import false_discovery_control
 
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.enums import Aggregation
-
 from unquad.data.load import load_shuttle
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
@@ -81,8 +82,10 @@ ce = ConformalDetector(
 ce.fit(x_train)
 estimates = ce.predict(x_test)
 
-print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
-print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
+decisions = false_discovery_control(estimates, method='bh') <= 0.1
+
+print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=decisions)}")
+print(f"Empirical Power: {statistical_power(y=y_test, y_hat=decisions)}")
 ```
 
 Output:
@@ -97,11 +100,11 @@ The statistical validity of conformal anomaly detection depends on data *exchang
 
 ```python
 from pyod.models.iforest import IForest
+from scipy.stats import false_discovery_control
 
 from unquad.data.load import load_shuttle
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.split import Split
-from unquad.utils.enums import Aggregation
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
@@ -113,8 +116,10 @@ ce = WeightedConformalDetector(detector=model, strategy=strategy)
 ce.fit(x_train)
 estimates = ce.predict(x_test)
 
-print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=estimates)}")
-print(f"Empirical Power: {statistical_power(y=y_test, y_hat=estimates)}")
+decisions = false_discovery_control(estimates, method='bh') <= 0.1
+
+print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=decisions)}")
+print(f"Empirical Power: {statistical_power(y=y_test, y_hat=decisions)}")
 ```
 
 Output:
