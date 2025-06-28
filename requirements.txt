@@ -1,12 +1,20 @@
+# Core dependencies
 numpy~=1.26.0
 pandas>=2.2.1
 scikit-learn>=1.6.1
 pyod~=2.0.3
 scipy>=1.13.0
 tqdm>=4.66.2
+
+# Optional dependencies for development
+# Data dependencies (unquad[data])
 pyarrow>=16.1.0
+
+# Deep learning dependencies (unquad[dl])
 tensorflow>=2.16.1
 torch>=2.2.2
+
+# Development dependencies (unquad[dev])
 black
 ruff
 pre-commit

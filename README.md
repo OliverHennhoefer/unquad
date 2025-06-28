@@ -18,11 +18,18 @@
 pip install unquad
 ```
 
-_For advanced features (e.g. deep learning models) you might need optional dependencies. Please refer to the [pyproject.toml](https://github.com/OliverHennhoefer/unquad/blob/main/pyproject.toml) for details._
+_For additional features, you might need optional dependencies:_
+- `pip install unquad[data]` - Includes datasets and pyarrow for loading example data
+- `pip install unquad[dl]` - Includes deep learning dependencies (TensorFlow, PyTorch)
+- `pip install unquad[all]` - Includes all optional dependencies
+
+_Please refer to the [pyproject.toml](https://github.com/OliverHennhoefer/unquad/blob/main/pyproject.toml) for details._
 
 ## Split-Conformal (also _Inductive_) Approach
 
 Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset:
+
+> **Note:** The examples below use the built-in datasets. Install with `pip install unquad[data]` to run these examples.
 
 ```python
 from pyod.models.gmm import GMM
@@ -30,7 +37,7 @@ from scipy.stats import false_discovery_control
 
 from unquad.strategy.split import Split
 from unquad.estimation.conformal import ConformalDetector
-from unquad.data.load import load_shuttle
+from unquad.utils.load import load_shuttle
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
@@ -69,7 +76,7 @@ from scipy.stats import false_discovery_control
 
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
-from unquad.data.load import load_shuttle
+from unquad.utils.load import load_shuttle
 from unquad.utils.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
@@ -102,7 +109,7 @@ The statistical validity of conformal anomaly detection depends on data *exchang
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.data.load import load_shuttle
+from unquad.utils.load import load_shuttle
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.metrics import false_discovery_rate, statistical_power

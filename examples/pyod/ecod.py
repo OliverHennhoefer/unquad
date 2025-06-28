@@ -1,6 +1,6 @@
 from pyod.models.ecod import ECOD
 from scipy.stats import false_discovery_control
-from unquad.data.load import load_breast
+from unquad.utils.load import load_breast
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife
 from unquad.utils.metrics import false_discovery_rate, statistical_power

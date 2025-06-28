@@ -1,6 +1,6 @@
 [project]
 name = "unquad"
-version = "0.8"
+version = "0.8.1"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
@@ -31,7 +31,6 @@ dependencies = [
     "pyod~=2.0.3",
     "scipy>=1.13.0",
     "tqdm>=4.66.2",
-    "pyarrow>=16.1.0",
 ]
 
 [build-system]
@@ -39,6 +38,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.optional-dependencies]
+data = [
+    "pyarrow>=16.1.0",
+]
 dev = [
     "black",
     "ruff",
@@ -52,10 +54,10 @@ docs = [
 ]
 dl = [
     "tensorflow>=2.16.1",
-    "torch>=2.7.0"  # Assuming you meant torch version here, was 2.7.0, common is 2.x.y
+    "torch>=2.7.0"
 ]
 all = [
-    "unquad[dev,docs,dl]" # Simpler way to express all dependencies
+    "unquad[data,dev,docs,dl]"
 ]
 
 [project.urls]

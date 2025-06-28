@@ -1,6 +1,6 @@
 from pyod.models.kpca import KPCA
 from scipy.stats import false_discovery_control
-from unquad.data.load import load_ionosphere
+from unquad.utils.load import load_ionosphere
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.metrics import false_discovery_rate, statistical_power

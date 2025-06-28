@@ -15,11 +15,24 @@ pip install unquad
 ```
 ## Optional dependencies
 
-Existing optional dependencies are grouped into `[dev]`, `[docs]`, `[dl]` and `[all]`:
+Existing optional dependencies are grouped into `[data]`, `[dev]`, `[docs]`, `[dl]` and `[all]`:
+- `[data]`: Dataset loading functionality (includes `pyarrow`)
 - `[dev]`: Development dependencies
 - `[docs]`: Documentation dependencies
 - `[dl]`: Deep Learning dependencies (`tensorflow`, `pytorch`)
 - `[all]`: All optional dependencies
+
+### Installing with specific dependencies
+
+To install with datasets support:
+```bash
+pip install unquad[data]
+```
+
+To install with all optional dependencies:
+```bash
+pip install unquad[all]
+```
 
 ## Get started
 
