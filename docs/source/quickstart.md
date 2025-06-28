@@ -2,6 +2,25 @@
 
 This guide will get you started with `unquad` in just a few minutes.
 
+## Built-in Datasets
+
+For quick experimentation, unquad includes several benchmark anomaly detection datasets. Install with `pip install unquad[data]` to enable dataset functionality.
+
+```python
+from unquad.utils.load import load_breast, load_shuttle, load_fraud
+
+# Load a dataset - automatically downloads and caches in memory
+x_train, x_test, y_test = load_breast(setup=True)
+
+print(f"Training data shape: {x_train.shape}")
+print(f"Test data shape: {x_test.shape}")
+print(f"Anomaly ratio in test set: {y_test.mean():.2%}")
+```
+
+**Note**: Datasets are downloaded on first use and cached in memory with zero disk footprint.
+
+Available datasets: `load_breast`, `load_fraud`, `load_ionosphere`, `load_mammography`, `load_musk`, `load_shuttle`, `load_thyroid`, `load_wbc`.
+
 ## Basic Usage
 
 ### 1. Classical Conformal Anomaly Detection

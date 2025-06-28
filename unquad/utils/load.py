@@ -1,8 +1,8 @@
 import gzip
-import hashlib
+import io
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Dict
 from urllib.parse import urljoin
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -11,24 +11,14 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # Dataset configuration
-DATASET_VERSION = os.environ.get("UNQUAD_DATASET_VERSION", "v.0.8.1-datasets")  # Update this when releasing new datasets
+DATASET_VERSION = os.environ.get("UNQUAD_DATASET_VERSION", "v.0.8.1-datasets")
 DATASET_BASE_URL = os.environ.get(
     "UNQUAD_DATASET_URL",
     f"https://github.com/OliverHennhoefer/unquad/releases/download/{DATASET_VERSION}/"
 )
-CACHE_DIR = Path(os.environ.get("UNQUAD_CACHE_DIR", str(Path.home() / ".unquad" / "datasets")))
 
-# Dataset checksums for verification (optional, update when releasing)
-DATASET_CHECKSUMS = {
-    "breast.parquet.gz": None,  # Add SHA256 checksums here after release
-    "fraud.parquet.gz": None,
-    "ionosphere.parquet.gz": None,
-    "mammography.parquet.gz": None,
-    "musk.parquet.gz": None,
-    "shuttle.parquet.gz": None,
-    "thyroid.parquet.gz": None,
-    "wbc.parquet.gz": None,
-}
+# In-memory cache for downloaded datasets
+_DATASET_CACHE: Dict[str, bytes] = {}
 
 # Check if pyarrow is available for reading parquet files
 try:
@@ -272,36 +262,22 @@ def load_wbc(
     return _load_dataset(Path("wbc.parquet.gz"), setup, random_state)
 
 
-def _download_dataset(filename: str, show_progress: bool = True) -> Path:
-    """Download dataset from GitHub releases and cache locally.
+def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
+    """Download dataset from GitHub releases and cache in memory.
     
     Args:
         filename: Name of the dataset file (e.g., "breast.parquet.gz")
         show_progress: Whether to show download progress
         
     Returns:
-        Path to the cached dataset file
+        BytesIO object containing the compressed dataset
         
     Raises:
         URLError: If download fails
-        RuntimeError: If checksum verification fails
     """
-    cache_path = CACHE_DIR / filename
-    
-    # Create cache directory if it doesn't exist
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    
-    # If file already cached, verify and return
-    if cache_path.exists():
-        if DATASET_CHECKSUMS.get(filename) is not None:
-            if _verify_checksum(cache_path, DATASET_CHECKSUMS[filename]):
-                return cache_path
-            else:
-                print(f"Checksum mismatch for cached {filename}, re-downloading...")
-                cache_path.unlink()
-        else:
-            # No checksum available, trust cached file
-            return cache_path
+    # Check if already cached in memory
+    if filename in _DATASET_CACHE:
+        return io.BytesIO(_DATASET_CACHE[filename])
     
     # Download file
     url = urljoin(DATASET_BASE_URL, filename)
@@ -319,57 +295,43 @@ def _download_dataset(filename: str, show_progress: bool = True) -> Path:
                 try:
                     from tqdm import tqdm
                     with tqdm(total=total_size, unit='B', unit_scale=True, desc=filename) as pbar:
-                        with open(cache_path, 'wb') as f:
-                            while True:
-                                chunk = response.read(8192)
-                                if not chunk:
-                                    break
-                                f.write(chunk)
-                                pbar.update(len(chunk))
+                        # Use bytearray for efficient concatenation, then convert to bytes
+                        data_buffer = bytearray()
+                        while True:
+                            chunk = response.read(8192)
+                            if not chunk:
+                                break
+                            data_buffer.extend(chunk)
+                            pbar.update(len(chunk))
+                        data = bytes(data_buffer)
                 except ImportError:
                     # Fallback to simple download without progress bar
-                    with open(cache_path, 'wb') as f:
-                        f.write(response.read())
+                    data = response.read()
             else:
-                with open(cache_path, 'wb') as f:
-                    f.write(response.read())
+                data = response.read()
                     
     except (URLError, HTTPError) as e:
-        if cache_path.exists():
-            cache_path.unlink()
         raise URLError(f"Failed to download {filename}: {str(e)}") from e
     
-    # Verify checksum if available
-    if DATASET_CHECKSUMS.get(filename) is not None:
-        if not _verify_checksum(cache_path, DATASET_CHECKSUMS[filename]):
-            cache_path.unlink()
-            raise RuntimeError(f"Checksum verification failed for {filename}")
+    # Cache in memory
+    _DATASET_CACHE[filename] = data
     
-    print(f"Successfully downloaded {filename}")
-    return cache_path
-
-
-def _verify_checksum(file_path: Path, expected_checksum: str) -> bool:
-    """Verify SHA256 checksum of a file."""
-    sha256_hash = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            sha256_hash.update(chunk)
-    return sha256_hash.hexdigest() == expected_checksum
+    print(f"Successfully loaded {filename} ({len(data)/1024:.1f} KB)")
+    return io.BytesIO(data)
 
 
 def _load_dataset(
-    file_path: Path, setup: bool, random_state: int
+    file_path, setup: bool, random_state: int
 ) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
     """Load a dataset from a gzipped Parquet file and optionally sets it up.
 
     This is a helper function used by the specific dataset loaders. It downloads
-    the dataset from GitHub releases if not cached locally, then reads the
+    the dataset from GitHub releases and caches it in memory, then reads the
     Parquet file compressed with gzip. If `setup` is true, it calls
     `_create_setup` to split the data.
 
     Args:
-        file_path (pathlib.Path): The path to the dataset file (used to extract filename).
+        file_path: The path object (used to extract filename).
         setup (bool): If ``True``, the data is processed by `_create_setup`
             to produce training and testing sets.
         random_state (int): Seed for random number generation, used if
@@ -396,10 +358,11 @@ def _load_dataset(
     # Extract filename from the provided path
     filename = file_path.name
     
-    # Download dataset if not cached
-    cached_path = _download_dataset(filename)
+    # Download dataset to memory
+    compressed_stream = _download_dataset(filename)
     
-    with gzip.open(cached_path, "rb") as f:
+    # Read parquet directly from compressed memory stream
+    with gzip.open(compressed_stream, 'rb') as f:
         df = pd.read_parquet(f)
 
     if setup:
@@ -472,66 +435,67 @@ def _create_setup(
     return x_train, x_test, y_test
 
 
-def clear_cache(dataset: Optional[str] = None) -> None:
-    """Clear cached dataset files.
+def clear_memory_cache(dataset: str = None) -> None:
+    """Clear datasets from memory cache.
     
     Args:
         dataset: Specific dataset name to clear (e.g., "breast"). 
                 If None, clears all cached datasets.
     """
+    global _DATASET_CACHE
+    
     if dataset is not None:
-        # Clear specific dataset
-        cache_file = CACHE_DIR / f"{dataset}.parquet.gz"
-        if cache_file.exists():
-            cache_file.unlink()
-            print(f"Cleared cached dataset: {dataset}")
+        filename = f"{dataset}.parquet.gz"
+        if filename in _DATASET_CACHE:
+            del _DATASET_CACHE[filename]
+            print(f"Cleared cached dataset from memory: {dataset}")
         else:
-            print(f"No cached dataset found: {dataset}")
+            print(f"No cached dataset found in memory: {dataset}")
     else:
         # Clear all datasets
-        if CACHE_DIR.exists():
-            for file in CACHE_DIR.glob("*.parquet.gz"):
-                file.unlink()
-                print(f"Cleared cached dataset: {file.stem}")
-            print("All cached datasets cleared.")
-        else:
-            print("No cache directory found.")
+        cleared_count = len(_DATASET_CACHE)
+        _DATASET_CACHE.clear()
+        print(f"Cleared {cleared_count} datasets from memory cache")
 
 
 def list_cached_datasets() -> list[str]:
-    """List all cached datasets.
+    """List all datasets cached in memory.
     
     Returns:
         List of cached dataset names (without .parquet.gz extension)
     """
-    if not CACHE_DIR.exists():
-        return []
-    
     # Remove .parquet.gz extension to get just the dataset name
-    return [f.name.removesuffix('.parquet.gz') for f in CACHE_DIR.glob("*.parquet.gz")]
+    return [filename.removesuffix('.parquet.gz') for filename in _DATASET_CACHE.keys()]
 
 
-def get_cache_info() -> dict:
-    """Get information about the dataset cache.
+def get_memory_cache_info() -> dict:
+    """Get information about the in-memory dataset cache.
     
     Returns:
-        Dictionary with cache information including path, size, and datasets
+        Dictionary with cache information including datasets and memory usage
     """
     info = {
-        "cache_dir": str(CACHE_DIR),
-        "exists": CACHE_DIR.exists(),
+        "cache_type": "in-memory",
         "datasets": [],
+        "total_size_kb": 0,
         "total_size_mb": 0
     }
     
-    if CACHE_DIR.exists():
-        for file in CACHE_DIR.glob("*.parquet.gz"):
-            size_mb = file.stat().st_size / (1024 * 1024)
-            info["datasets"].append({
-                "name": file.name.removesuffix('.parquet.gz'),
-                "size_mb": round(size_mb, 2)
-            })
-            info["total_size_mb"] += size_mb
+    total_bytes = 0
+    for filename, data in _DATASET_CACHE.items():
+        size_bytes = len(data)
+        size_kb = size_bytes / 1024
+        size_mb = size_bytes / (1024 * 1024)
+        total_bytes += size_bytes
+        
+        info["datasets"].append({
+            "name": filename.removesuffix('.parquet.gz'),
+            "size_kb": round(size_kb, 1),
+            "size_mb": round(size_mb, 3),
+            "size_bytes": size_bytes
+        })
     
-    info["total_size_mb"] = round(info["total_size_mb"], 2)
+    info["total_size_kb"] = round(total_bytes / 1024, 1)
+    info["total_size_mb"] = round(total_bytes / (1024 * 1024), 3)
+    
     return info

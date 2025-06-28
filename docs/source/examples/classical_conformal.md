@@ -7,16 +7,15 @@ This example demonstrates how to use classical conformal prediction for anomaly 
 ```python
 import numpy as np
 from pyod.models.lof import LOF
-from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
 from unquad.utils.enums import Aggregation
+from unquad.utils.load import load_breast
 
-# Load example data
-data = load_breast_cancer()
-X = data.data
-y = data.target
+# Load example data - downloads automatically and caches in memory
+x_train, x_test, y_test = load_breast(setup=True)
+print(f"Training samples: {len(x_train)}, Test samples: {len(x_test)}")
 ```
 
 ## Basic Usage
@@ -35,18 +34,19 @@ detector = ConformalDetector(
     silent=False
 )
 
-# Fit the detector
-detector.fit(X)
+# Fit the detector on training data (normal samples only)
+detector.fit(x_train)
 
-# Get p-values
-p_values = detector.predict(X, raw=False)
+# Get p-values for test data
+p_values = detector.predict(x_test, raw=False)
 
 # Get raw anomaly scores
-scores = detector.predict(X, raw=True)
+scores = detector.predict(x_test, raw=True)
 
 # Simple anomaly detection at 5% significance level
 anomalies = p_values < 0.05
 print(f"Number of anomalies detected: {anomalies.sum()}")
+print(f"True anomaly rate in test set: {y_test.mean():.2%}")
 ```
 
 ## FDR Control

@@ -29,6 +29,8 @@ To install with datasets support:
 pip install unquad[data]
 ```
 
+**Note**: The datasets are downloaded automatically when first used and cached in memory. This approach has zero disk footprint - no files are stored on your system.
+
 To install with all optional dependencies:
 ```bash
 pip install unquad[all]
