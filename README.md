@@ -19,7 +19,7 @@ pip install unquad
 ```
 
 _For additional features, you might need optional dependencies:_
-- `pip install unquad[data]` - Includes datasets and pyarrow for loading example data
+- `pip install unquad[data]` - Includes pyarrow for loading example data (via remote download)
 - `pip install unquad[dl]` - Includes deep learning dependencies (TensorFlow, PyTorch)
 - `pip install unquad[all]` - Includes all optional dependencies
 
