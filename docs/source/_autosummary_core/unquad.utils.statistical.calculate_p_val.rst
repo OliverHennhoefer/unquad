@@ -1,6 +1,6 @@
-﻿unquad.utils.statistical.calculate\_p\_val
-==========================================
+﻿unquad.utils.stat.statistical.calculate\_p\_val
+================================================
 
-.. currentmodule:: unquad.utils.statistical
+.. currentmodule:: unquad.utils.stat.statistical
 
 .. autofunction:: calculate_p_val

@@ -116,9 +116,26 @@ autoapi_options = [
 ]
 
 source_suffix = {
-    ".rst": "restructuredtext",
+    ".rst": "restructuredtext", 
     ".txt": "markdown",
     ".md": "markdown",
+}
+
+# MyST parser configuration
+myst_enable_extensions = [
+    "dollarmath",  # Enable $...$ and $$...$$ for math
+    "amsmath",     # Enable AMS math environments
+    "deflist",     # Definition lists
+    "fieldlist",   # Field lists
+    "tasklist",    # Task lists
+]
+
+# MathJax configuration
+mathjax3_config = {
+    "tex": {
+        "inlineMath": [["$", "$"], ["\\(", "\\)"]],
+        "displayMath": [["$$", "$$"], ["\\[", "\\]"]],
+    }
 }
 
 autodoc_default_options = {

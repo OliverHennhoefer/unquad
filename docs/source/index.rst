@@ -9,7 +9,7 @@ Welcome to Unquad's documentation!
    quickstart
    user_guide/index
    examples/index
-   api/index
+   api/unquad/index
    contributing
 
 Indices and tables

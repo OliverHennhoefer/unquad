@@ -12,13 +12,13 @@ FDR control is a statistical method for handling multiple hypothesis testing. In
 import numpy as np
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 from pyod.models.lof import LOF
 
 # Initialize detector
-base_detector = LOF(contamination=0.1)
-strategy = SplitStrategy(calibration_size=0.2)
+base_detector = LOF()
+strategy = Split(calib_size=0.2)
 
 detector = ConformalDetector(
     detector=base_detector,
@@ -271,6 +271,70 @@ combined_stats, combined_p_values = combine_pvalues(
 final_adjusted = false_discovery_control(combined_p_values, method='bh', alpha=0.05)
 final_discoveries = final_adjusted < 0.05
 ```
+
+## Online FDR Control for Streaming Data
+
+For dynamic settings with streaming data batches, the optional `online-fdr` package provides methods that adapt to temporal dependencies while maintaining FDR control.
+
+### Installation and Basic Usage
+
+```python
+# Install FDR dependencies
+# pip install unquad[fdr]
+
+from onlinefdr import Alpha_investing, LORD
+
+# Example with streaming conformal p-values
+def streaming_anomaly_detection(data_stream, detector, alpha=0.05):
+    """Online FDR control for streaming anomaly detection."""
+    
+    # Initialize online FDR method
+    # Alpha-investing: adapts alpha based on discoveries
+    online_fdr = Alpha_investing(alpha=alpha, w0=0.05)
+    
+    discoveries = []
+    
+    for batch in data_stream:
+        # Get p-values for current batch
+        p_values = detector.predict(batch, raw=False)
+        
+        # Apply online FDR control
+        for p_val in p_values:
+            decision = online_fdr.run_single(p_val)
+            discoveries.append(decision)
+    
+    return discoveries
+```
+
+### LORD (Levels based On Recent Discovery) Method
+
+```python
+# LORD method: more aggressive when recent discoveries
+lord_fdr = LORD(alpha=0.05, tau=0.5)
+
+# Process streaming data with temporal adaptation
+for t, (batch, p_values) in enumerate(stream_with_pvalues):
+    for p_val in p_values:
+        # LORD adapts rejection threshold based on recent discoveries
+        reject = lord_fdr.run_single(p_val)
+        
+        if reject:
+            print(f"Anomaly detected at time {t} with p-value {p_val:.4f}")
+```
+
+### Statistical Assumptions for Online FDR
+
+**Key Requirements:**
+- **Independence assumption**: Test statistics should be independent or satisfy specific dependency structures
+- **Sequential testing**: Methods designed for sequential hypothesis testing scenarios
+- **Temporal stability**: Underlying anomaly detection model should be reasonably stable
+
+**When NOT to use online FDR:**
+- Strong temporal dependencies in p-values without proper correction
+- Concept drift affecting p-value calibration
+- Non-stationary data streams requiring model retraining
+
+**Best practice**: Combine with windowed model retraining and exchangeability monitoring for robust streaming anomaly detection.
 
 ## Next Steps
 

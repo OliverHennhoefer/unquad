@@ -1,6 +1,6 @@
-﻿unquad.data.load.load\_shuttle
-==============================
+﻿unquad.utils.data.load.load\_shuttle
+====================================
 
-.. currentmodule:: unquad.data.load
+.. currentmodule:: unquad.utils.data.load
 
 .. autofunction:: load_shuttle

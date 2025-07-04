@@ -9,7 +9,7 @@ import numpy as np
 from pyod.models.lof import LOF
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 from unquad.utils.data.load import load_breast
 
@@ -22,10 +22,10 @@ print(f"Training samples: {len(x_train)}, Test samples: {len(x_test)}")
 
 ```python
 # Initialize base detector
-base_detector = LOF(contamination=0.1)
+base_detector = LOF()
 
 # Create conformal detector with split strategy
-strategy = SplitStrategy(calibration_size=0.2)
+strategy = Split(calib_size=0.2)
 detector = ConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -57,16 +57,16 @@ adjusted_p_values = false_discovery_control(p_values, method='bh')
 discoveries = adjusted_p_values < 0.05
 
 print(f"Number of discoveries with FDR control: {discoveries.sum()}")
-print(f"Empirical FDR: {(discoveries & (y == 0)).sum() / max(1, discoveries.sum()):.3f}")
+print(f"Empirical FDR: {(discoveries & (y_test == 0)).sum() / max(1, discoveries.sum()):.3f}")
 ```
 
 ## Advanced Usage with Cross-Validation
 
 ```python
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.cross_val import CrossValidation
 
 # Use cross-validation strategy for better calibration
-cv_strategy = CrossValidationStrategy(n_splits=5)
+cv_strategy = CrossValidation(k=5)
 cv_detector = ConformalDetector(
     detector=base_detector,
     strategy=cv_strategy,
@@ -75,12 +75,16 @@ cv_detector = ConformalDetector(
 )
 
 # Fit and predict with cross-validation
-cv_detector.fit(X)
-cv_p_values = cv_detector.predict(X, raw=False)
+cv_detector.fit(x_train)
+cv_p_values = cv_detector.predict(x_test, raw=False)
 
 # Compare with split strategy
-print(f"Split strategy detections: {(p_values < 0.05).sum()}")
-print(f"Cross-validation detections: {(cv_p_values < 0.05).sum()}")
+# Apply FDR control for fair comparison
+split_fdr = false_discovery_control(p_values, method='bh')
+cv_fdr = false_discovery_control(cv_p_values, method='bh')
+
+print(f"Split strategy detections: {(split_fdr < 0.05).sum()}")
+print(f"Cross-validation detections: {(cv_fdr < 0.05).sum()}")
 ```
 
 ## Comparing Different Aggregation Methods
@@ -96,10 +100,12 @@ for agg_method in aggregation_methods:
         aggregation=agg_method,
         seed=42
     )
-    detector.fit(X)
-    p_vals = detector.predict(X, raw=False)
+    detector.fit(x_train)
+    p_vals = detector.predict(x_test, raw=False)
     
-    print(f"{agg_method.value} aggregation: {(p_vals < 0.05).sum()} detections")
+    # Apply FDR control
+    fdr_controlled = false_discovery_control(p_vals, method='bh')
+    print(f"{agg_method.value} aggregation: {(fdr_controlled < 0.05).sum()} detections")
 ```
 
 ## Visualization

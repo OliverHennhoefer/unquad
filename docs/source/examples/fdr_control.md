@@ -10,7 +10,7 @@ from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer, make_blobs
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
 # Load example data
@@ -23,8 +23,8 @@ y = data.target
 
 ```python
 # Initialize detector
-base_detector = LOF(contamination=0.1)
-strategy = SplitStrategy(calibration_size=0.2)
+base_detector = LOF()
+strategy = Split(calib_size=0.2)
 
 detector = ConformalDetector(
     detector=base_detector,
@@ -139,7 +139,7 @@ detectors = {
 
 # Get p-values from each detector
 all_p_values = {}
-strategy = SplitStrategy(calibration_size=0.2)
+strategy = Split(calib_size=0.2)
 
 for name, base_det in detectors.items():
     detector = ConformalDetector(

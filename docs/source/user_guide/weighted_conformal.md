@@ -13,13 +13,13 @@ The `WeightedConformalDetector` automatically estimates importance weights using
 ```python
 import numpy as np
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 from pyod.models.lof import LOF
 
 # Initialize base detector
-base_detector = LOF(contamination=0.1)
-strategy = SplitStrategy(calibration_size=0.2)
+base_detector = LOF()
+strategy = Split(calib_size=0.2)
 
 # Create weighted conformal detector
 detector = WeightedConformalDetector(
@@ -131,8 +131,14 @@ weighted_detector.fit(X_train)
 standard_p_values = standard_detector.predict(X_test_shifted, raw=False)
 weighted_p_values = weighted_detector.predict(X_test_shifted, raw=False)
 
-print(f"Standard conformal detections: {(standard_p_values < 0.05).sum()}")
-print(f"Weighted conformal detections: {(weighted_p_values < 0.05).sum()}")
+# Apply FDR control for proper comparison
+from scipy.stats import false_discovery_control
+
+standard_fdr = false_discovery_control(standard_p_values, method='bh')
+weighted_fdr = false_discovery_control(weighted_p_values, method='bh')
+
+print(f"Standard conformal detections: {(standard_fdr < 0.05).sum()}")
+print(f"Weighted conformal detections: {(weighted_fdr < 0.05).sum()}")
 ```
 
 ## Different Aggregation Strategies
@@ -161,11 +167,11 @@ for agg_method in aggregation_methods:
 Different strategies can be used with weighted conformal detection:
 
 ```python
-from unquad.strategy.bootstrap import BootstrapStrategy
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.bootstrap import Bootstrap
+from unquad.strategy.cross_val import CrossValidation
 
 # Bootstrap strategy for stability
-bootstrap_strategy = BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8)
+bootstrap_strategy = Bootstrap(n_bootstraps=100, resampling_ratio=0.8)
 bootstrap_detector = WeightedConformalDetector(
     detector=base_detector,
     strategy=bootstrap_strategy,
@@ -174,7 +180,7 @@ bootstrap_detector = WeightedConformalDetector(
 )
 
 # Cross-validation strategy for efficiency
-cv_strategy = CrossValidationStrategy(n_splits=5)
+cv_strategy = CrossValidation(k=5)
 cv_detector = WeightedConformalDetector(
     detector=base_detector,
     strategy=cv_strategy,
@@ -183,75 +189,6 @@ cv_detector = WeightedConformalDetector(
 )
 ```
 
-## Diagnostic Tools
-
-### Weight Distribution Analysis
-```python
-# Access the computed weights (this requires modifying the predict method to return weights)
-# For now, we can analyze the distribution indirectly
-
-def analyze_shift_severity(detector, X_calib, X_test):
-    """Analyze the severity of distribution shift."""
-    # Create combined dataset
-    X_combined = np.vstack([X_calib, X_test])
-    y_combined = np.hstack([np.zeros(len(X_calib)), np.ones(len(X_test))])
-    
-    # Train classifier to distinguish datasets
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import cross_val_score
-    
-    clf = LogisticRegression(random_state=42)
-    scores = cross_val_score(clf, X_combined, y_combined, cv=5)
-    
-    avg_score = scores.mean()
-    print(f"Dataset discrimination accuracy: {avg_score:.3f}")
-    
-    if avg_score > 0.7:
-        print("Significant distribution shift detected")
-    elif avg_score > 0.6:
-        print("Moderate distribution shift detected")
-    else:
-        print("Minimal distribution shift detected")
-    
-    return avg_score
-
-# Example usage
-shift_severity = analyze_shift_severity(detector, X_train, X_test_shifted)
-```
-
-### P-value Calibration Check
-```python
-def check_p_value_calibration(p_values, n_bins=10):
-    """Check if p-values are well-calibrated."""
-    bins = np.linspace(0, 1, n_bins + 1)
-    bin_centers = (bins[:-1] + bins[1:]) / 2
-    
-    observed_freq = []
-    for i in range(n_bins):
-        mask = (p_values >= bins[i]) & (p_values < bins[i+1])
-        if mask.sum() > 0:
-            observed_freq.append(mask.sum() / len(p_values))
-        else:
-            observed_freq.append(0)
-    
-    expected_freq = 1 / n_bins
-    
-    # Plot calibration
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=(8, 6))
-    plt.bar(bin_centers, observed_freq, width=0.08, alpha=0.7, label='Observed')
-    plt.axhline(expected_freq, color='red', linestyle='--', label='Expected (uniform)')
-    plt.xlabel('P-value Range')
-    plt.ylabel('Frequency')
-    plt.title('P-value Calibration')
-    plt.legend()
-    plt.show()
-    
-    return observed_freq
-
-# Check calibration
-calibration_freq = check_p_value_calibration(weighted_p_values)
-```
 
 ## Performance Considerations
 

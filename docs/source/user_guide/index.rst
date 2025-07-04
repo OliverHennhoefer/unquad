@@ -7,7 +7,10 @@ User Guide
    conformal_inference
    conformalization_strategies
    weighted_conformal
+   evt_conformal
    fdr_control
+   batch_evaluation
+   streaming_evaluation
    statistical_concepts
    best_practices
    troubleshooting

@@ -10,7 +10,7 @@ from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.jackknife import Jackknife
 from unquad.utils.func.enums import Aggregation
 
 # Load example data
@@ -23,10 +23,10 @@ y = data.target
 
 ```python
 # Initialize base detector
-base_detector = LOF(contamination=0.1)
+base_detector = LOF()
 
 # Create jackknife strategy (leave-one-out)
-jackknife_strategy = JackknifeStrategy()
+jackknife_strategy = Jackknife()
 
 # Initialize detector with jackknife strategy
 detector = ConformalDetector(
@@ -50,7 +50,7 @@ print(f"Number of anomalies detected: {anomalies.sum()}")
 
 ```python
 # Use plus mode to retain all models
-jackknife_plus_strategy = JackknifeStrategy(plus=True)
+jackknife_plus_strategy = Jackknife(plus=True)
 
 detector_plus = ConformalDetector(
     detector=base_detector,
@@ -87,16 +87,16 @@ import time
 
 # Jackknife can be computationally expensive for large datasets
 # Let's compare computation time with other strategies
-from unquad.strategy.split import SplitStrategy
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.split import Split
+from unquad.strategy.cross_val import CrossValidation
 
 # Use a subset for timing comparison
 X_subset = X[:100]  # Use first 100 samples
 
 strategies = {
-    'Split': SplitStrategy(calibration_size=0.2),
-    '5-fold CV': CrossValidationStrategy(n_splits=5),
-    'Jackknife': JackknifeStrategy()
+    'Split': Split(calib_size=0.2),
+    '5-fold CV': CrossValidation(k=5),
+    'Jackknife': Jackknife()
 }
 
 timing_results = {}
@@ -136,7 +136,7 @@ for size in dataset_sizes:
     # Jackknife
     jk_detector = ConformalDetector(
         detector=base_detector,
-        strategy=JackknifeStrategy(),
+        strategy=Jackknife(),
         aggregation=Aggregation.MEDIAN,
         seed=42,
         silent=True
@@ -148,7 +148,7 @@ for size in dataset_sizes:
     # Split for comparison
     split_detector = ConformalDetector(
         detector=base_detector,
-        strategy=SplitStrategy(calibration_size=0.2),
+        strategy=Split(calib_size=0.2),
         aggregation=Aggregation.MEDIAN,
         seed=42,
         silent=True
@@ -186,9 +186,9 @@ leave_k_out_configs = [
 
 for config in leave_k_out_configs:
     if config['k'] == 1:
-        strategy = JackknifeStrategy()
+        strategy = Jackknife()
     else:
-        strategy = CrossValidationStrategy(n_splits=config['n_splits'])
+        strategy = CrossValidation(k=config['n_splits'])
     
     detector = ConformalDetector(
         detector=base_detector,
@@ -206,15 +206,15 @@ for config in leave_k_out_configs:
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.strategy.bootstrap import Bootstrap
 
 # Comprehensive comparison
 strategies = {
-    'Jackknife': JackknifeStrategy(),
-    'Jackknife+': JackknifeStrategy(plus=True),
-    'Split': SplitStrategy(calibration_size=0.2),
-    '5-fold CV': CrossValidationStrategy(n_splits=5),
-    'Bootstrap': BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8)
+    'Jackknife': Jackknife(),
+    'Jackknife+': Jackknife(plus=True),
+    'Split': Split(calib_size=0.2),
+    '5-fold CV': CrossValidation(k=5),
+    'Bootstrap': Bootstrap(n_bootstraps=100, resampling_ratio=0.8)
 }
 
 comparison_results = {}

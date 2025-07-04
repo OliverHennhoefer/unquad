@@ -27,7 +27,7 @@ from unquad.utils.func.enums import Aggregation
 
 detector = ConformalDetector(
     detector=LOF(),
-    strategy=SplitStrategy(calibration_size=0.2),
+    strategy=Split(calib_size=0.2),
     aggregation=Aggregation.MEDIAN,
     seed=42,
     silent=False
@@ -162,13 +162,13 @@ if y_true is not None:
 
 ```python
 # Try multiple strategies for comparison
-from unquad.strategy.bootstrap import BootstrapStrategy
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.bootstrap import Bootstrap
+from unquad.strategy.cross_val import CrossValidation
 
 strategies = {
-    'Split': SplitStrategy(calibration_size=0.2),
-    'Bootstrap': BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8),
-    'CV': CrossValidationStrategy(n_splits=5)
+    'Split': Split(calib_size=0.2),
+    'Bootstrap': Bootstrap(n_bootstraps=100, resampling_ratio=0.8),
+    'CV': CrossValidation(k=5)
 }
 
 for name, strategy in strategies.items():
@@ -192,13 +192,13 @@ for name, strategy in strategies.items():
 
 ```python
 # Old imports (deprecated)
-from unquad.strategy import Split, CrossValidation, Jackknife, Bootstrap
+# Removed - use individual imports
 
 # New imports
-from unquad.strategy.split import SplitStrategy
-from unquad.strategy.cross_val import CrossValidationStrategy
-from unquad.strategy.jackknife import JackknifeStrategy
-from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.strategy.split import Split
+from unquad.strategy.cross_val import CrossValidation
+from unquad.strategy.jackknife import Jackknife
+from unquad.strategy.bootstrap import Bootstrap
 ```
 
 ### 9. Parameter Name Changes
@@ -209,9 +209,9 @@ from unquad.strategy.bootstrap import BootstrapStrategy
 
 ```python
 # Old parameter names
-SplitStrategy(calib_size=0.2)           # -> calibration_size=0.2
-CrossValidationStrategy(k=5)            # -> n_splits=5
-BootstrapStrategy(resampling_ratio=0.8) # -> sample_ratio=0.8
+Split(calibration_size=0.2)           # -> calib_size=0.2
+CrossValidation(n_splits=5)            # -> k=5
+Bootstrap(sample_ratio=0.8) # -> resampling_ratio=0.8
 ```
 
 ### 10. Integration Issues

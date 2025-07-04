@@ -399,11 +399,12 @@ def _create_setup(
 
     Returns
     -------
-        Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]:
-            A tuple (x_train, x_test, y_test):
-            - `x_train`: DataFrame of training features (normal samples only).
-            - `x_test`: DataFrame of test features.
-            - `y_test`: Series of test labels (0 for normal, 1 for outlier).
+    Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]:
+        A tuple (x_train, x_test, y_test):
+        
+        - `x_train`: DataFrame of training features (normal samples only).
+        - `x_test`: DataFrame of test features.
+        - `y_test`: Series of test labels (0 for normal, 1 for outlier).
     """
     normal = df[df["Class"] == 0]
     n_train = len(normal) // 2

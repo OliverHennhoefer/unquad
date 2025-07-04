@@ -10,7 +10,7 @@ from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.func.enums import Aggregation
 
 # Load example data
@@ -23,10 +23,10 @@ y = data.target
 
 ```python
 # Initialize base detector
-base_detector = LOF(contamination=0.1)
+base_detector = LOF()
 
 # Create cross-validation strategy
-cv_strategy = CrossValidationStrategy(n_splits=5)
+cv_strategy = CrossValidation(k=5)
 
 # Initialize detector with cross-validation strategy
 detector = ConformalDetector(
@@ -50,7 +50,7 @@ print(f"Number of anomalies detected: {anomalies.sum()}")
 
 ```python
 # Use plus mode to retain all fold models
-cv_plus_strategy = CrossValidationStrategy(n_splits=5, plus=True)
+cv_plus_strategy = CrossValidation(k=5, plus=True)
 
 detector_plus = ConformalDetector(
     detector=base_detector,
@@ -75,7 +75,7 @@ fold_options = [3, 5, 10]
 
 results = {}
 for n_folds in fold_options:
-    strategy = CrossValidationStrategy(n_splits=n_folds)
+    strategy = CrossValidation(k=n_folds)
     detector = ConformalDetector(
         detector=base_detector,
         strategy=strategy,
@@ -136,7 +136,7 @@ cv_results = []
 for seed in seeds:
     detector = ConformalDetector(
         detector=base_detector,
-        strategy=CrossValidationStrategy(n_splits=5),
+        strategy=CrossValidation(k=5),
         aggregation=Aggregation.MEDIAN,
         seed=seed,
         silent=True
@@ -170,17 +170,17 @@ print(f"Std detections: {np.std(cv_results):.1f}")
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy.split import SplitStrategy
-from unquad.strategy.bootstrap import BootstrapStrategy
-from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.split import Split
+from unquad.strategy.bootstrap import Bootstrap
+from unquad.strategy.jackknife import Jackknife
 
 # Compare cross-validation with other strategies
 strategies = {
-    'Split': SplitStrategy(calibration_size=0.2),
-    '5-fold CV': CrossValidationStrategy(n_splits=5),
-    '10-fold CV': CrossValidationStrategy(n_splits=10),
-    'Bootstrap': BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8),
-    'Jackknife': JackknifeStrategy()
+    'Split': Split(calib_size=0.2),
+    '5-fold CV': CrossValidation(k=5),
+    '10-fold CV': CrossValidation(k=10),
+    'Bootstrap': Bootstrap(n_bootstraps=100, resampling_ratio=0.8),
+    'Jackknife': Jackknife()
 }
 
 comparison_results = {}

@@ -1,7 +1,7 @@
-﻿unquad.data.load
-================
+﻿unquad.utils.data.load
+======================
 
-.. automodule:: unquad.data.load
+.. automodule:: unquad.utils.data.load
 
    
    .. rubric:: Functions

@@ -10,7 +10,7 @@ from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.func.enums import Aggregation
 
 # Load example data
@@ -23,12 +23,12 @@ y = data.target
 
 ```python
 # Initialize base detector
-base_detector = LOF(contamination=0.1)
+base_detector = LOF()
 
 # Create bootstrap strategy
-bootstrap_strategy = BootstrapStrategy(
+bootstrap_strategy = Bootstrap(
     n_bootstraps=100,
-    sample_ratio=0.8
+    resampling_ratio=0.8
 )
 
 # Initialize detector with bootstrap strategy
@@ -53,9 +53,9 @@ print(f"Number of anomalies detected: {anomalies.sum()}")
 
 ```python
 # Use bootstrap plus mode for better calibration
-bootstrap_plus_strategy = BootstrapStrategy(
+bootstrap_plus_strategy = Bootstrap(
     n_bootstraps=100,
-    sample_ratio=0.8,
+    resampling_ratio=0.8,
     plus=True
 )
 
@@ -79,14 +79,14 @@ print(f"Bootstrap+ detections: {(p_values_plus < 0.05).sum()}")
 ```python
 # Try different bootstrap configurations
 configurations = [
-    {"n_bootstraps": 50, "sample_ratio": 0.7},
-    {"n_bootstraps": 100, "sample_ratio": 0.8},
-    {"n_bootstraps": 200, "sample_ratio": 0.9}
+    {"n_bootstraps": 50, "resampling_ratio": 0.7},
+    {"n_bootstraps": 100, "resampling_ratio": 0.8},
+    {"n_bootstraps": 200, "resampling_ratio": 0.9}
 ]
 
 results = {}
 for config in configurations:
-    strategy = BootstrapStrategy(**config)
+    strategy = Bootstrap(**config)
     detector = ConformalDetector(
         detector=base_detector,
         strategy=strategy,
@@ -97,7 +97,7 @@ for config in configurations:
     detector.fit(X)
     p_vals = detector.predict(X, raw=False)
     
-    key = f"B={config['n_bootstraps']}, r={config['sample_ratio']}"
+    key = f"B={config['n_bootstraps']}, r={config['resampling_ratio']}"
     results[key] = (p_vals < 0.05).sum()
     print(f"{key}: {results[key]} detections")
 ```
@@ -147,7 +147,7 @@ stability_results = []
 for _ in range(10):
     det = ConformalDetector(
         detector=base_detector,
-        strategy=BootstrapStrategy(n_bootstraps=50, sample_ratio=0.8),
+        strategy=Bootstrap(n_bootstraps=50, resampling_ratio=0.8),
         aggregation=Aggregation.MEDIAN,
         seed=np.random.randint(1000)
     )
@@ -166,14 +166,14 @@ plt.show()
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy.split import SplitStrategy
-from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.split import Split
+from unquad.strategy.jackknife import Jackknife
 
 # Compare bootstrap with other strategies
 strategies = {
-    'Bootstrap': BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8),
-    'Split': SplitStrategy(calibration_size=0.2),
-    'Jackknife': JackknifeStrategy()
+    'Bootstrap': Bootstrap(n_bootstraps=100, resampling_ratio=0.8),
+    'Split': Split(calib_size=0.2),
+    'Jackknife': Jackknife()
 }
 
 comparison_results = {}

@@ -1,6 +1,6 @@
-﻿unquad.data.load.load\_fraud
-============================
+﻿unquad.utils.data.load.load\_fraud
+==================================
 
-.. currentmodule:: unquad.data.load
+.. currentmodule:: unquad.utils.data.load
 
 .. autofunction:: load_fraud

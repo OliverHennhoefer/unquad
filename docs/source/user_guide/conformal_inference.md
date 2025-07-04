@@ -29,11 +29,11 @@ Conformal inference provides a principled way to convert scores to p-values:
 ```python
 # Conformal approach - statistically valid p-values
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
 # Create conformal detector
-strategy = SplitStrategy(calibration_size=0.2)
+strategy = Split(calib_size=0.2)
 detector = ConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -47,8 +47,12 @@ detector.fit(X_train)
 # Get valid p-values
 p_values = detector.predict(X_test, raw=False)
 
-# Now we can control error rates!
-anomalies = p_values < 0.05  # 5% significance level
+# Now we can control error rates with FDR control!
+from scipy.stats import false_discovery_control
+
+# Apply Benjamini-Hochberg FDR control
+fdr_corrected_pvals = false_discovery_control(p_values, method='bh')
+anomalies = fdr_corrected_pvals < 0.05  # Controls FDR at 5%
 ```
 
 ## Mathematical Foundation
@@ -89,35 +93,27 @@ Exchangeability is weaker than the i.i.d. assumption. A sequence of random varia
 
 ### When Exchangeability Holds
 
-```python
-# Good: Test data from same distribution as training
-X_train = load_normal_data(source='production', time='2023-01')
-X_test = load_test_data(source='production', time='2023-03')
+**Statistical Definition**: Exchangeability holds when the joint distribution of observations remains unchanged under any permutation of the data indices. In practical terms, this means your calibration data and test instances come from the same underlying distribution.
 
-# All data comes from the same underlying process
-detector.fit(X_train)
-p_values = detector.predict(X_test, raw=False)
-```
+**Conditions for validity**:
+- Training and test data come from the same source/process
+- No systematic changes over time (stationarity)
+- Same measurement conditions and feature distributions
+- No covariate shift between calibration and test phases
+
+Under exchangeability, standard conformal p-values provide exact finite-sample coverage guarantees.
 
 ### When Exchangeability is Violated
 
-```python
-# Problem: Different sources, time periods, or conditions
-X_train = load_normal_data(source='lab', time='2023-01')
-X_test = load_test_data(source='production', time='2023-06')
+**Common violations**:
+- **Covariate shift**: Test data features have different distributions than training
+- **Temporal drift**: Data characteristics change over time
+- **Domain shift**: Different measurement conditions, sensors, or environments
+- **Selection bias**: Non-random sampling between training and test phases
 
-# Solution: Use weighted conformal p-values
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
+**Statistical consequence**: When exchangeability fails, standard conformal p-values lose their coverage guarantees and may become systematically miscalibrated.
 
-weighted_detector = WeightedConformalDetector(
-    detector=base_detector,
-    strategy=strategy,
-    aggregation=Aggregation.MEDIAN,
-    seed=42
-)
-weighted_detector.fit(X_train)
-p_values = weighted_detector.predict(X_test, raw=False)  # Automatically handles shift
-```
+**Solution**: Weighted conformal prediction uses density ratio estimation to reweight calibration data, restoring valid inference under covariate shift. The method estimates the likelihood ratio between test and calibration distributions, then applies importance weighting to maintain statistical validity.
 
 ## Practical Implementation
 
@@ -127,7 +123,7 @@ p_values = weighted_detector.predict(X_test, raw=False)  # Automatically handles
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
 # 1. Prepare your data
@@ -135,10 +131,10 @@ X_train = load_normal_training_data()  # Normal data for training and calibratio
 X_test = load_test_data()  # Data to be tested
 
 # 2. Create base detector
-base_detector = IsolationForest(contamination=0.1, random_state=42)
+base_detector = IsolationForest(random_state=42)
 
 # 3. Create conformal detector with strategy
-strategy = SplitStrategy(calibration_size=0.2)  # 20% for calibration
+strategy = Split(calib_size=0.2)  # 20% for calibration
 detector = ConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -186,10 +182,10 @@ for i, p_val in enumerate(p_values[:5]):
 Best for large datasets where you can afford to hold out calibration data:
 
 ```python
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 
 # Use 20% of data for calibration
-strategy = SplitStrategy(calibration_size=0.2)
+strategy = Split(calib_size=0.2)
 
 # Or use absolute number for very large datasets
 strategy = SplitStrategy(calibration_size=1000)
@@ -200,10 +196,10 @@ strategy = SplitStrategy(calibration_size=1000)
 Better utilization of data by using all samples for both training and calibration:
 
 ```python
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.cross_val import CrossValidation
 
 # 5-fold cross-validation
-strategy = CrossValidationStrategy(n_splits=5)
+strategy = CrossValidation(k=5)
 
 detector = ConformalDetector(
     detector=base_detector,
@@ -218,10 +214,10 @@ detector = ConformalDetector(
 Provides robust estimates through resampling:
 
 ```python
-from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.strategy.bootstrap import Bootstrap
 
 # 100 bootstrap samples with 80% sampling ratio
-strategy = BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8)
+strategy = Bootstrap(n_bootstraps=100, resampling_ratio=0.8)
 
 detector = ConformalDetector(
     detector=base_detector,
@@ -236,10 +232,10 @@ detector = ConformalDetector(
 Maximum use of small datasets:
 
 ```python
-from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.jackknife import Jackknife
 
 # Leave-one-out cross-validation
-strategy = JackknifeStrategy()
+strategy = Jackknife()
 
 detector = ConformalDetector(
     detector=base_detector,
@@ -252,108 +248,29 @@ detector = ConformalDetector(
 ## Common Pitfalls and Solutions
 
 ### 1. Data Leakage
-
-**Problem**: Using contaminated calibration data
-
-```python
-# Wrong: Training data contains anomalies
-X_mixed = load_mixed_data()  # Contains both normal and anomalous
-detector.fit(X_mixed)  # This invalidates the guarantees!
-```
-
-**Solution**: Ensure training data is clean
-
-```python
-# Correct: Use only verified normal data for training
-X_clean = load_verified_normal_data()
-detector.fit(X_clean)
-
-# Or clean the data first
-def clean_training_data(X, contamination_rate=0.05):
-    temp_detector = IsolationForest(contamination=contamination_rate)
-    temp_detector.fit(X)
-    scores = temp_detector.decision_function(X)
-    # Keep only the most normal samples
-    threshold = np.percentile(scores, contamination_rate * 100)
-    return X[scores >= threshold]
-
-X_cleaned = clean_training_data(X_train)
-detector.fit(X_cleaned)
-```
+- **Problem**: Using contaminated calibration data invalidates statistical guarantees
+- **Solution**: Ensure training data contains only verified normal samples
+- **Key**: Never train on data containing known anomalies
 
 ### 2. Insufficient Calibration Data
-
-**Problem**: Too few calibration samples lead to coarse p-values
-
-```python
-# Problematic: Only 10 calibration samples
-# P-values will be coarse (0.09, 0.18, 0.27, ...)
-X_small = X_normal[:50]
-strategy = SplitStrategy(calibration_size=0.2)  # Only 10 samples for calibration
-```
-
-**Solution**: Use strategies that make better use of data
-
-```python
-# Better: Use jackknife for small datasets
-strategy = JackknifeStrategy()  # Uses all data efficiently
-
-# Or use bootstrap for medium datasets
-strategy = BootstrapStrategy(n_bootstraps=100, sample_ratio=0.8)
-
-# Or increase calibration size for split strategy
-strategy = SplitStrategy(calibration_size=0.5)  # Use more data for calibration
-```
+- **Problem**: Too few calibration samples lead to coarse p-values
+- **Solution**: Use jackknife strategy for small datasets or increase calibration set size
+- **Rule of thumb**: Minimum 50-100 calibration samples for reasonable p-value resolution
 
 ### 3. Distribution Shift
-
-**Problem**: Test distribution differs from training distribution
-
-```python
-# Problematic: Different conditions
-X_train = load_data(season='summer', location='lab')
-X_test = load_data(season='winter', location='production')
-```
-
-**Solution**: Use weighted conformal p-values
-
-```python
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
-
-# Weighted detector automatically estimates importance weights
-weighted_detector = WeightedConformalDetector(
-    detector=base_detector,
-    strategy=strategy,
-    aggregation=Aggregation.MEDIAN,
-    seed=42
-)
-weighted_detector.fit(X_train)
-p_values = weighted_detector.predict(X_test, raw=False)
-```
+- **Problem**: Test distribution differs from training distribution violates exchangeability
+- **Solution**: Use weighted conformal prediction to handle covariate shift
+- **Detection**: Monitor p-value distributions for systematic bias
 
 ### 4. Multiple Testing
+- **Problem**: Testing many instances inflates false positive rate
+- **Solution**: Apply Benjamini-Hochberg FDR control instead of raw thresholding
+- **Best practice**: Always use `scipy.stats.false_discovery_control` for multiple comparisons
 
-**Problem**: Testing many instances increases false positive rate
-
-```python
-# Problem: With 1000 tests at α=0.05, expect ~50 false positives
-p_values = detector.predict(X_test_large, raw=False)
-raw_discoveries = (p_values < 0.05).sum()
-print(f"Raw discoveries: {raw_discoveries}")  # Likely inflated
-```
-
-**Solution**: Use FDR control
-
-```python
-from scipy.stats import false_discovery_control
-
-# Control False Discovery Rate at 5%
-adjusted_p_values = false_discovery_control(p_values, method='bh', alpha=0.05)
-controlled_discoveries = (adjusted_p_values < 0.05).sum()
-
-print(f"Raw discoveries: {(p_values < 0.05).sum()}")
-print(f"FDR-controlled discoveries: {controlled_discoveries}")
-```
+### 5. Improper Thresholding  
+- **Problem**: Using simple p-value thresholds without FDR control
+- **Solution**: Apply proper multiple testing correction for all anomaly detection scenarios
+- **Implementation**: Use `false_discovery_control(p_values, method='bh')` before thresholding
 
 ## Advanced Topics
 
@@ -388,7 +305,7 @@ aggregation_methods = [Aggregation.MEAN, Aggregation.MEDIAN, Aggregation.MAX]
 for agg_method in aggregation_methods:
     detector = ConformalDetector(
         detector=base_detector,
-        strategy=CrossValidationStrategy(n_splits=5),
+        strategy=CrossValidation(k=5),
         aggregation=agg_method,
         seed=42
     )
@@ -447,9 +364,9 @@ import time
 
 strategies = {
     'Split': SplitStrategy(calibration_size=0.2),
-    'Cross-Val (5-fold)': CrossValidationStrategy(n_splits=5),
-    'Bootstrap (50)': BootstrapStrategy(n_bootstraps=50, sample_ratio=0.8),
-    'Jackknife': JackknifeStrategy()
+    'Cross-Val (5-fold)': CrossValidation(k=5),
+    'Bootstrap (50)': Bootstrap(n_bootstraps=50, resampling_ratio=0.8),
+    'Jackknife': Jackknife()
 }
 
 for name, strategy in strategies.items():

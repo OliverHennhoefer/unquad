@@ -32,7 +32,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
 # Generate some example data
@@ -44,10 +44,10 @@ X_anomalies = np.random.uniform(-10, 10, (20, X_test.shape[1]))
 X_test = np.vstack([X_test, X_anomalies])
 
 # Initialize base detector
-base_detector = IsolationForest(contamination=0.1, random_state=42)
+base_detector = IsolationForest(random_state=42)
 
 # Create conformal anomaly detector with split strategy
-strategy = SplitStrategy(calibration_size=0.3)
+strategy = Split(calib_size=0.3)
 detector = ConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -105,7 +105,7 @@ jackknife_detector.fit(X_normal)
 jackknife_p_values = jackknife_detector.predict(X_test, raw=False)
 
 # Cross-Validation Conformal Anomaly Detection
-cv_strategy = CrossValidationStrategy(n_splits=5)
+cv_strategy = CrossValidationStrategy(k=5)
 cv_detector = ConformalDetector(
     detector=base_detector,
     strategy=cv_strategy,
@@ -127,10 +127,10 @@ When dealing with covariate shift, use weighted conformal p-values:
 
 ```python
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 
 # Create weighted conformal anomaly detector
-weighted_strategy = SplitStrategy(calibration_size=0.3)
+weighted_strategy = Split(calib_size=0.3)
 weighted_detector = WeightedConformalDetector(
     detector=base_detector,
     strategy=weighted_strategy,
@@ -154,16 +154,16 @@ unquad integrates seamlessly with PyOD detectors:
 from pyod.models.knn import KNN
 from pyod.models.lof import LOF
 from pyod.models.ocsvm import OCSVM
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 
 # Try different PyOD detectors
 detectors = {
-    'KNN': KNN(contamination=0.1),
-    'LOF': LOF(contamination=0.1),
-    'OCSVM': OCSVM(contamination=0.1)
+    'KNN': KNN(),
+    'LOF': LOF(),
+    'OCSVM': OCSVM()
 }
 
-strategy = SplitStrategy(calibration_size=0.3)
+strategy = Split(calib_size=0.3)
 results = {}
 
 for name, base_det in detectors.items():
@@ -191,7 +191,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
 # Generate data
@@ -205,8 +205,8 @@ X_test = np.vstack([X_test_normal, X_test_anomalies])
 y_true = np.hstack([np.zeros(80), np.ones(20)])
 
 # Setup and fit detector
-base_detector = IsolationForest(contamination=0.1, random_state=42)
-strategy = SplitStrategy(calibration_size=0.3)
+base_detector = IsolationForest(random_state=42)
+strategy = Split(calib_size=0.3)
 detector = ConformalDetector(
     detector=base_detector,
     strategy=strategy,

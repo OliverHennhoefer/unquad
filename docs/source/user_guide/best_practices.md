@@ -103,7 +103,7 @@ Consider using multiple detectors for improved robustness:
 
 ```python
 from unquad.estimation.conformal import ConformalDetector
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 from scipy.stats import false_discovery_control
 
@@ -144,13 +144,13 @@ Best for:
 - When you have enough data for reliable calibration
 
 ```python
-from unquad.strategy.split import SplitStrategy
+from unquad.strategy.split import Split
 
 # For large datasets
-strategy = SplitStrategy(calibration_size=0.2)  # Use 20% for calibration
+strategy = Split(calib_size=0.2)  # Use 20% for calibration
 
 # For very large datasets, use absolute number
-strategy = SplitStrategy(calibration_size=1000)  # Use 1000 samples
+strategy = Split(calib_size=1000)  # Use 1000 samples
 ```
 
 ### 2. Jackknife (Leave-One-Out)
@@ -161,10 +161,10 @@ Best for:
 - When computational cost is not a primary concern
 
 ```python
-from unquad.strategy.jackknife import JackknifeStrategy
+from unquad.strategy.jackknife import Jackknife
 
 # For small datasets where every sample matters
-strategy = JackknifeStrategy()
+strategy = Jackknife()
 ```
 
 ### 3. Bootstrap
@@ -175,12 +175,12 @@ Best for:
 - When you want to balance efficiency and power
 
 ```python
-from unquad.strategy.bootstrap import BootstrapStrategy
+from unquad.strategy.bootstrap import Bootstrap
 
 # Balanced approach for medium datasets
-strategy = BootstrapStrategy(
+strategy = Bootstrap(
     n_bootstraps=50,
-    sample_ratio=0.8
+    resampling_ratio=0.8
 )
 ```
 
@@ -192,10 +192,10 @@ Best for:
 - When you need stable performance estimates
 
 ```python
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy.cross_val import CrossValidation
 
 # Good balance of efficiency and stability
-strategy = CrossValidationStrategy(n_splits=5)
+strategy = CrossValidation(k=5)
 ```
 
 ## Calibration Best Practices
@@ -206,15 +206,15 @@ strategy = CrossValidationStrategy(n_splits=5)
 def choose_calibration_strategy(n_samples):
     """Choose appropriate strategy based on dataset size."""
     if n_samples < 500:
-        return JackknifeStrategy()
+        return Jackknife()
     elif n_samples < 2000:
-        return BootstrapStrategy(n_bootstraps=50, sample_ratio=0.8)
+        return Bootstrap(n_bootstraps=50, resampling_ratio=0.8)
     elif n_samples < 10000:
-        return CrossValidationStrategy(n_splits=5)
+        return CrossValidation(k=5)
     else:
         # Use absolute number for very large datasets
         calib_size = min(2000, int(0.2 * n_samples))
-        return SplitStrategy(calibration_size=calib_size)
+        return Split(calib_size=calib_size)
 ```
 
 ### 2. Calibration Data Quality
