@@ -145,12 +145,10 @@ def calculate_evt_p_val(
         - For scores > threshold: GPD-based tail probability
     """
     from unquad.utils.stat.evt import calculate_hybrid_p_value
-    
+
     p_values = []
     for score in scores:
-        p_val = calculate_hybrid_p_value(
-            score, calibration_set, threshold, gpd_params
-        )
+        p_val = calculate_hybrid_p_value(score, calibration_set, threshold, gpd_params)
         p_values.append(p_val)
-    
+
     return np.array(p_values)

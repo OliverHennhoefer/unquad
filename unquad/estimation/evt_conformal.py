@@ -62,7 +62,9 @@ class EVTConformalDetector(ConformalDetector):
         aggregation: Aggregation = Aggregation.MEDIAN,
         seed: int = 1,
         silent: bool = True,
-        evt_threshold_method: Literal["percentile", "top_k", "mean_excess", "custom"] = "percentile",
+        evt_threshold_method: Literal[
+            "percentile", "top_k", "mean_excess", "custom"
+        ] = "percentile",
         evt_threshold_value: Union[float, Callable[[np.ndarray], float]] = 0.95,
         evt_min_tail_size: int = 10,
     ):
@@ -86,8 +88,12 @@ class EVTConformalDetector(ConformalDetector):
         super().__init__(detector, strategy, aggregation, seed, silent)
 
         # EVT-specific parameters
-        self.evt_threshold_method: Literal["percentile", "top_k", "mean_excess", "custom"] = evt_threshold_method
-        self.evt_threshold_value: Union[float, Callable[[np.ndarray], float]] = evt_threshold_value
+        self.evt_threshold_method: Literal[
+            "percentile", "top_k", "mean_excess", "custom"
+        ] = evt_threshold_method
+        self.evt_threshold_value: Union[float, Callable[[np.ndarray], float]] = (
+            evt_threshold_value
+        )
         self.evt_min_tail_size: int = evt_min_tail_size
 
         # EVT-specific attributes

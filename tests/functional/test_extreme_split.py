@@ -13,16 +13,13 @@ from unquad.strategy.split import Split
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 from online_fdr.batching.bh import BatchBH
 
+
 class TestCaseExtremeSplit(unittest.TestCase):
     def test_extreme_split_batch_bh_shuttle(self):
 
         df = load_shuttle()
         x_train, batch_gen = create_batch_generator(
-            df,
-            train_size=0.6,
-            batch_size=300,
-            anomaly_proportion=0.13,
-            random_state=42
+            df, train_size=0.6, batch_size=300, anomaly_proportion=0.13, random_state=42
         )
 
         evt_detector = EVTConformalDetector(
@@ -31,7 +28,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
-            silent=True
+            silent=True,
         )
 
         evt_detector.fit(x_train)
@@ -52,16 +49,11 @@ class TestCaseExtremeSplit(unittest.TestCase):
         self.assertEqual(statistical_power(label, decision), 0.946)
         self.assertEqual(false_discovery_rate(label, decision), 0.068)
 
-
     def test_extreme_split_batch_st_bh_shuttle(self):
 
         df = load_shuttle()
         x_train, batch_gen = create_batch_generator(
-            df,
-            train_size=0.6,
-            batch_size=300,
-            anomaly_proportion=0.01,
-            random_state=42
+            df, train_size=0.6, batch_size=300, anomaly_proportion=0.01, random_state=42
         )
 
         evt_detector = EVTConformalDetector(
@@ -70,7 +62,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
-            silent=True
+            silent=True,
         )
 
         evt_detector.fit(x_train)
@@ -99,7 +91,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             train_size=0.6,
             batch_size=1000,
             anomaly_proportion=0.001,
-            random_state=42
+            random_state=42,
         )
 
         evt_detector = EVTConformalDetector(
@@ -108,7 +100,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
-            silent=True
+            silent=True,
         )
 
         evt_detector.fit(x_train)
@@ -133,11 +125,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
 
         df = load_fraud()
         x_train, batch_gen = create_batch_generator(
-            df,
-            train_size=0.6,
-            batch_size=100,
-            anomaly_proportion=0.01,
-            random_state=42
+            df, train_size=0.6, batch_size=100, anomaly_proportion=0.01, random_state=42
         )
 
         evt_detector = EVTConformalDetector(
@@ -146,7 +134,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
-            silent=True
+            silent=True,
         )
 
         evt_detector.fit(x_train)

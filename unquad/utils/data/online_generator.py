@@ -116,10 +116,14 @@ class OnlineGenerator:
         n_normal_pool = self.pool_size - n_anomaly_pool
 
         if n_normal_pool > 0 and self.n_normal == 0:
-            raise ValueError("No normal instances available but normal instances required")
+            raise ValueError(
+                "No normal instances available but normal instances required"
+            )
 
         if n_anomaly_pool > 0 and self.n_anomaly == 0:
-            raise ValueError("No anomaly instances available but anomaly instances required")
+            raise ValueError(
+                "No anomaly instances available but anomaly instances required"
+            )
 
         if not self.replacement:
             if n_normal_pool > self.n_normal:
@@ -140,10 +144,9 @@ class OnlineGenerator:
         n_normal_pool = self.pool_size - n_anomaly_pool
 
         # Create labels pool (0=normal, 1=anomaly)
-        self.pool_labels = np.concatenate([
-            np.zeros(n_normal_pool, dtype=int),
-            np.ones(n_anomaly_pool, dtype=int)
-        ])
+        self.pool_labels = np.concatenate(
+            [np.zeros(n_normal_pool, dtype=int), np.ones(n_anomaly_pool, dtype=int)]
+        )
 
         # Shuffle for randomized order while maintaining exact counts
         self.rng.shuffle(self.pool_labels)
@@ -189,7 +192,7 @@ class OnlineGenerator:
                 if self.replacement:
                     data_idx = self.rng.integers(0, self.n_normal)
                 else:
-                    # For without replacement, would need more complex tracking  
+                    # For without replacement, would need more complex tracking
                     data_idx = pool_idx % self.n_normal
                 x_instance = self.x_normal.iloc[[data_idx]]
 
@@ -208,12 +211,12 @@ class OnlineGenerator:
 
     def get_exact_anomaly_count(self, n_instances: int) -> int:
         """Calculate exact number of anomalies in next n_instances.
-        
+
         Parameters
         ----------
         n_instances : int
             Number of instances to check.
-            
+
         Returns
         -------
         int
@@ -221,20 +224,20 @@ class OnlineGenerator:
         """
         if n_instances <= 0:
             return 0
-            
+
         # Calculate how many complete cycles and remainder
         complete_cycles = n_instances // self.pool_size
         remainder = n_instances % self.pool_size
-        
+
         # Anomalies in complete cycles
         anomalies_per_cycle = int(self.pool_size * self.anomaly_proportion)
         total_anomalies = complete_cycles * anomalies_per_cycle
-        
+
         # Anomalies in remainder
         if remainder > 0:
             start_idx = self._current_index
             end_idx = (self._current_index + remainder) % self.pool_size
-            
+
             if end_idx > start_idx:
                 # No wraparound
                 remainder_labels = self.pool_labels[
@@ -242,13 +245,15 @@ class OnlineGenerator:
                 ]
             else:
                 # Wraparound case
-                remainder_labels = np.concatenate([
-                    self.pool_labels[self.pool_indices[start_idx:]],
-                    self.pool_labels[self.pool_indices[:end_idx]]
-                ])
-            
+                remainder_labels = np.concatenate(
+                    [
+                        self.pool_labels[self.pool_indices[start_idx:]],
+                        self.pool_labels[self.pool_indices[:end_idx]],
+                    ]
+                )
+
             total_anomalies += remainder_labels.sum()
-            
+
         return int(total_anomalies)
 
     @property

@@ -3,7 +3,7 @@
 from .batch_generator import BatchGenerator, create_batch_generator
 from .load import (
     load_breast,
-    load_fraud, 
+    load_fraud,
     load_ionosphere,
     load_mammography,
     load_musk,
@@ -12,15 +12,15 @@ from .load import (
     load_wbc,
     clear_memory_cache,
     list_cached_datasets,
-    get_memory_cache_info
+    get_memory_cache_info,
 )
 
 __all__ = [
     "BatchGenerator",
-    "create_batch_generator", 
+    "create_batch_generator",
     "load_breast",
     "load_fraud",
-    "load_ionosphere", 
+    "load_ionosphere",
     "load_mammography",
     "load_musk",
     "load_shuttle",
@@ -28,5 +28,5 @@ __all__ = [
     "load_wbc",
     "clear_memory_cache",
     "list_cached_datasets",
-    "get_memory_cache_info"
+    "get_memory_cache_info",
 ]

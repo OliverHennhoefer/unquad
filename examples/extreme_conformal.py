@@ -19,11 +19,11 @@ if __name__ == "__main__":
 
     # EVT-Enhanced Conformal Anomaly Detector
     ce = EVTConformalDetector(
-        detector=model, 
+        detector=model,
         strategy=strategy,
         evt_threshold_method="percentile",
         evt_threshold_value=0.95,
-        evt_min_tail_size=10
+        evt_min_tail_size=10,
     )
     ce.fit(x_train)
     estimates = ce.predict(x_test)

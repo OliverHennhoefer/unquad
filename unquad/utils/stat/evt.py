@@ -54,7 +54,9 @@ def select_threshold(
 
     elif method == "custom":
         if not callable(value):
-            raise ValueError(f"For custom method, value must be callable, got {type(value)}")
+            raise ValueError(
+                f"For custom method, value must be callable, got {type(value)}"
+            )
         return value(scores)
 
     else:
@@ -142,7 +144,7 @@ def calculate_hybrid_p_value(
     """
     n_total = len(calibration_scores)
     max_calib_score = np.max(calibration_scores)
-    
+
     if score <= max_calib_score:
         # Use empirical p-value for scores within calibration range
         # This preserves the exact conformal guarantees
@@ -152,16 +154,16 @@ def calculate_hybrid_p_value(
         # For scores beyond calibration range, use EVT extrapolation
         # This provides principled tail modeling for extreme scores
         n_exceed_threshold = np.sum(calibration_scores > threshold)
-        
+
         # Empirical probability at the boundary (max calibration score)
         p_at_boundary = 1.0 / (1.0 + n_total)  # Minimum possible empirical p-value
-        
+
         # GPD tail probability beyond the maximum calibration score
         shape, loc, scale = gpd_params
         p_tail = gpd_tail_probability(
             score, threshold, shape, scale, n_total, n_exceed_threshold
         )
-        
+
         # Ensure monotonicity: p-value for extreme score should not exceed
         # p-value at the boundary of calibration data
         return min(p_tail, p_at_boundary)

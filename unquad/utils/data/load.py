@@ -14,13 +14,14 @@ from sklearn.model_selection import train_test_split
 DATASET_VERSION = os.environ.get("UNQUAD_DATASET_VERSION", "v.0.8.1-datasets")
 DATASET_BASE_URL = os.environ.get(
     "UNQUAD_DATASET_URL",
-    f"https://github.com/OliverHennhoefer/unquad/releases/download/{DATASET_VERSION}/"
+    f"https://github.com/OliverHennhoefer/unquad/releases/download/{DATASET_VERSION}/",
 )
 _DATASET_CACHE: Dict[str, bytes] = {}  # In-memory cache for downloaded datasets
 
 # Check if pyarrow is available for reading parquet files
 try:
     import pyarrow  # noqa: F401
+
     _PYARROW_AVAILABLE = True
 except ImportError:
     _PYARROW_AVAILABLE = False
@@ -262,37 +263,40 @@ def load_wbc(
 
 def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
     """Download dataset from GitHub releases and cache in memory.
-    
+
     Args:
         filename: Name of the dataset file (e.g., "breast.parquet.gz")
         show_progress: Whether to show download progress
-        
+
     Returns:
         BytesIO object containing the compressed dataset
-        
+
     Raises:
         URLError: If download fails
     """
     # Check if already cached in memory
     if filename in _DATASET_CACHE:
         return io.BytesIO(_DATASET_CACHE[filename])
-    
+
     # Download file
     url = urljoin(DATASET_BASE_URL, filename)
     print(f"Downloading {filename} from {url}...")
-    
+
     try:
         # Add headers to avoid GitHub rate limiting
-        req = Request(url, headers={'User-Agent': 'unquad-dataset-loader'})
-        
+        req = Request(url, headers={"User-Agent": "unquad-dataset-loader"})
+
         with urlopen(req) as response:
-            total_size = int(response.headers.get('Content-Length', 0))
-            
+            total_size = int(response.headers.get("Content-Length", 0))
+
             # Download with progress bar if requested
             if show_progress and total_size > 0:
                 try:
                     from tqdm import tqdm
-                    with tqdm(total=total_size, unit='B', unit_scale=True, desc=filename) as pbar:
+
+                    with tqdm(
+                        total=total_size, unit="B", unit_scale=True, desc=filename
+                    ) as pbar:
                         # Use bytearray for efficient concatenation, then convert to bytes
                         data_buffer = bytearray()
                         while True:
@@ -307,13 +311,13 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
                     data = response.read()
             else:
                 data = response.read()
-                    
+
     except (URLError, HTTPError) as e:
         raise URLError(f"Failed to download {filename}: {str(e)}") from e
-    
+
     # Cache in memory
     _DATASET_CACHE[filename] = data
-    
+
     print(f"Successfully loaded {filename} ({len(data)/1024:.1f} KB)")
     return io.BytesIO(data)
 
@@ -352,15 +356,15 @@ def _load_dataset(
             "The datasets functionality requires pyarrow to read parquet files. "
             "Please install the data dependencies with: pip install unquad[data]"
         )
-    
+
     # Extract filename from the provided path
     filename = file_path.name
-    
+
     # Download dataset to memory
     compressed_stream = _download_dataset(filename)
-    
+
     # Read parquet directly from compressed memory stream
-    with gzip.open(compressed_stream, 'rb') as f:
+    with gzip.open(compressed_stream, "rb") as f:
         df = pd.read_parquet(f)
 
     if setup:
@@ -435,13 +439,13 @@ def _create_setup(
 
 def clear_memory_cache(dataset: str = None) -> None:
     """Clear datasets from memory cache.
-    
+
     Args:
-        dataset: Specific dataset name to clear (e.g., "breast"). 
+        dataset: Specific dataset name to clear (e.g., "breast").
                 If None, clears all cached datasets.
     """
     global _DATASET_CACHE
-    
+
     if dataset is not None:
         filename = f"{dataset}.parquet.gz"
         if filename in _DATASET_CACHE:
@@ -458,17 +462,17 @@ def clear_memory_cache(dataset: str = None) -> None:
 
 def list_cached_datasets() -> list[str]:
     """List all datasets cached in memory.
-    
+
     Returns:
         List of cached dataset names (without .parquet.gz extension)
     """
     # Remove .parquet.gz extension to get just the dataset name
-    return [filename.removesuffix('.parquet.gz') for filename in _DATASET_CACHE.keys()]
+    return [filename.removesuffix(".parquet.gz") for filename in _DATASET_CACHE.keys()]
 
 
 def get_memory_cache_info() -> dict:
     """Get information about the in-memory dataset cache.
-    
+
     Returns:
         Dictionary with cache information including datasets and memory usage
     """
@@ -476,24 +480,26 @@ def get_memory_cache_info() -> dict:
         "cache_type": "in-memory",
         "datasets": [],
         "total_size_kb": 0,
-        "total_size_mb": 0
+        "total_size_mb": 0,
     }
-    
+
     total_bytes = 0
     for filename, data in _DATASET_CACHE.items():
         size_bytes = len(data)
         size_kb = size_bytes / 1024
         size_mb = size_bytes / (1024 * 1024)
         total_bytes += size_bytes
-        
-        info["datasets"].append({
-            "name": filename.removesuffix('.parquet.gz'),
-            "size_kb": round(size_kb, 1),
-            "size_mb": round(size_mb, 3),
-            "size_bytes": size_bytes
-        })
-    
+
+        info["datasets"].append(
+            {
+                "name": filename.removesuffix(".parquet.gz"),
+                "size_kb": round(size_kb, 1),
+                "size_mb": round(size_mb, 3),
+                "size_bytes": size_bytes,
+            }
+        )
+
     info["total_size_kb"] = round(total_bytes / 1024, 1)
     info["total_size_mb"] = round(total_bytes / (1024 * 1024), 3)
-    
+
     return info
