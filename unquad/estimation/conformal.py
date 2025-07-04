@@ -19,12 +19,12 @@ from tqdm import tqdm
 
 from pyod.models.base import BaseDetector as PyODBaseDetector  # Alias for clarity
 from unquad.estimation.base import BaseConformalDetector
-from unquad.utils.parameterization import set_params
+from unquad.utils.func.params import set_params
 from unquad.strategy.base import BaseStrategy
-from unquad.utils.aggregation import aggregate
-from unquad.utils.decorator import ensure_numpy_array
-from unquad.utils.enums import Aggregation
-from unquad.utils.statistical import calculate_p_val
+from unquad.utils.stat.aggregation import aggregate
+from unquad.utils.func.decorator import ensure_numpy_array
+from unquad.utils.func.enums import Aggregation
+from unquad.utils.stat.statistical import calculate_p_val
 
 
 class ConformalDetector(BaseConformalDetector):

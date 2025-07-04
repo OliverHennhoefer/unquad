@@ -12,6 +12,7 @@ __pycache__
 # Root directories
 /.env/
 /.venv/
+/.venv-wsl/
 /.idea/
 /venv/
 /dist/
@@ -25,4 +26,6 @@ docs/source/api/ # If using sphinx-apidoc and generating into source
 docs/source/_autosummary_generated/ # If using autosummary
 
 # Claude Code
+CLAUDE.local.md
+.claude
 .claudeignore

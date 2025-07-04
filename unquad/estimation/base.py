@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-from unquad.utils.decorator import ensure_numpy_array
+from unquad.utils.func.decorator import ensure_numpy_array
 
 
 class BaseConformalDetector(ABC):

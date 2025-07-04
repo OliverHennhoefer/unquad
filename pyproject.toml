@@ -30,7 +30,7 @@ dependencies = [
     "scikit-learn>=1.6.1",
     "pyod~=2.0.3",
     "scipy>=1.13.0",
-    "tqdm>=4.66.2",
+    "tqdm>=4.66.2"
 ]
 
 [build-system]
@@ -56,8 +56,11 @@ dl = [
     "tensorflow>=2.16.1",
     "torch>=2.7.0"
 ]
+fdr = [
+    "online-fdr>=0.0.3"
+]
 all = [
-    "unquad[data,dev,docs,dl]"
+    "unquad[data,dev,docs,dl,fdr]"
 ]
 
 [project.urls]
@@ -69,12 +72,6 @@ line-length = 88
 target-version = [
     'py312'
 ]
-# extend-exclude is already well-defined by Ruff's default excludes,
-# Black will also respect .gitignore. If you have specific additional
-# top-level directories Black should ignore that aren't covered by
-# .gitignore or standard Python project layouts, you can add them.
-# The default excludes for Black are usually sufficient.
-# Current extend-exclude is fine but very verbose.
 
 [tool.ruff]
 line-length = 88
@@ -176,11 +173,7 @@ unfixable = []
 
 # Configure pydocstyle (D rules)
 [tool.ruff.lint.pydocstyle]
-convention = "numpy"  # Or "google" - choose one that Napoleon uses in Sphinx
-
-# For Markdown linting (RUF rules, e.g., RUF200 for header increments)
-# Ruff will pick up .md files if they are in the `include` and not `exclude`.
-# Some Markdown rules are in the RUF category.
+convention = "numpy"
 
 [tool.ruff.format]
 quote-style = "double"

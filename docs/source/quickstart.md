@@ -7,7 +7,7 @@ This guide will get you started with `unquad` in just a few minutes.
 For quick experimentation, unquad includes several benchmark anomaly detection datasets. Install with `pip install unquad[data]` to enable dataset functionality.
 
 ```python
-from unquad.utils.load import load_breast, load_shuttle, load_fraud
+from unquad.utils.data.load import load_breast, load_shuttle, load_fraud
 
 # Load a dataset - automatically downloads and caches in memory
 x_train, x_test, y_test = load_breast(setup=True)
@@ -33,7 +33,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # Generate some example data
 X_normal, _ = make_blobs(n_samples=1000, centers=1, random_state=42)
@@ -192,7 +192,7 @@ from sklearn.datasets import make_blobs
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # Generate data
 np.random.seed(42)

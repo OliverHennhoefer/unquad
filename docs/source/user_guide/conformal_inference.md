@@ -30,7 +30,7 @@ Conformal inference provides a principled way to convert scores to p-values:
 # Conformal approach - statistically valid p-values
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # Create conformal detector
 strategy = SplitStrategy(calibration_size=0.2)
@@ -128,7 +128,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # 1. Prepare your data
 X_train = load_normal_training_data()  # Normal data for training and calibration

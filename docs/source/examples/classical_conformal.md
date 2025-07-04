@@ -10,8 +10,8 @@ from pyod.models.lof import LOF
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
-from unquad.utils.load import load_breast
+from unquad.utils.func.enums import Aggregation
+from unquad.utils.data.load import load_breast
 
 # Load example data - downloads automatically and caches in memory
 x_train, x_test, y_test = load_breast(setup=True)

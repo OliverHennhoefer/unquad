@@ -104,7 +104,7 @@ Consider using multiple detectors for improved robustness:
 ```python
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 from scipy.stats import false_discovery_control
 
 # Create multiple detectors
@@ -446,7 +446,8 @@ class ScalableAnomalyDetector:
 ```python
 from dataclasses import dataclass
 from typing import Optional
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
+
 
 @dataclass
 class AnomalyDetectionConfig:
@@ -459,12 +460,12 @@ class AnomalyDetectionConfig:
     silent: bool = True
     batch_size: int = 1000
     fdr_method: str = 'bh'
-    
+
     def __post_init__(self):
         """Validate configuration."""
         if not 0 < self.alpha < 1:
             raise ValueError("Alpha must be between 0 and 1")
-        
+
         if isinstance(self.calibration_size, float) and not 0 < self.calibration_size < 1:
             raise ValueError("Calibration size ratio must be between 0 and 1")
 ```

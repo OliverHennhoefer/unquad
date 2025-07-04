@@ -11,7 +11,7 @@ from sklearn.datasets import load_breast_cancer, make_blobs
 from scipy.stats import false_discovery_control
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # Load example data
 data = load_breast_cancer()

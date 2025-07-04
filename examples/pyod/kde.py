@@ -1,9 +1,9 @@
 from pyod.models.kde import KDE
 from scipy.stats import false_discovery_control
-from unquad.utils.load import load_mammography
+from unquad.utils.data.load import load_mammography
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import Split
-from unquad.utils.metrics import false_discovery_rate, statistical_power
+from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
     x_train, x_test, y_test = load_mammography(setup=True)

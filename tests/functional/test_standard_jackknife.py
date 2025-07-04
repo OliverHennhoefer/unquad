@@ -3,10 +3,10 @@ import unittest
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.utils.load import load_breast
+from unquad.utils.data.load import load_breast
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.jackknife import Jackknife
-from unquad.utils.metrics import false_discovery_rate, statistical_power
+from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 
 class TestCaseJackknifeConformal(unittest.TestCase):

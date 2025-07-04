@@ -13,6 +13,7 @@ This guide addresses common issues you might encounter while using unquad and pr
 ```python
 # Old API (deprecated)
 from unquad.estimation.configuration import DetectorConfig
+
 detector = ConformalDetector(
     detector=LOF(),
     strategy=Split(calib_size=0.2),
@@ -22,7 +23,7 @@ detector = ConformalDetector(
 # New API
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 detector = ConformalDetector(
     detector=LOF(),
@@ -224,7 +225,7 @@ BootstrapStrategy(resampling_ratio=0.8) # -> sample_ratio=0.8
 - Use the correct aggregation enum values
 
 ```python
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # Correct usage of aggregation enums
 detector = ConformalDetector(

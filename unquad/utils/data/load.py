@@ -1,24 +1,22 @@
 import gzip
 import io
 import os
+
+import pandas as pd
+
 from pathlib import Path
 from typing import Dict
 from urllib.parse import urljoin
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
-
-import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# Dataset configuration
 DATASET_VERSION = os.environ.get("UNQUAD_DATASET_VERSION", "v.0.8.1-datasets")
 DATASET_BASE_URL = os.environ.get(
     "UNQUAD_DATASET_URL",
     f"https://github.com/OliverHennhoefer/unquad/releases/download/{DATASET_VERSION}/"
 )
-
-# In-memory cache for downloaded datasets
-_DATASET_CACHE: Dict[str, bytes] = {}
+_DATASET_CACHE: Dict[str, bytes] = {}  # In-memory cache for downloaded datasets
 
 # Check if pyarrow is available for reading parquet files
 try:

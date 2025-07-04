@@ -17,7 +17,7 @@ def check_imports():
         print("✓ Basic imports successful")
         
         # Test the module structure
-        from unquad.utils import load
+        from unquad.utils.data import load
         print("✓ Module import successful")
         
         # Check cache-related functions exist
@@ -56,8 +56,8 @@ def check_imports():
 def check_configuration():
     """Check configuration variables."""
     try:
-        from unquad.utils import load
-        
+        from unquad.utils.data import load
+
         print(f"✓ Dataset version: {load.DATASET_VERSION}")
         print(f"✓ Base URL: {load.DATASET_BASE_URL}")
         print(f"✓ Cache type: In-memory dictionary")

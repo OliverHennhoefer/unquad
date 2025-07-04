@@ -11,7 +11,7 @@ from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidationStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 
 # Load example data
 data = load_breast_cancer()

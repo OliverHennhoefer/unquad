@@ -37,8 +37,8 @@ from scipy.stats import false_discovery_control
 
 from unquad.strategy.split import Split
 from unquad.estimation.conformal import ConformalDetector
-from unquad.utils.load import load_shuttle
-from unquad.utils.metrics import false_discovery_rate, statistical_power
+from unquad.utils.data.load import load_shuttle
+from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -76,8 +76,8 @@ from scipy.stats import false_discovery_control
 
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.load import load_shuttle
-from unquad.utils.metrics import false_discovery_rate, statistical_power
+from unquad.utils.data.load import load_shuttle
+from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -109,10 +109,10 @@ The statistical validity of conformal anomaly detection depends on data *exchang
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.utils.load import load_shuttle
+from unquad.utils.data.load import load_shuttle
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.split import Split
-from unquad.utils.metrics import false_discovery_rate, statistical_power
+from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 

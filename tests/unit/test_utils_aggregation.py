@@ -1,7 +1,7 @@
 import unittest
 
-from unquad.utils.aggregation import aggregate
-from unquad.utils.enums import Aggregation
+from unquad.utils.stat.aggregation import aggregate
+from unquad.utils.func.enums import Aggregation
 
 
 class TestUtilsAggregation(unittest.TestCase):

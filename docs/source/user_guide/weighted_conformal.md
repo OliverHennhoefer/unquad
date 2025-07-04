@@ -14,7 +14,7 @@ The `WeightedConformalDetector` automatically estimates importance weights using
 import numpy as np
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 from pyod.models.lof import LOF
 
 # Initialize base detector

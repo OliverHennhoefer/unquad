@@ -7,7 +7,7 @@ from sklearn.model_selection import ShuffleSplit
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector
-from unquad.utils.parameterization import set_params
+from unquad.utils.func.params import set_params
 from unquad.strategy.base import BaseStrategy
 
 

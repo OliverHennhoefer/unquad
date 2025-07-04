@@ -1,6 +1,6 @@
 import numpy as np
 
-from unquad.utils.decorator import performance_conversion
+from unquad.utils.func.decorator import performance_conversion
 
 
 @performance_conversion("y", "y_hat")

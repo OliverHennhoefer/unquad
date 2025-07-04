@@ -13,7 +13,7 @@ import numpy as np
 from scipy.stats import false_discovery_control
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import SplitStrategy
-from unquad.utils.enums import Aggregation
+from unquad.utils.func.enums import Aggregation
 from pyod.models.lof import LOF
 
 # Initialize detector
