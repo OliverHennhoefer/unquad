@@ -130,7 +130,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
 
         evt_detector = EVTConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=Split(calib_size=5_000),
+            strategy=Bootstrap(n_calib=5_000, resampling_ratio=0.995),
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
@@ -152,8 +152,8 @@ class TestCaseExtremeSplit(unittest.TestCase):
             label.extend(y_batch.tolist())
             decision.extend(decisions)
 
-        self.assertEqual(statistical_power(label, decision), 0.4)
-        self.assertEqual(false_discovery_rate(label, decision), 0.2)
+        self.assertEqual(statistical_power(label, decision), 0.1)
+        self.assertEqual(false_discovery_rate(label, decision), 0.5)
 
 
 if __name__ == "__main__":

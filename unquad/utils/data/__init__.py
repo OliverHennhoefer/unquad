@@ -10,9 +10,10 @@ from .load import (
     load_shuttle,
     load_thyroid,
     load_wbc,
-    clear_memory_cache,
+    clear_cache,
     list_cached_datasets,
-    get_memory_cache_info,
+    get_cache_info,
+    get_cache_location,
 )
 
 __all__ = [
@@ -26,7 +27,8 @@ __all__ = [
     "load_shuttle",
     "load_thyroid",
     "load_wbc",
-    "clear_memory_cache",
+    "clear_cache",
     "list_cached_datasets",
-    "get_memory_cache_info",
+    "get_cache_info",
+    "get_cache_location",
 ]
