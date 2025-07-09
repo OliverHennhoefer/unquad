@@ -2,14 +2,12 @@ import gzip
 import io
 import os
 import shutil
+from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.parse import urljoin
+from urllib.request import Request, urlopen
 
 import pandas as pd
-
-from pathlib import Path
-from typing import Dict
-from urllib.parse import urljoin
-from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
 from sklearn.model_selection import train_test_split
 
 DATASET_VERSION = os.environ.get("UNQUAD_DATASET_VERSION", "v.0.8.1-datasets")
@@ -17,7 +15,7 @@ DATASET_BASE_URL = os.environ.get(
     "UNQUAD_DATASET_URL",
     f"https://github.com/OliverHennhoefer/unquad/releases/download/{DATASET_VERSION}/",
 )
-_DATASET_CACHE: Dict[str, bytes] = {}  # In-memory cache for downloaded datasets
+_DATASET_CACHE: dict[str, bytes] = {}  # In-memory cache for downloaded datasets
 
 # Disk cache directory (version-aware) - created lazily
 _CACHE_DIR = None
@@ -285,10 +283,12 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
         filename: Name of the dataset file (e.g., "breast.parquet.gz")
         show_progress: Whether to show download progress
 
-    Returns:
+    Returns
+    -------
         BytesIO object containing the compressed dataset
 
-    Raises:
+    Raises
+    ------
         URLError: If download fails
     """
     # Check memory cache first
@@ -327,7 +327,7 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
                     with tqdm(
                         total=total_size, unit="B", unit_scale=True, desc=filename
                     ) as pbar:
-                        # Use bytearray for efficient concatenation, then convert to bytes
+                        # Use bytearray for efficient concatenation, then convert
                         data_buffer = bytearray()
                         while True:
                             chunk = response.read(8192)
@@ -343,7 +343,7 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
                 data = response.read()
 
     except (URLError, HTTPError) as e:
-        raise URLError(f"Failed to download {filename}: {str(e)}") from e
+        raise URLError(f"Failed to download {filename}: {e!s}") from e
 
     # Cache in memory and on disk
     _DATASET_CACHE[filename] = data
@@ -496,7 +496,7 @@ def _cleanup_old_versions() -> None:
         print(f"Cleaned up {removed_count} old dataset versions")
 
 
-def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
+def clear_cache(dataset: str | None = None, all_versions: bool = False) -> None:
     """Clear dataset cache.
 
     Args:
@@ -525,8 +525,7 @@ def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
         filename = f"{dataset}.parquet.gz"
 
         # Remove from memory cache
-        if filename in _DATASET_CACHE:
-            del _DATASET_CACHE[filename]
+        _DATASET_CACHE.pop(filename, None)
 
         # Remove from disk cache
         cache_dir = _get_cache_dir()
@@ -546,7 +545,8 @@ def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
             except PermissionError:
                 # On Windows, files may be locked by other processes
                 print(
-                    f"Warning: Could not clear cache directory (v{DATASET_VERSION}) due to file permissions"
+                    f"Warning: Could not clear cache directory (v{DATASET_VERSION}) "
+                    f"due to file permissions"
                 )
         _DATASET_CACHE.clear()
 
@@ -554,7 +554,8 @@ def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
 def list_cached_datasets() -> list[str]:
     """List all datasets cached (memory + disk).
 
-    Returns:
+    Returns
+    -------
         List of cached dataset names (without .parquet.gz extension)
     """
     cached_names = set()
@@ -577,7 +578,8 @@ def list_cached_datasets() -> list[str]:
 def get_cache_info() -> dict:
     """Get comprehensive cache information.
 
-    Returns:
+    Returns
+    -------
         Dictionary with memory and disk cache information
     """
     cache_dir = _get_cache_dir()

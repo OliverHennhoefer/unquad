@@ -1,8 +1,9 @@
-from pyod.models.loci import LOCI
 from scipy.stats import false_discovery_control
-from unquad.utils.data.load import load_thyroid
+
+from pyod.models.loci import LOCI
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import Split
+from unquad.utils.data.load import load_thyroid
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":

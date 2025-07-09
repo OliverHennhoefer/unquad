@@ -1,11 +1,11 @@
 import unittest
 
-from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.utils.data.load import load_fraud, load_shuttle
+from pyod.models.iforest import IForest
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.split import Split
+from unquad.utils.data.load import load_fraud, load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 

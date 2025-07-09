@@ -7,7 +7,8 @@ the tail of the calibration score distribution.
 """
 
 import os
-from typing import Literal, Optional, Tuple, Union, Callable
+from collections.abc import Callable
+from typing import Literal
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
@@ -18,9 +19,9 @@ from tqdm import tqdm
 from pyod.models.base import BaseDetector as PyODBaseDetector
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.base import BaseStrategy
-from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.func.decorator import ensure_numpy_array
 from unquad.utils.func.enums import Aggregation
+from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.stat.extreme import fit_gpd, select_threshold
 from unquad.utils.stat.statistical import calculate_evt_p_val, calculate_p_val
 
@@ -65,7 +66,7 @@ class EVTConformalDetector(ConformalDetector):
         evt_threshold_method: Literal[
             "percentile", "top_k", "mean_excess", "custom"
         ] = "percentile",
-        evt_threshold_value: Union[float, Callable[[np.ndarray], float]] = 0.95,
+        evt_threshold_value: float | Callable[[np.ndarray], float] = 0.95,
         evt_min_tail_size: int = 10,
     ):
         """Initialize the EVTConformalDetector.
@@ -91,14 +92,14 @@ class EVTConformalDetector(ConformalDetector):
         self.evt_threshold_method: Literal[
             "percentile", "top_k", "mean_excess", "custom"
         ] = evt_threshold_method
-        self.evt_threshold_value: Union[float, Callable[[np.ndarray], float]] = (
+        self.evt_threshold_value: float | Callable[[np.ndarray], float] = (
             evt_threshold_value
         )
         self.evt_min_tail_size: int = evt_min_tail_size
 
         # EVT-specific attributes
-        self.evt_threshold: Optional[float] = None
-        self.gpd_params: Optional[Tuple[float, float, float]] = None
+        self.evt_threshold: float | None = None
+        self.gpd_params: tuple[float, float, float] | None = None
 
     @ensure_numpy_array
     def fit(self, x: pd.DataFrame | np.ndarray) -> None:
@@ -141,7 +142,8 @@ class EVTConformalDetector(ConformalDetector):
                     # If GPD fitting fails, fall back to standard approach
                     if not self.silent:
                         print(
-                            f"Warning: GPD fitting failed: {e}. Using standard approach."
+                            f"Warning: GPD fitting failed: {e}. "
+                            f"Using standard approach."
                         )
                     self.gpd_params = None
             else:
@@ -171,7 +173,8 @@ class EVTConformalDetector(ConformalDetector):
             raw (bool, optional): Whether to return raw anomaly scores or
                 p-values. Defaults to False.
 
-        Returns:
+        Returns
+        -------
             np.ndarray: Predictions based on the output type.
         """
         # Calculate anomaly scores

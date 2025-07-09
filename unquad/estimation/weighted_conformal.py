@@ -12,11 +12,11 @@ from tqdm import tqdm
 
 from pyod.models.base import BaseDetector
 from unquad.estimation.base import BaseConformalDetector
-from unquad.utils.func.params import set_params
 from unquad.strategy.base import BaseStrategy
-from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.func.decorator import ensure_numpy_array
 from unquad.utils.func.enums import Aggregation
+from unquad.utils.func.params import set_params
+from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.stat.statistical import calculate_weighted_p_val
 
 
@@ -76,7 +76,8 @@ class WeightedConformalDetector(BaseConformalDetector):
             silent (bool, optional): Whether to suppress progress bars and logs.
                 Defaults to True.
 
-        Raises:
+        Raises
+        ------
             ValueError: If seed is negative.
             TypeError: If aggregation is not an Aggregation enum.
         """
@@ -132,7 +133,7 @@ class WeightedConformalDetector(BaseConformalDetector):
         x: pd.DataFrame | np.ndarray,
         raw: bool = False,
     ) -> np.ndarray:
-        """Generates weighted anomaly estimates (p-values or raw scores) for new data.
+        """Generate weighted anomaly estimates (p-values or raw scores) for new data.
 
         For each test instance in `x`:
         1. Anomaly scores are obtained from each detector in `detector_set`.

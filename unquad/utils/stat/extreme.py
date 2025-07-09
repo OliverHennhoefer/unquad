@@ -5,7 +5,9 @@ to extreme values, threshold selection methods, and hybrid p-value calculations
 that combine bulk and tail distributions.
 """
 
-from typing import Literal, Tuple, Union, Callable
+from collections.abc import Callable
+from typing import Literal
+
 import numpy as np
 from scipy import stats
 
@@ -13,7 +15,7 @@ from scipy import stats
 def select_threshold(
     scores: np.ndarray,
     method: Literal["percentile", "top_k", "mean_excess", "custom"],
-    value: Union[float, Callable[[np.ndarray], float]],
+    value: float | Callable[[np.ndarray], float],
 ) -> float:
     """Select threshold for extreme value modeling.
 
@@ -30,7 +32,8 @@ def select_threshold(
             - For "mean_excess": initial percentile to start search
             - For "custom": callable that takes scores array and returns threshold
 
-    Returns:
+    Returns
+    -------
         Threshold value
     """
     sorted_scores = np.sort(scores)
@@ -63,13 +66,14 @@ def select_threshold(
         raise ValueError(f"Unknown threshold method: {method}")
 
 
-def fit_gpd(exceedances: np.ndarray) -> Tuple[float, float, float]:
+def fit_gpd(exceedances: np.ndarray) -> tuple[float, float, float]:
     """Fit Generalized Pareto Distribution to exceedances.
 
     Args:
         exceedances: Values exceeding the threshold (X - threshold for X > threshold)
 
-    Returns:
+    Returns
+    -------
         Tuple of (shape, location, scale) parameters
     """
     if len(exceedances) == 0:
@@ -100,7 +104,8 @@ def gpd_tail_probability(
         n_total: Total number of calibration samples
         n_exceed: Number of samples exceeding threshold
 
-    Returns:
+    Returns
+    -------
         Probability that a random value exceeds the score
     """
     if score <= threshold:
@@ -124,7 +129,7 @@ def calculate_hybrid_p_value(
     score: float,
     calibration_scores: np.ndarray,
     threshold: float,
-    gpd_params: Tuple[float, float, float],
+    gpd_params: tuple[float, float, float],
 ) -> float:
     """Calculate p-value using hybrid approach (empirical + GPD).
 
@@ -139,7 +144,8 @@ def calculate_hybrid_p_value(
         threshold: Threshold used for GPD fitting (not decision boundary)
         gpd_params: Tuple of (shape, loc, scale) from GPD fit
 
-    Returns:
+    Returns
+    -------
         P-value for the test score
     """
     n_total = len(calibration_scores)

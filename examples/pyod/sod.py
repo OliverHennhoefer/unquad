@@ -1,8 +1,9 @@
-from pyod.models.sod import SOD
 from scipy.stats import false_discovery_control
-from unquad.utils.data.load import load_shuttle
+
+from pyod.models.sod import SOD
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.cross_val import CrossValidation
+from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":

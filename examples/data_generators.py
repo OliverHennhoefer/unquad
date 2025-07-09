@@ -1,8 +1,8 @@
 """Example demonstrating different data providing methods in unquad.utils.data."""
 
-from unquad.utils.data.load import load_shuttle, load_breast
-from unquad.utils.data.batch_generator import BatchGenerator, create_batch_generator
-from unquad.utils.data.online_generator import OnlineGenerator
+from unquad.utils.data.generator.batch import BatchGenerator, create_batch_generator
+from unquad.utils.data.load import get_cache_info, load_breast, load_shuttle
+from unquad.utils.data.generator.online import OnlineGenerator
 
 
 def demonstrate_data_loading():
@@ -23,9 +23,9 @@ def demonstrate_data_loading():
     )
 
     # Show memory cache info
-    cache_info = get_memory_cache_info()
+    cache_info = get_cache_info()
     print(
-        f"Memory cache: {len(cache_info['datasets'])} datasets, {cache_info['total_size_mb']} MB"
+        f"Memory cache: {len(cache_info['memory']['datasets'])} datasets, {cache_info['memory']['size_mb']} MB"
     )
     print()
 

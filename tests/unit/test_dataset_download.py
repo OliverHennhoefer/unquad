@@ -1,8 +1,8 @@
-import unittest
 import io
-import unittest.mock as mock
-import tempfile
 import shutil
+import tempfile
+import unittest
+import unittest.mock as mock
 from pathlib import Path
 from urllib.error import URLError
 
@@ -159,11 +159,11 @@ class TestDatasetDownload(unittest.TestCase):
 
             with mock.patch("unquad.utils.data.load.Request"):
                 # First call should trigger download
-                stream1 = load._download_dataset("test.parquet.gz", show_progress=False)
+                load._download_dataset("test.parquet.gz", show_progress=False)
                 self.assertEqual(mock_urlopen.call_count, 1)
 
                 # Second call should use cache (no network call)
-                stream2 = load._download_dataset("test.parquet.gz", show_progress=False)
+                load._download_dataset("test.parquet.gz", show_progress=False)
                 self.assertEqual(mock_urlopen.call_count, 1)  # Should not increase
 
                 # Verify cache content in both memory and disk

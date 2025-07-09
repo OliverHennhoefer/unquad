@@ -1,8 +1,9 @@
-from pyod.models.mcd import MCD
 from scipy.stats import false_discovery_control
-from unquad.utils.data.load import load_ionosphere
+
+from pyod.models.mcd import MCD
 from unquad.estimation.conformal import ConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
+from unquad.utils.data.load import load_ionosphere
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":

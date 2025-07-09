@@ -1,8 +1,12 @@
-"""Batch generator for anomaly detection experiments with configurable anomaly mixing."""
+"""Batch generator for anomaly detection experiments.
+
+This module provides batch generation capabilities for anomaly detection experiments
+with configurable anomaly mixing.
+"""
 
 from __future__ import annotations
 
-from typing import Iterator, Optional, Union
+from collections.abc import Iterator
 
 import numpy as np
 import pandas as pd
@@ -41,7 +45,7 @@ class BatchGenerator:
     Examples
     --------
     >>> from unquad.utils.data.load import load_shuttle
-    >>> from unquad.utils.data.batch_generator import BatchGenerator
+    >>> from unquad.utils.data.generator.batch import BatchGenerator
     >>>
     >>> # Load data with setup
     >>> x_train, x_test, y_test = load_shuttle(setup=True)
@@ -69,8 +73,8 @@ class BatchGenerator:
         x_normal: pd.DataFrame,
         x_anomaly: pd.DataFrame,
         batch_size: int,
-        anomaly_proportion: Union[float, int],
-        random_state: Optional[int] = None,
+        anomaly_proportion: float | int,
+        random_state: int | None = None,
     ) -> None:
         """Initialize the batch generator."""
         self.x_normal = x_normal
@@ -104,12 +108,14 @@ class BatchGenerator:
 
         if self.anomaly_proportion < 0:
             raise ValueError(
-                f"anomaly_proportion must be non-negative, got {self.anomaly_proportion}"
+                f"anomaly_proportion must be non-negative, "
+                f"got {self.anomaly_proportion}"
             )
 
         if self.n_anomaly_per_batch > self.batch_size:
             raise ValueError(
-                f"Anomaly count ({self.n_anomaly_per_batch}) exceeds batch_size ({self.batch_size})"
+                f"Anomaly count ({self.n_anomaly_per_batch}) exceeds "
+                f"batch_size ({self.batch_size})"
             )
 
         if self.n_normal_per_batch > self.n_normal:
@@ -125,7 +131,7 @@ class BatchGenerator:
             )
 
     def generate(
-        self, n_batches: Optional[int] = None
+        self, n_batches: int | None = None
     ) -> Iterator[tuple[pd.DataFrame, pd.Series]]:
         """Generate batches with mixed normal and anomalous instances.
 
@@ -191,7 +197,7 @@ class BatchGenerator:
         return min(max_normal_batches, max_anomaly_batches)
 
     def __repr__(self) -> str:
-        """String representation of the generator."""
+        """Return string representation of the generator."""
         return (
             f"BatchGenerator("
             f"n_normal={self.n_normal}, "
@@ -205,10 +211,10 @@ def create_batch_generator(
     df: pd.DataFrame,
     train_size: float = 0.5,
     batch_size: int = 100,
-    anomaly_proportion: Union[float, int] = 0.1,
-    random_state: Optional[int] = None,
+    anomaly_proportion: float | int = 0.1,
+    random_state: int | None = None,
 ) -> tuple[pd.DataFrame, BatchGenerator]:
-    """Convenience function to create a batch generator from a dataset.
+    """Create a batch generator from a dataset.
 
     This function splits the dataset into training data (normal only) and
     creates a batch generator for the remaining data.
@@ -237,7 +243,7 @@ def create_batch_generator(
     Examples
     --------
     >>> from unquad.utils.data.load import load_shuttle
-    >>> from unquad.utils.data.batch_generator import create_batch_generator
+    >>> from unquad.utils.data.generator.batch import create_batch_generator
     >>>
     >>> df = load_shuttle()
     >>> x_train, batch_gen = create_batch_generator(

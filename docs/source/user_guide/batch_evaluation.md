@@ -9,7 +9,7 @@ The `BatchGenerator` creates evaluation batches with precise anomaly contaminati
 ## Basic Usage
 
 ```python
-from unquad.utils.data.batch_generator import BatchGenerator
+from unquad.utils.data.generator.batch import BatchGenerator
 from unquad.utils.data.load import load_shuttle
 
 # Load and separate data
@@ -83,8 +83,9 @@ for x_batch, y_batch in batch_gen.generate():
 ## Convenience Functions
 
 ### Dataset Splitting
+
 ```python
-from unquad.utils.data.batch_generator import create_batch_generator
+from unquad.utils.data.generator.batch import create_batch_generator
 
 # Load complete dataset
 df = load_shuttle()
@@ -92,7 +93,7 @@ df = load_shuttle()
 # Create training data and batch generator
 x_train, batch_gen = create_batch_generator(
     df,
-    train_size=0.5,        # 50% of normal data for training
+    train_size=0.5,  # 50% of normal data for training
     batch_size=150,
     anomaly_proportion=0.2,  # 20% anomalies per batch
     random_state=42

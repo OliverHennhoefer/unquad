@@ -19,11 +19,11 @@ from tqdm import tqdm
 
 from pyod.models.base import BaseDetector as PyODBaseDetector  # Alias for clarity
 from unquad.estimation.base import BaseConformalDetector
-from unquad.utils.func.params import set_params
 from unquad.strategy.base import BaseStrategy
-from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.func.decorator import ensure_numpy_array
 from unquad.utils.func.enums import Aggregation
+from unquad.utils.func.params import set_params
+from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.stat.statistical import calculate_p_val
 
 
@@ -33,7 +33,8 @@ class ConformalDetector(BaseConformalDetector):
     This detector inherits from BaseConformalDetector and uses an underlying
     anomaly detection model and a specified strategy (e.g., split conformal, CV+)
     to calibrate non-conformity scores. It then uses these calibrated scores to
-    generate anomaly estimates on new data, providing options for raw scores or p-values.
+    generate anomaly estimates on new data, providing options for raw scores or
+    p-values.
 
     Attributes
     ----------
@@ -74,7 +75,8 @@ class ConformalDetector(BaseConformalDetector):
             silent (bool, optional): Whether to suppress progress bars and logs.
                 Defaults to True.
 
-        Raises:
+        Raises
+        ------
             ValueError: If seed is negative.
             TypeError: If aggregation is not an Aggregation enum.
         """
@@ -119,7 +121,7 @@ class ConformalDetector(BaseConformalDetector):
         x: pd.DataFrame | np.ndarray,
         raw: bool = False,
     ) -> np.ndarray:
-        """Generates anomaly estimates (p-values or raw scores) for new data.
+        """Generate anomaly estimates (p-values or raw scores) for new data.
 
         Based on the fitted models and calibration scores, this method evaluates
         new data points. It can return either raw anomaly scores or p-values

@@ -9,7 +9,7 @@ The `OnlineGenerator` creates deterministic streams of single instances with exa
 ## Basic Usage
 
 ```python
-from unquad.utils.data.online_generator import OnlineGenerator
+from unquad.utils.data.generator.online import OnlineGenerator
 from unquad.utils.data.load import load_shuttle
 
 # Load and separate data
@@ -259,7 +259,7 @@ print(f"FDR variation: {np.std(window_results):.3f}")
 ## Integration with Batch Evaluation
 
 ```python
-from unquad.utils.data.batch_generator import BatchGenerator
+from unquad.utils.data.generator.batch import BatchGenerator
 
 # Compare streaming vs batch evaluation
 batch_gen = BatchGenerator(
@@ -288,7 +288,7 @@ for x_instance, y_label in online_gen.generate_stream(n_instances=1000):
     streaming_labels.append(y_label)
 
 streaming_fdr = false_discovery_rate(
-    streaming_labels, 
+    streaming_labels,
     np.array(streaming_preds) < 0.05
 )
 

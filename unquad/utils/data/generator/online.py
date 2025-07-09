@@ -1,14 +1,13 @@
 """Online generator for single-instance streaming with deterministic anomaly control."""
 
-from __future__ import annotations
+from collections.abc import Iterator
 
-from typing import Iterator, Optional, Tuple
 import numpy as np
 import pandas as pd
 
 
 class OnlineGenerator:
-    """Generate single instances with deterministic anomaly contamination for streaming evaluation.
+    """Generate single instances with deterministic anomaly contamination for streaming.
 
     This generator creates a deterministic stream of single instances by pre-creating
     a pool with exact anomaly proportions, then sampling from this pool sequentially.
@@ -77,7 +76,7 @@ class OnlineGenerator:
         x_anomaly: pd.DataFrame,
         anomaly_proportion: float,
         pool_size: int = 1000,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
         replacement: bool = True,
     ) -> None:
         """Initialize the online generator."""
@@ -108,7 +107,8 @@ class OnlineGenerator:
 
         if not 0 <= self.anomaly_proportion <= 1:
             raise ValueError(
-                f"anomaly_proportion must be between 0 and 1, got {self.anomaly_proportion}"
+                f"anomaly_proportion must be between 0 and 1, "
+                f"got {self.anomaly_proportion}"
             )
 
         # Calculate exact counts
@@ -156,8 +156,8 @@ class OnlineGenerator:
         self._current_index = 0
 
     def generate_stream(
-        self, n_instances: Optional[int] = None
-    ) -> Iterator[Tuple[pd.DataFrame, int]]:
+        self, n_instances: int | None = None
+    ) -> Iterator[tuple[pd.DataFrame, int]]:
         """Generate stream of single instances with deterministic anomaly proportion.
 
         Parameters
@@ -262,7 +262,7 @@ class OnlineGenerator:
         return self._current_index
 
     def __repr__(self) -> str:
-        """String representation of the generator."""
+        """Return string representation of the generator."""
         n_anomaly_pool = int(self.pool_size * self.anomaly_proportion)
         return (
             f"OnlineGenerator("

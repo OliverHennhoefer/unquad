@@ -1,4 +1,5 @@
-from typing import Tuple, Union, Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 
@@ -104,9 +105,9 @@ def calculate_evt_p_val(
     scores: np.ndarray,
     calibration_set: np.ndarray,
     threshold_method: Literal["percentile", "top_k", "mean_excess", "custom"],
-    threshold_value: Union[float, Callable[[np.ndarray], float]],
+    threshold_value: float | Callable[[np.ndarray], float],
     min_tail_size: int,
-    gpd_params: Tuple[float, float, float],
+    gpd_params: tuple[float, float, float],
     threshold: float,
 ) -> list[float]:
     """Calculate p-values using EVT-enhanced hybrid approach.
@@ -130,7 +131,7 @@ def calculate_evt_p_val(
         threshold_method (Literal): Method used for threshold selection.
         threshold_value (Union[float, Callable]): Parameter for threshold method.
         min_tail_size (int): Minimum number of exceedances required for GPD fitting.
-        gpd_params (Tuple[float, float, float]): Fitted GPD parameters (shape, loc, scale).
+        gpd_params (Tuple[float, float, float]): Fitted parameters (shape, loc, scale).
         threshold (float): Threshold separating bulk and tail distributions.
 
     Returns

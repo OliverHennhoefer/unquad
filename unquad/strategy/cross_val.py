@@ -6,8 +6,8 @@ from sklearn.model_selection import KFold
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector
-from unquad.utils.func.params import set_params
 from unquad.strategy.base import BaseStrategy
+from unquad.utils.func.params import set_params
 
 
 class CrossValidation(BaseStrategy):
