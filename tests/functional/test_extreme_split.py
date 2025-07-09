@@ -2,16 +2,15 @@ import unittest
 from online_fdr import BatchStoreyBH
 
 from pyod.models.iforest import IForest
-from pyod.models.pca import PCA
-from sklearn.ensemble import IsolationForest
 
 from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.data.load import load_shuttle, load_musk, load_fraud
+from unquad.utils.data.load import load_shuttle, load_fraud
 from unquad.utils.data.batch_generator import create_batch_generator
-from unquad.estimation.evt_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import EVTConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 from online_fdr.batching.bh import BatchBH
+from online_fdr.batching.prds import BatchPRDS
 
 
 class TestCaseExtremeSplit(unittest.TestCase):
@@ -131,7 +130,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         evt_detector = EVTConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Bootstrap(n_calib=5_000, resampling_ratio=0.995),
-            evt_threshold_method="percentile",
+            evt_threshold_method="mean_excess",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
             silent=True,
@@ -139,7 +138,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
 
         evt_detector.fit(x_train)
 
-        batch_st_bh = BatchStoreyBH(alpha=0.2, lambda_=0.01)
+        batch_st_bh = BatchPRDS(alpha=0.2)
 
         label = []
         decision = []
@@ -153,7 +152,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             decision.extend(decisions)
 
         self.assertEqual(statistical_power(label, decision), 0.1)
-        self.assertEqual(false_discovery_rate(label, decision), 0.5)
+        self.assertEqual(false_discovery_rate(label, decision), 0.0)
 
 
 if __name__ == "__main__":

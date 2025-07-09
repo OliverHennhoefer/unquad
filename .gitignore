@@ -26,6 +26,7 @@ docs/source/api/ # If using sphinx-apidoc and generating into source
 docs/source/_autosummary_generated/ # If using autosummary
 
 # Claude Code
+CLAUDE.md
 CLAUDE.local.md
 .claude
 .claudeignore

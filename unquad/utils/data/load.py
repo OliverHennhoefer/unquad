@@ -22,13 +22,18 @@ _DATASET_CACHE: Dict[str, bytes] = {}  # In-memory cache for downloaded datasets
 # Disk cache directory (version-aware) - created lazily
 _CACHE_DIR = None
 
+
 def _get_cache_dir() -> Path:
     """Get cache directory, creating it lazily."""
     global _CACHE_DIR
     if _CACHE_DIR is None:
-        _CACHE_DIR = Path(os.environ.get("UNQUAD_CACHE_DIR", Path.home() / ".cache" / "unquad")) / DATASET_VERSION
+        _CACHE_DIR = (
+            Path(os.environ.get("UNQUAD_CACHE_DIR", Path.home() / ".cache" / "unquad"))
+            / DATASET_VERSION
+        )
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
     return _CACHE_DIR
+
 
 # Check if pyarrow is available for reading parquet files
 try:
@@ -295,7 +300,7 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
     cache_file = cache_dir / filename
     if cache_file.exists():
         print(f"Loading {filename} from disk cache (v{DATASET_VERSION})")
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             data = f.read()
         _DATASET_CACHE[filename] = data
         return io.BytesIO(data)
@@ -344,7 +349,7 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
     _DATASET_CACHE[filename] = data
     # Ensure cache directory exists before writing (important for tests)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         f.write(data)
 
     print(f"Successfully cached {filename} ({len(data)/1024:.1f} KB)")
@@ -430,7 +435,7 @@ def _create_setup(
     -------
     Tuple[pandas.DataFrame, pandas.DataFrame, pandas.Series]:
         A tuple (x_train, x_test, y_test):
-        
+
         - `x_train`: DataFrame of training features (normal samples only).
         - `x_test`: DataFrame of test features.
         - `y_test`: Series of test labels (0 for normal, 1 for outlier).
@@ -473,10 +478,10 @@ def _cleanup_old_versions() -> None:
     cache_root = cache_dir.parent
     if not cache_root.exists():
         return
-    
+
     current_version = DATASET_VERSION
     removed_count = 0
-    
+
     for version_dir in cache_root.iterdir():
         if version_dir.is_dir() and version_dir.name != current_version:
             try:
@@ -486,22 +491,22 @@ def _cleanup_old_versions() -> None:
                 # On Windows, files may be locked by other processes (e.g., swap files)
                 # Skip these directories to avoid test failures
                 pass
-    
+
     if removed_count > 0:
         print(f"Cleaned up {removed_count} old dataset versions")
 
 
 def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
     """Clear dataset cache.
-    
+
     Args:
-        dataset: Specific dataset name to clear (e.g., "breast"). 
+        dataset: Specific dataset name to clear (e.g., "breast").
                 If None, clears all datasets for current version.
         all_versions: If True, clears cache for all dataset versions.
                      If False, only clears current version.
     """
     global _DATASET_CACHE
-    
+
     if all_versions:
         # Clear entire cache directory (all versions)
         cache_root = _get_cache_dir().parent
@@ -514,15 +519,15 @@ def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
                 print("Warning: Could not clear all cache due to file permissions")
         _DATASET_CACHE.clear()
         return
-    
+
     if dataset is not None:
         # Clear specific dataset
         filename = f"{dataset}.parquet.gz"
-        
+
         # Remove from memory cache
         if filename in _DATASET_CACHE:
             del _DATASET_CACHE[filename]
-        
+
         # Remove from disk cache
         cache_dir = _get_cache_dir()
         cache_file = cache_dir / filename
@@ -540,10 +545,10 @@ def clear_cache(dataset: str = None, all_versions: bool = False) -> None:
                 print(f"Cleared all dataset cache (v{DATASET_VERSION})")
             except PermissionError:
                 # On Windows, files may be locked by other processes
-                print(f"Warning: Could not clear cache directory (v{DATASET_VERSION}) due to file permissions")
+                print(
+                    f"Warning: Could not clear cache directory (v{DATASET_VERSION}) due to file permissions"
+                )
         _DATASET_CACHE.clear()
-
-
 
 
 def list_cached_datasets() -> list[str]:
@@ -553,42 +558,48 @@ def list_cached_datasets() -> list[str]:
         List of cached dataset names (without .parquet.gz extension)
     """
     cached_names = set()
-    
+
     # Add from memory cache
-    cached_names.update(filename.removesuffix(".parquet.gz") for filename in _DATASET_CACHE.keys())
-    
+    cached_names.update(
+        filename.removesuffix(".parquet.gz") for filename in _DATASET_CACHE.keys()
+    )
+
     # Add from disk cache
     cache_dir = _get_cache_dir()
     if cache_dir.exists():
-        cached_names.update(f.name.removesuffix(".parquet.gz") for f in cache_dir.glob("*.parquet.gz"))
-    
+        cached_names.update(
+            f.name.removesuffix(".parquet.gz") for f in cache_dir.glob("*.parquet.gz")
+        )
+
     return sorted(list(cached_names))
 
 
 def get_cache_info() -> dict:
     """Get comprehensive cache information.
-    
+
     Returns:
         Dictionary with memory and disk cache information
     """
     cache_dir = _get_cache_dir()
     cache_root = cache_dir.parent
-    
+
     # Memory cache info
     memory_info = {
         "datasets": list(_DATASET_CACHE.keys()),
         "count": len(_DATASET_CACHE),
-        "size_mb": round(sum(len(data) for data in _DATASET_CACHE.values()) / (1024 * 1024), 2)
+        "size_mb": round(
+            sum(len(data) for data in _DATASET_CACHE.values()) / (1024 * 1024), 2
+        ),
     }
-    
+
     # Disk cache info
     disk_info = {
         "cache_dir": str(cache_dir),
         "current_version": DATASET_VERSION,
         "datasets": [],
-        "total_size_mb": 0
+        "total_size_mb": 0,
     }
-    
+
     if cache_dir.exists():
         total_size = 0
         for cache_file in cache_dir.glob("*.parquet.gz"):
@@ -597,26 +608,22 @@ def get_cache_info() -> dict:
             size_mb = size / (1024 * 1024)
             # Use more precision for small files to avoid rounding to 0
             precision = 6 if size_mb < 0.01 else 2
-            disk_info["datasets"].append({
-                "name": cache_file.name.removesuffix(".parquet.gz"),
-                "size_mb": round(size_mb, precision)
-            })
+            disk_info["datasets"].append(
+                {
+                    "name": cache_file.name.removesuffix(".parquet.gz"),
+                    "size_mb": round(size_mb, precision),
+                }
+            )
         disk_info["total_size_mb"] = round(total_size / (1024 * 1024), 2)
-    
+
     # Check for old versions
     old_versions = []
     if cache_root.exists():
         for version_dir in cache_root.iterdir():
             if version_dir.is_dir() and version_dir.name != DATASET_VERSION:
                 old_versions.append(version_dir.name)
-    
-    return {
-        "memory": memory_info,
-        "disk": disk_info,
-        "old_versions": old_versions
-    }
 
-
+    return {"memory": memory_info, "disk": disk_info, "old_versions": old_versions}
 
 
 def get_cache_location() -> str:

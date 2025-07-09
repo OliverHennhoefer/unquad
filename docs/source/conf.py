@@ -116,7 +116,7 @@ autoapi_options = [
 ]
 
 source_suffix = {
-    ".rst": "restructuredtext", 
+    ".rst": "restructuredtext",
     ".txt": "markdown",
     ".md": "markdown",
 }
@@ -124,10 +124,10 @@ source_suffix = {
 # MyST parser configuration
 myst_enable_extensions = [
     "dollarmath",  # Enable $...$ and $$...$$ for math
-    "amsmath",     # Enable AMS math environments
-    "deflist",     # Definition lists
-    "fieldlist",   # Field lists
-    "tasklist",    # Task lists
+    "amsmath",  # Enable AMS math environments
+    "deflist",  # Definition lists
+    "fieldlist",  # Field lists
+    "tasklist",  # Task lists
 ]
 
 # MathJax configuration

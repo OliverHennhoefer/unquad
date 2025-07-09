@@ -1,4 +1,4 @@
-# EVT Conformal Detection
+# Extreme Conformal Detection
 
 Extreme Value Theory (EVT) enhanced conformal prediction for superior detection of extreme anomalies.
 
@@ -13,10 +13,36 @@ Extreme Value Theory (EVT) enhanced conformal prediction for superior detection 
 - **Robust fallback**: Graceful degradation to standard conformal when EVT fitting fails
 - **Configurable sensitivity**: Adjustable parameters for different data characteristics
 
+## How the Hybrid P-Value Computation Works
+
+The extreme conformal detector uses a sophisticated hybrid approach that combines two complementary methods:
+
+### Standard Conformal for Observed Range
+For test scores within the calibration range, the detector uses the standard empirical conformal p-value:
+```
+p_value = (1 + count(calibration_scores >= test_score)) / (1 + N_calibration)
+```
+This preserves exact conformal prediction guarantees for typical values.
+
+### GPD-Based Extrapolation for Extreme Values
+For test scores beyond the maximum calibration score (truly extreme values), the detector uses Generalized Pareto Distribution (GPD) modeling:
+
+1. **Threshold Selection**: A threshold (e.g., 95th percentile) separates bulk from tail distribution
+2. **GPD Fitting**: The tail exceedances are modeled using Maximum Likelihood Estimation
+3. **Boundary Probability**: The minimum empirical p-value is `1/(N_calibration + 1)`
+4. **Tail Extrapolation**: GPD provides principled estimates for the small probability space below this boundary
+
+### The Key Insight
+If calibration scores range from -0.9 to -0.1 with 1000 samples, then:
+- Scores ≤ -0.1: Use empirical p-values (range: `1/1001` to `1.0`)
+- Scores > -0.1: Use GPD to model the tiny tail probability below `1/1001`
+
+This ensures that the GPD only handles truly extreme cases while maintaining conformal guarantees for the bulk of the distribution. The result is monotonic p-values that decrease appropriately with increasing anomaly scores.
+
 ## Basic Usage
 
 ```python
-from unquad.estimation.evt_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import EVTConformalDetector
 from unquad.strategy.split import Split
 from pyod.models.lof import LOF
 
@@ -83,11 +109,11 @@ detector = EVTConformalDetector(
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `evt_threshold_method` | Method for selecting EVT threshold | `"percentile"` |
-| `evt_threshold_value` | Parameter for threshold method | `0.95` |
-| `evt_min_tail_size` | Minimum exceedances for GPD fitting | `10` |
+| `extreme_threshold_method` | Method for selecting extreme threshold | `"percentile"` |
+| `extreme_threshold_value` | Parameter for threshold method | `0.95` |
+| `extreme_min_tail_size` | Minimum exceedances for GPD fitting | `10` |
 
-## When to Use EVT Conformal
+## When to Use Extreme Conformal
 
 **Recommended for:**
 - Datasets with extreme outliers
@@ -108,7 +134,7 @@ detector = EVTConformalDetector(
 
 ## Integration with Strategies
 
-EVT conformal works with all conformal strategies:
+Extreme conformal works with all conformal strategies:
 
 ```python
 from unquad.strategy.cross_val import CrossValidation
@@ -133,16 +159,16 @@ detector = EVTConformalDetector(
 
 ## Diagnostic Information
 
-Access fitted EVT parameters for analysis:
+Access fitted extreme parameters for analysis:
 
 ```python
 detector.fit(X_train)
 
-# Check if EVT fitting succeeded
+# Check if extreme fitting succeeded
 if detector.gpd_params is not None:
     shape, loc, scale = detector.gpd_params
     print(f"GPD parameters - Shape: {shape:.3f}, Scale: {scale:.3f}")
-    print(f"EVT threshold: {detector.evt_threshold:.3f}")
+    print(f"Extreme threshold: {detector.extreme_threshold:.3f}")
 else:
-    print("EVT fitting failed, using standard conformal")
+    print("Extreme fitting failed, using standard conformal")
 ```

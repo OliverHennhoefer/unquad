@@ -1,8 +1,6 @@
 """Example demonstrating different data providing methods in unquad.utils.data."""
 
-import numpy as np
-import pandas as pd
-from unquad.utils.data.load import load_shuttle, load_breast, get_memory_cache_info
+from unquad.utils.data.load import load_shuttle, load_breast
 from unquad.utils.data.batch_generator import BatchGenerator, create_batch_generator
 from unquad.utils.data.online_generator import OnlineGenerator
 

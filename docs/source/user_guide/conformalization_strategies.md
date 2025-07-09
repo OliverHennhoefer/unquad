@@ -125,7 +125,7 @@ All strategies work with any conformal detector:
 ```python
 from unquad.estimation.conformal import ConformalDetector
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.estimation.evt_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import EVTConformalDetector
 from pyod.models.lof import LOF
 
 # Standard conformal with cross-validation

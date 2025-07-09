@@ -19,10 +19,10 @@ class TestDatasetDownload(unittest.TestCase):
         # The actual cache directory should be under temp_root/version_name/
         self.temp_cache_dir = self.temp_cache_root / load.DATASET_VERSION
         self.temp_cache_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.original_get_cache_dir = load._get_cache_dir
         load._get_cache_dir = lambda: self.temp_cache_dir
-        
+
         # Clear memory cache only
         load._DATASET_CACHE.clear()
 
@@ -30,10 +30,10 @@ class TestDatasetDownload(unittest.TestCase):
         """Clean up after tests."""
         # Restore original cache directory function
         load._get_cache_dir = self.original_get_cache_dir
-        
+
         # Clear memory cache only
         load._DATASET_CACHE.clear()
-        
+
         # Clean up temporary root directory (includes all subdirectories)
         if self.temp_cache_root.exists():
             try:
@@ -82,7 +82,7 @@ class TestDatasetDownload(unittest.TestCase):
             load._DATASET_CACHE,
             "Dataset should be removed from memory cache",
         )
-        
+
         # 6. Verify it's also gone from disk cache
         cache_file = self.temp_cache_dir / dataset_filename
         self.assertFalse(
@@ -169,7 +169,7 @@ class TestDatasetDownload(unittest.TestCase):
                 # Verify cache content in both memory and disk
                 self.assertIn("test.parquet.gz", load._DATASET_CACHE)
                 self.assertEqual(load._DATASET_CACHE["test.parquet.gz"], mock_data)
-                
+
                 cache_file = self.temp_cache_dir / "test.parquet.gz"
                 self.assertTrue(cache_file.exists())
                 self.assertEqual(cache_file.read_bytes(), mock_data)
@@ -179,7 +179,7 @@ class TestDatasetDownload(unittest.TestCase):
         # Add mock data to memory cache and create disk files
         load._DATASET_CACHE["dataset1.parquet.gz"] = b"data1"
         load._DATASET_CACHE["dataset2.parquet.gz"] = b"data2"
-        
+
         # Create corresponding disk files
         (self.temp_cache_dir / "dataset1.parquet.gz").write_bytes(b"data1")
         (self.temp_cache_dir / "dataset2.parquet.gz").write_bytes(b"data2")
@@ -210,13 +210,13 @@ class TestDatasetDownload(unittest.TestCase):
         load.clear_cache()
         # Ensure cache directory exists after clearing
         self.temp_cache_dir.mkdir(parents=True, exist_ok=True)
-        
+
         test_data1 = b"x" * 1000  # 1000 bytes
         test_data2 = b"y" * 2000  # 2000 bytes
 
         load._DATASET_CACHE["small.parquet.gz"] = test_data1
         load._DATASET_CACHE["large.parquet.gz"] = test_data2
-        
+
         # Create corresponding disk files
         (self.temp_cache_dir / "small.parquet.gz").write_bytes(test_data1)
         (self.temp_cache_dir / "large.parquet.gz").write_bytes(test_data2)
@@ -231,7 +231,7 @@ class TestDatasetDownload(unittest.TestCase):
         info = load.get_cache_info()
         self.assertEqual(len(info["memory"]["datasets"]), 2)
         self.assertEqual(len(info["disk"]["datasets"]), 2)
-        
+
         # Check disk cache info
         disk_names = [d["name"] for d in info["disk"]["datasets"]]
         self.assertIn("small", disk_names)
@@ -258,22 +258,22 @@ class TestDatasetDownload(unittest.TestCase):
         test_data = b"persistent_test_data"
         load._DATASET_CACHE["persist.parquet.gz"] = test_data
         (self.temp_cache_dir / "persist.parquet.gz").write_bytes(test_data)
-        
+
         # Verify it's in both caches
         self.assertIn("persist.parquet.gz", load._DATASET_CACHE)
         self.assertTrue((self.temp_cache_dir / "persist.parquet.gz").exists())
-        
+
         # Clear only memory cache
         load._DATASET_CACHE.clear()
         self.assertEqual(len(load._DATASET_CACHE), 0)
-        
+
         # Disk cache should still exist
         self.assertTrue((self.temp_cache_dir / "persist.parquet.gz").exists())
-        
+
         # Re-downloading should load from disk cache
         stream = load._download_dataset("persist.parquet.gz", show_progress=False)
         loaded_data = stream.read()
-        
+
         # Should be back in memory cache and data should match
         self.assertIn("persist.parquet.gz", load._DATASET_CACHE)
         self.assertEqual(loaded_data, test_data)
@@ -391,11 +391,15 @@ class TestDatasetDownload(unittest.TestCase):
 
                 self.assertEqual(data1, data2, "Stream 1 and 2 should have same data")
                 self.assertEqual(data2, data3, "Stream 2 and 3 should have same data")
-                
+
                 # Verify data was also cached to disk
                 cache_file = self.temp_cache_dir / "cache_test.parquet.gz"
                 self.assertTrue(cache_file.exists(), "Data should be cached to disk")
-                self.assertEqual(cache_file.read_bytes(), test_data, "Disk cache should contain same data")
+                self.assertEqual(
+                    cache_file.read_bytes(),
+                    test_data,
+                    "Disk cache should contain same data",
+                )
 
 
 if __name__ == "__main__":

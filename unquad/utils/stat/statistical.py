@@ -144,7 +144,7 @@ def calculate_evt_p_val(
         - For scores <= threshold: empirical p-value from calibration set
         - For scores > threshold: GPD-based tail probability
     """
-    from unquad.utils.stat.evt import calculate_hybrid_p_value
+    from unquad.utils.stat.extreme import calculate_hybrid_p_value
 
     p_values = []
     for score in scores:

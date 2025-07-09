@@ -21,7 +21,7 @@ from unquad.strategy.base import BaseStrategy
 from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.func.decorator import ensure_numpy_array
 from unquad.utils.func.enums import Aggregation
-from unquad.utils.stat.evt import fit_gpd, select_threshold
+from unquad.utils.stat.extreme import fit_gpd, select_threshold
 from unquad.utils.stat.statistical import calculate_evt_p_val, calculate_p_val
 
 
