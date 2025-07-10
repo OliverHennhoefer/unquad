@@ -46,7 +46,7 @@ The `scipy.stats.false_discovery_control` function supports several methods:
 ### Benjamini-Hochberg (BH)
 - **Method**: `'bh'`
 - **Description**: Most commonly used FDR control method
-- **Assumptions**: Independent or positively dependent tests
+- **Assumptions**: Independent tests, or tests satisfying positive regression dependence on subsets (PRDS). Note that PRDS is more restrictive than general positive dependence - it requires that for any subset of hypotheses, the joint distribution of p-values is positively dependent.
 - **Usage**: `false_discovery_control(p_values, method='bh')`
 
 ### Benjamini-Yekutieli (BY)

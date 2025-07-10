@@ -8,10 +8,10 @@ This example demonstrates how to use classical conformal prediction for anomaly 
 import numpy as np
 from pyod.models.lof import LOF
 from scipy.stats import false_discovery_control
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
-from unquad.utils.data.load import load_breast
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.func import Aggregation
+from unquad.utils.data import load_breast
 
 # Load example data - downloads automatically and caches in memory
 x_train, x_test, y_test = load_breast(setup=True)
@@ -26,7 +26,7 @@ base_detector = LOF()
 
 # Create conformal detector with split strategy
 strategy = Split(calib_size=0.2)
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -63,11 +63,11 @@ print(f"Empirical FDR: {(discoveries & (y_test == 0)).sum() / max(1, discoveries
 ## Advanced Usage with Cross-Validation
 
 ```python
-from unquad.strategy.cross_val import CrossValidation
+from unquad.strategy import CrossValidation
 
 # Use cross-validation strategy for better calibration
 cv_strategy = CrossValidation(k=5)
-cv_detector = ConformalDetector(
+cv_detector = StandardConformalDetector(
     detector=base_detector,
     strategy=cv_strategy,
     aggregation=Aggregation.MEDIAN,
@@ -94,7 +94,7 @@ print(f"Cross-validation detections: {(cv_fdr < 0.05).sum()}")
 aggregation_methods = [Aggregation.MEAN, Aggregation.MEDIAN, Aggregation.MAX]
 
 for agg_method in aggregation_methods:
-    detector = ConformalDetector(
+    detector = StandardConformalDetector(
         detector=base_detector,
         strategy=strategy,
         aggregation=agg_method,

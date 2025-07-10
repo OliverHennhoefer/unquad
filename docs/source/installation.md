@@ -30,7 +30,7 @@ To install with datasets support:
 pip install unquad[data]
 ```
 
-**Note**: The datasets are downloaded automatically when first used and cached in memory. This approach has zero disk footprint - no files are stored on your system.
+**Note**: The datasets are downloaded automatically when first used and cached both in memory and on disk (in `~/.cache/unquad/`) for faster subsequent access.
 
 To install with online FDR control for streaming scenarios:
 ```bash

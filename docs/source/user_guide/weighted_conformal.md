@@ -4,7 +4,7 @@ This guide explains how to use weighted conformal p-values in `unquad` for handl
 
 ## Overview
 
-Weighted conformal p-values extend classical conformal prediction to handle cases where the test data distribution differs from the calibration data distribution. This is particularly useful in scenarios with covariate shift, where the input distribution changes but the conditional distribution of anomalies given inputs remains the same.
+Weighted conformal p-values extend classical conformal prediction to handle covariate shift scenarios. **Key assumption**: The method assumes that only the marginal distribution P(X) changes between calibration and test data, while the conditional distribution P(Y|X) - the relationship between features and anomaly status - remains constant. This assumption is crucial for the validity of weighted conformal inference.
 
 The `WeightedConformalDetector` automatically estimates importance weights using logistic regression to distinguish between calibration and test samples, then uses these weights to compute adjusted p-values.
 
@@ -60,14 +60,21 @@ The p-values are computed using weighted empirical distribution functions:
 # Simplified version of the weighted p-value calculation
 def weighted_p_value(test_score, calibration_scores, calibration_weights, test_weight):
     """
-    Calculate weighted conformal p-value.
+    Calculate weighted conformal p-value with proper tie handling.
     
     The p-value represents the probability of observing a score
     at least as extreme as the test score under the weighted
     calibration distribution.
     """
-    weighted_rank = np.sum(calibration_weights[calibration_scores >= test_score])
-    weighted_rank += test_weight  # Add test instance weight
+    # Count calibration scores strictly greater than test score
+    weighted_rank = np.sum(calibration_weights[calibration_scores > test_score])
+    
+    # Handle ties: add random fraction of tied weights (coin flip approach)
+    tied_weights = np.sum(calibration_weights[calibration_scores == test_score])
+    weighted_rank += np.random.uniform(0, 1) * tied_weights
+    
+    # Add test instance weight (always included for conformal guarantee)
+    weighted_rank += test_weight
     total_weight = np.sum(calibration_weights) + test_weight
     
     return weighted_rank / total_weight

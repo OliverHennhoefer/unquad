@@ -35,10 +35,10 @@ Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset:
 from pyod.models.gmm import GMM
 from scipy.stats import false_discovery_control
 
-from unquad.strategy.split import Split
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.strategy import Split
+from unquad.estimation import StandardConformalDetector
+from unquad.utils.data import load_shuttle
+from unquad.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -74,10 +74,10 @@ calibration procedure when using a bootstrap strategy.
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Bootstrap
+from unquad.utils.data import load_shuttle
+from unquad.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -109,10 +109,10 @@ The statistical validity of conformal anomaly detection depends on data *exchang
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.utils.data.load import load_shuttle
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.utils.data import load_shuttle
+from unquad.estimation import WeightedConformalDetector
+from unquad.strategy import Split
+from unquad.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 

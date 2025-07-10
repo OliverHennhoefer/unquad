@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer, make_blobs
 from scipy.stats import false_discovery_control
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import WeightedConformalDetector
+from unquad.strategy import Split
+from unquad.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -78,7 +78,7 @@ print(f"Number of anomalies detected: {(p_values_shifted < 0.05).sum()}")
 ## Comparison with Standard Conformal Detection
 
 ```python
-from unquad.estimation.standard_conformal import StandardConformalDetector
+from unquad.estimation import StandardConformalDetector
 
 # Standard conformal detector for comparison
 standard_detector = StandardConformalDetector(
@@ -119,7 +119,7 @@ X_test_with_anomalies = np.vstack([X_test, X_anomalies])
 y_true = np.hstack([np.zeros(len(X_test)), np.ones(len(X_anomalies))])
 
 # Standard conformal detector
-standard_detector = ConformalDetector(
+standard_detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -232,7 +232,7 @@ for agg_method in aggregation_methods:
 ## Bootstrap Strategy with Weighted Conformal
 
 ```python
-from unquad.strategy.bootstrap import Bootstrap
+from unquad.strategy import Bootstrap
 
 # Use bootstrap strategy for better stability
 bootstrap_strategy = Bootstrap(n_bootstraps=50, resampling_ratio=0.8)

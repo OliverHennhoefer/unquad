@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.cross_val import CrossValidation
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import CrossValidation
+from unquad.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -29,7 +29,7 @@ base_detector = LOF()
 cv_strategy = CrossValidation(k=5)
 
 # Initialize detector with cross-validation strategy
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=cv_strategy,
     aggregation=Aggregation.MEDIAN,

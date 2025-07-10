@@ -1,235 +1,353 @@
 # Batch Evaluation
 
-Controlled batch generation for systematic anomaly detection evaluation with configurable contamination levels.
+Generate evaluation batches with precise anomaly contamination control for systematic anomaly detection testing.
 
 ## Overview
 
-The `BatchGenerator` creates evaluation batches with precise anomaly contamination control. It ensures reproducible experiments by managing the mixing of normal and anomalous instances across multiple batches.
+The `BatchGenerator` creates evaluation batches with configurable anomaly proportion control. It supports two modes:
+- **Proportional mode**: Fixed anomalies per batch (e.g., exactly 10% in each batch)
+- **Probabilistic mode**: Exact global proportion across all batches
 
 ## Basic Usage
 
 ```python
-from unquad.utils.data.generator.batch import BatchGenerator
-from unquad.utils.data.load import load_shuttle
+from unquad.utils.data import load_shuttle
+from unquad.utils.data.generator import BatchGenerator
 
-# Load and separate data
-x_train, x_test, y_test = load_shuttle(setup=True)
-x_normal = x_test[y_test == 0]
-x_anomaly = x_test[y_test == 1]
-
-# Create batch generator
+# Create batch generator with proportional mode (default)
 batch_gen = BatchGenerator(
-    x_normal=x_normal,
-    x_anomaly=x_anomaly,
+    load_data_func=load_shuttle,
     batch_size=100,
     anomaly_proportion=0.1,  # 10% anomalies per batch
     random_state=42
 )
 
+# Get training data for detector fitting
+x_train = batch_gen.get_training_data()
+print(f"Training data shape: {x_train.shape}")
+
 # Generate batches
-for x_batch, y_batch in batch_gen.generate(n_batches=5):
-    print(f"Batch shape: {x_batch.shape}, Anomalies: {y_batch.sum()}")
+for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=5)):
+    anomaly_count = y_batch.sum()
+    print(f"Batch {i+1}: {x_batch.shape}, Anomalies: {anomaly_count} ({anomaly_count/len(x_batch)*100:.1f}%)")
 ```
 
-## Contamination Control
+## Anomaly Proportion Control Modes
 
-### Percentage-based Contamination
+### Proportional Mode (Fixed per Batch)
+
+Ensures exact number of anomalies in each batch:
+
 ```python
-# 15% anomalies per batch
+# Exactly 15 anomalies per batch of 100
 batch_gen = BatchGenerator(
-    x_normal=x_normal,
-    x_anomaly=x_anomaly,
-    batch_size=200,
-    anomaly_proportion=0.15
-)
-```
-
-### Fixed Count Contamination
-```python
-# Exactly 25 anomalies per batch
-batch_gen = BatchGenerator(
-    x_normal=x_normal,
-    x_anomaly=x_anomaly,
-    batch_size=200,
-    anomaly_proportion=25
-)
-```
-
-## Evaluation Patterns
-
-### Finite Batch Generation
-```python
-# Generate specific number of batches
-for x_batch, y_batch in batch_gen.generate(n_batches=10):
-    # Evaluate model on batch
-    p_values = detector.predict(x_batch)
-    fdr = false_discovery_rate(y_batch, p_values < 0.05)
-    print(f"Batch FDR: {fdr:.3f}")
-```
-
-### Infinite Batch Generation
-```python
-# Generate batches indefinitely
-batch_count = 0
-for x_batch, y_batch in batch_gen.generate():
-    # Process batch
-    results = evaluate_batch(x_batch, y_batch)
-    
-    batch_count += 1
-    if batch_count >= 100:  # Stop after 100 batches
-        break
-```
-
-## Convenience Functions
-
-### Dataset Splitting
-
-```python
-from unquad.utils.data.generator.batch import create_batch_generator
-
-# Load complete dataset
-df = load_shuttle()
-
-# Create training data and batch generator
-x_train, batch_gen = create_batch_generator(
-    df,
-    train_size=0.5,  # 50% of normal data for training
-    batch_size=150,
-    anomaly_proportion=0.2,  # 20% anomalies per batch
+    load_data_func=load_shuttle,
+    batch_size=100,
+    anomaly_proportion=0.15,
+    anomaly_mode="proportional",  # Default mode
     random_state=42
 )
 
-# Train detector
+# Each batch will have exactly 15 anomalies
+for x_batch, y_batch in batch_gen.generate(n_batches=3):
+    print(f"Anomalies: {y_batch.sum()}/100")  # Always 15
+```
+
+### Probabilistic Mode (Global Target)
+
+Ensures exact global proportion across all batches:
+
+```python
+# Exactly 5% anomalies globally across 10 batches
+batch_gen = BatchGenerator(
+    load_data_func=load_shuttle,
+    batch_size=50,
+    anomaly_proportion=0.05,
+    anomaly_mode="probabilistic",
+    max_batches=10,  # Required for probabilistic mode
+    random_state=42
+)
+
+total_instances = 0
+total_anomalies = 0
+
+for x_batch, y_batch in batch_gen.generate(n_batches=10):
+    batch_anomalies = y_batch.sum()
+    total_instances += len(x_batch)
+    total_anomalies += batch_anomalies
+    print(f"Batch anomalies: {batch_anomalies}")
+
+print(f"Global proportion: {total_anomalies/total_instances:.3f}")  # Exactly 0.050
+```
+
+## Integration with Conformal Detection
+
+```python
+from pyod.models.lof import LOF
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.stat import false_discovery_rate, statistical_power
+
+# Create batch generator
+batch_gen = BatchGenerator(
+    load_data_func=load_shuttle,
+    batch_size=200,
+    anomaly_proportion=0.08,
+    train_size=0.7,  # Use 70% of normal data for training
+    random_state=42
+)
+
+# Get training data and train detector
+x_train = batch_gen.get_training_data()
+detector = StandardConformalDetector(
+    detector=LOF(n_neighbors=20),
+    strategy=Split(calib_size=0.3)
+)
 detector.fit(x_train)
 
-# Evaluate on batches
-for x_batch, y_batch in batch_gen.generate(n_batches=20):
+# Evaluate on generated batches
+batch_results = []
+for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
+    # Get p-values
     p_values = detector.predict(x_batch)
-    # Process results
+    
+    # Apply significance threshold
+    decisions = p_values < 0.05
+    
+    # Calculate metrics
+    fdr = false_discovery_rate(y_batch, decisions)
+    power = statistical_power(y_batch, decisions)
+    
+    batch_results.append({
+        'batch': i+1,
+        'fdr': fdr,
+        'power': power,
+        'detections': decisions.sum()
+    })
+    print(f"Batch {i+1}: FDR={fdr:.3f}, Power={power:.3f}")
+
+# Summary statistics
+import numpy as np
+mean_fdr = np.mean([r['fdr'] for r in batch_results])
+mean_power = np.mean([r['power'] for r in batch_results])
+print(f"Average FDR: {mean_fdr:.3f}, Average Power: {mean_power:.3f}")
 ```
 
 ## Advanced Configuration
 
-### Reproducibility Control
+### Different Datasets
+
 ```python
-# Initialize with seed
+from unquad.utils.data import load_breast, load_fraud
+
+# Test with different datasets
+datasets = [
+    (load_shuttle, "Shuttle"),
+    (load_breast, "Breast Cancer"),
+    (load_fraud, "Credit Fraud")
+]
+
+for load_func, name in datasets:
+    print(f"\n{name} Dataset:")
+    
+    batch_gen = BatchGenerator(
+        load_data_func=load_func,
+        batch_size=100,
+        anomaly_proportion=0.1,
+        random_state=42
+    )
+    
+    # Check data availability
+    x_train = batch_gen.get_training_data()
+    print(f"  Training data: {x_train.shape}")
+    print(f"  Available - Normal: {batch_gen.n_normal}, Anomaly: {batch_gen.n_anomaly}")
+    
+    # Generate one batch
+    x_batch, y_batch = next(batch_gen.generate(n_batches=1))
+    print(f"  Batch generated: {x_batch.shape}, Anomalies: {y_batch.sum()}")
+```
+
+### Reproducibility Control
+
+```python
+# Create generator with specific seed
 batch_gen = BatchGenerator(
-    x_normal=x_normal,
-    x_anomaly=x_anomaly,
+    load_data_func=load_shuttle,
     batch_size=100,
     anomaly_proportion=0.1,
     random_state=42
 )
 
-# Reset generator to initial state
+# Generate initial sequence
+batch1_data = []
+for x_batch, y_batch in batch_gen.generate(n_batches=3):
+    batch1_data.append((x_batch.copy(), y_batch.copy()))
+
+# Reset generator
 batch_gen.reset()
 
-# Generate identical sequence again
-for x_batch, y_batch in batch_gen.generate(n_batches=5):
-    # Same batches as before
-    pass
+# Generate identical sequence
+batch2_data = []
+for x_batch, y_batch in batch_gen.generate(n_batches=3):
+    batch2_data.append((x_batch.copy(), y_batch.copy()))
+
+# Verify reproducibility
+for i, ((x1, y1), (x2, y2)) in enumerate(zip(batch1_data, batch2_data)):
+    anomalies_match = y1.sum() == y2.sum()
+    print(f"Batch {i+1}: Anomaly counts match = {anomalies_match}")
 ```
 
-### Generator Properties
-```python
-# Check generator configuration
-print(f"Normal instances: {batch_gen.n_normal}")
-print(f"Anomaly instances: {batch_gen.n_anomaly}")
-print(f"Anomalies per batch: {batch_gen.n_anomaly_per_batch}")
-print(f"Max unique batches: {batch_gen.max_batches}")
-```
+### Performance Evaluation
 
-## Performance Considerations
-
-**Memory Usage:**
-- Loads entire dataset into memory
-- Efficient sampling without replacement
-- Minimal overhead during generation
-
-**Computational Efficiency:**
-- Fast random sampling
-- No duplicate prevention across batches
-- Configurable batch size for memory management
-
-## Use Cases
-
-### Model Evaluation
 ```python
 # Systematic evaluation across contamination levels
-contamination_levels = [0.05, 0.1, 0.15, 0.2]
-results = {}
+contamination_levels = [0.01, 0.05, 0.1, 0.15, 0.2]
+performance_results = {}
 
 for contamination in contamination_levels:
     batch_gen = BatchGenerator(
-        x_normal=x_normal,
-        x_anomaly=x_anomaly,
-        batch_size=100,
+        load_data_func=load_shuttle,
+        batch_size=150,
         anomaly_proportion=contamination,
         random_state=42
     )
     
-    fdrs = []
-    for x_batch, y_batch in batch_gen.generate(n_batches=10):
-        p_values = detector.predict(x_batch)
-        fdr = false_discovery_rate(y_batch, p_values < 0.05)
-        fdrs.append(fdr)
-    
-    results[contamination] = np.mean(fdrs)
-```
-
-### Hyperparameter Tuning
-```python
-# Evaluate different detector configurations
-detectors = [LOF(n_neighbors=k) for k in [5, 10, 20, 50]]
-performances = []
-
-for detector in detectors:
     # Train detector
+    x_train = batch_gen.get_training_data()
+    detector = StandardConformalDetector(
+        detector=LOF(n_neighbors=20),
+        strategy=Split(calib_size=0.3)
+    )
     detector.fit(x_train)
     
-    # Evaluate on consistent batches
-    batch_gen.reset()  # Ensure identical batches
-    scores = []
-    
-    for x_batch, y_batch in batch_gen.generate(n_batches=10):
-        p_values = detector.predict(x_batch)
-        score = statistical_power(y_batch, p_values < 0.05)
-        scores.append(score)
-    
-    performances.append(np.mean(scores))
-```
-
-## Integration with Evaluation Metrics
-
-```python
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
-
-
-# Comprehensive evaluation
-def evaluate_detector(detector, batch_gen, n_batches=10):
+    # Evaluate across multiple batches
     fdrs = []
     powers = []
-
-    for x_batch, y_batch in batch_gen.generate(n_batches=n_batches):
+    
+    for x_batch, y_batch in batch_gen.generate(n_batches=5):
         p_values = detector.predict(x_batch)
         decisions = p_values < 0.05
-
+        
         fdr = false_discovery_rate(y_batch, decisions)
         power = statistical_power(y_batch, decisions)
-
+        
         fdrs.append(fdr)
         powers.append(power)
-
-    return {
+    
+    performance_results[contamination] = {
         'mean_fdr': np.mean(fdrs),
         'mean_power': np.mean(powers),
-        'fdr_std': np.std(fdrs),
-        'power_std': np.std(powers)
+        'std_fdr': np.std(fdrs),
+        'std_power': np.std(powers)
     }
 
-
-# Usage
-results = evaluate_detector(detector, batch_gen)
-print(f"FDR: {results['mean_fdr']:.3f} ± {results['fdr_std']:.3f}")
-print(f"Power: {results['mean_power']:.3f} ± {results['power_std']:.3f}")
+# Display results
+print("Contamination\tFDR\t\tPower")
+for contamination, results in performance_results.items():
+    print(f"{contamination:.2f}\t\t{results['mean_fdr']:.3f}±{results['std_fdr']:.3f}\t{results['mean_power']:.3f}±{results['std_power']:.3f}")
 ```
+
+## Generator Properties and Validation
+
+```python
+# Check generator configuration
+batch_gen = BatchGenerator(
+    load_data_func=load_shuttle,
+    batch_size=100,
+    anomaly_proportion=0.1,
+    random_state=42
+)
+
+print(f"Batch size: {batch_gen.batch_size}")
+print(f"Anomaly proportion: {batch_gen.anomaly_proportion}")
+print(f"Anomaly mode: {batch_gen.anomaly_mode}")
+print(f"Normal instances available: {batch_gen.n_normal}")
+print(f"Anomaly instances available: {batch_gen.n_anomaly}")
+
+if batch_gen.anomaly_mode == "proportional":
+    print(f"Normal per batch: {batch_gen.n_normal_per_batch}")
+    print(f"Anomalies per batch: {batch_gen.n_anomaly_per_batch}")
+```
+
+## Error Handling and Validation
+
+```python
+# The generator validates parameters automatically
+try:
+    # Invalid batch size
+    BatchGenerator(
+        load_data_func=load_shuttle,
+        batch_size=0,  # Invalid
+        anomaly_proportion=0.1
+    )
+except ValueError as e:
+    print(f"Batch size error: {e}")
+
+try:
+    # Invalid anomaly proportion
+    BatchGenerator(
+        load_data_func=load_shuttle,
+        batch_size=100,
+        anomaly_proportion=1.5  # > 1.0
+    )
+except ValueError as e:
+    print(f"Proportion error: {e}")
+
+try:
+    # Probabilistic mode without max_batches
+    BatchGenerator(
+        load_data_func=load_shuttle,
+        batch_size=100,
+        anomaly_proportion=0.1,
+        anomaly_mode="probabilistic"
+        # Missing max_batches parameter
+    )
+except ValueError as e:
+    print(f"Mode error: {e}")
+```
+
+## Best Practices
+
+1. **Choose appropriate batch size**: Balance between statistical power and computational efficiency
+2. **Use proportional mode** for consistent per-batch evaluation
+3. **Use probabilistic mode** when you need exact global contamination across all batches
+4. **Set random seeds** for reproducible experiments
+5. **Validate data availability** before generating many batches
+6. **Reset generators** when reusing for different experiments
+
+## Integration with FDR Control
+
+```python
+from scipy.stats import false_discovery_control
+
+# Generate batches and apply FDR control
+batch_gen = BatchGenerator(
+    load_data_func=load_shuttle,
+    batch_size=200,
+    anomaly_proportion=0.1,
+    random_state=42
+)
+
+x_train = batch_gen.get_training_data()
+detector = StandardConformalDetector(
+    detector=LOF(n_neighbors=20),
+    strategy=Split(calib_size=0.3)
+)
+detector.fit(x_train)
+
+for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=5)):
+    # Get p-values
+    p_values = detector.predict(x_batch)
+    
+    # Apply Benjamini-Hochberg FDR control
+    fdr_adjusted = false_discovery_control(p_values, method='bh')
+    decisions = fdr_adjusted < 0.05
+    
+    # Calculate controlled FDR
+    fdr = false_discovery_rate(y_batch, decisions)
+    power = statistical_power(y_batch, decisions)
+    
+    print(f"Batch {i+1}: Controlled FDR={fdr:.3f}, Power={power:.3f}")
+```
+
+This batch evaluation approach provides systematic, reproducible testing for conformal anomaly detection with precise contamination control and statistical guarantees.

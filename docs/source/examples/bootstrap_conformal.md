@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Bootstrap
+from unquad.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -32,7 +32,7 @@ bootstrap_strategy = Bootstrap(
 )
 
 # Initialize detector with bootstrap strategy
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=bootstrap_strategy,
     aggregation=Aggregation.MEDIAN,
@@ -59,7 +59,7 @@ bootstrap_plus_strategy = Bootstrap(
     plus=True
 )
 
-detector_plus = ConformalDetector(
+detector_plus = StandardConformalDetector(
     detector=base_detector,
     strategy=bootstrap_plus_strategy,
     aggregation=Aggregation.MEDIAN,
@@ -87,7 +87,7 @@ configurations = [
 results = {}
 for config in configurations:
     strategy = Bootstrap(**config)
-    detector = ConformalDetector(
+    detector = StandardConformalDetector(
         detector=base_detector,
         strategy=strategy,
         aggregation=Aggregation.MEDIAN,
@@ -145,7 +145,7 @@ plt.subplot(1, 3, 3)
 # Run multiple bootstrap iterations
 stability_results = []
 for _ in range(10):
-    det = ConformalDetector(
+    det = StandardConformalDetector(
         detector=base_detector,
         strategy=Bootstrap(n_bootstraps=50, resampling_ratio=0.8),
         aggregation=Aggregation.MEDIAN,
@@ -166,8 +166,7 @@ plt.show()
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy.split import Split
-from unquad.strategy.jackknife import Jackknife
+from unquad.strategy import Split, Jackknife
 
 # Compare bootstrap with other strategies
 strategies = {
@@ -178,7 +177,7 @@ strategies = {
 
 comparison_results = {}
 for name, strategy in strategies.items():
-    detector = ConformalDetector(
+    detector = StandardConformalDetector(
         detector=base_detector,
         strategy=strategy,
         aggregation=Aggregation.MEDIAN,

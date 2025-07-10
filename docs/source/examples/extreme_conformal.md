@@ -10,11 +10,10 @@ import pandas as pd
 from pyod.models.lof import LOF
 from pyod.models.isolation_forest import IForest
 from pyod.models.ocsvm import OCSVM
-from unquad.estimation.extreme_conformal import ExtremeConformalDetector
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.estimation import ExtremeConformalDetector, StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.data import load_shuttle
+from unquad.utils.stat import false_discovery_rate, statistical_power
 from scipy.stats import false_discovery_control
 
 # Load dataset
@@ -28,12 +27,12 @@ print(f"Anomaly rate: {y_test.mean():.3f}")
 
 ```python
 # Create extreme conformal detector
-extreme_detector = EVTConformalDetector(
+extreme_detector = ExtremeConformalDetector(
     detector=LOF(n_neighbors=20),
     strategy=Split(calib_size=0.3),
-    extreme_threshold_method="percentile",
-    extreme_threshold_value=0.95,
-    extreme_min_tail_size=15,
+    evt_threshold_method="percentile",
+    evt_threshold_value=0.95,
+    evt_min_tail_size=15,
     seed=42
 )
 
@@ -41,12 +40,12 @@ extreme_detector = EVTConformalDetector(
 extreme_detector.fit(x_train)
 
 # Check if extreme fitting succeeded
-if extreme_detector.gpd_params is not None:
+if hasattr(extreme_detector, 'gpd_params') and extreme_detector.gpd_params is not None:
     shape, loc, scale = extreme_detector.gpd_params
     print(f"Extreme fitting successful:")
     print(f"  GPD Shape: {shape:.3f}")
     print(f"  GPD Scale: {scale:.3f}")
-    print(f"  Extreme Threshold: {extreme_detector.extreme_threshold:.3f}")
+    print(f"  EVT Threshold: {extreme_detector.evt_threshold:.3f}")
 else:
     print("Extreme fitting failed, using standard conformal")
 
@@ -59,7 +58,7 @@ print(f"P-values range: [{p_values.min():.4f}, {p_values.max():.4f}]")
 
 ```python
 # Standard conformal detector for comparison
-standard_detector = ConformalDetector(
+standard_detector = StandardConformalDetector(
     detector=LOF(n_neighbors=20),
     strategy=Split(calib_size=0.3),
     seed=42
@@ -130,12 +129,12 @@ threshold_methods = [
 threshold_results = []
 
 for method, value in threshold_methods:
-    detector = EVTConformalDetector(
+    detector = ExtremeConformalDetector(
         detector=LOF(n_neighbors=20),
         strategy=Split(calib_size=0.3),
-        extreme_threshold_method=method,
-        extreme_threshold_value=value,
-        extreme_min_tail_size=10,
+        evt_threshold_method=method,
+        evt_threshold_value=value,
+        evt_min_tail_size=10,
         seed=42
     )
     
@@ -150,7 +149,7 @@ for method, value in threshold_methods:
         
         threshold_results.append({
             'method': f"{method}({value})",
-            'extreme_threshold': detector.extreme_threshold,
+            'evt_threshold': detector.evt_threshold,
             'gpd_shape': detector.gpd_params[0],
             'fdr': fdr,
             'power': power
@@ -160,7 +159,7 @@ for method, value in threshold_methods:
 print("\nThreshold Method Comparison:")
 print("Method\t\tThreshold\tGPD Shape\tFDR\tPower")
 for r in threshold_results:
-    print(f"{r['method']:<15}\t{r['extreme_threshold']:.3f}\t\t{r['gpd_shape']:.3f}\t\t{r['fdr']:.3f}\t{r['power']:.3f}")
+    print(f"{r['method']:<15}\t{r['evt_threshold']:.3f}\t\t{r['gpd_shape']:.3f}\t\t{r['fdr']:.3f}\t{r['power']:.3f}")
 ```
 
 ## FDR Control with Extreme Conformal
@@ -193,11 +192,11 @@ detectors = [
 detector_results = []
 
 for name, base_detector in detectors:
-    extreme_det = EVTConformalDetector(
+    extreme_det = ExtremeConformalDetector(
         detector=base_detector,
         strategy=Split(calib_size=0.3),
-        extreme_threshold_method="percentile",
-        extreme_threshold_value=0.95,
+        evt_threshold_method="percentile",
+        evt_threshold_value=0.95,
         seed=42
     )
     
@@ -245,19 +244,19 @@ def custom_threshold(scores):
     return q75 + 1.5 * iqr
 
 # Extreme detector with custom threshold
-custom_detector = EVTConformalDetector(
+custom_detector = ExtremeConformalDetector(
     detector=LOF(n_neighbors=20),
     strategy=Split(calib_size=0.3),
-    extreme_threshold_method="custom",
-    extreme_threshold_value=custom_threshold,
-    extreme_min_tail_size=5,  # Lower minimum for custom threshold
+    evt_threshold_method="custom",
+    evt_threshold_value=custom_threshold,
+    evt_min_tail_size=5,  # Lower minimum for custom threshold
     seed=42
 )
 
 custom_detector.fit(x_train)
 
 if custom_detector.gpd_params is not None:
-    print(f"Custom threshold: {custom_detector.extreme_threshold:.3f}")
+    print(f"Custom threshold: {custom_detector.evt_threshold:.3f}")
     p_vals_custom = custom_detector.predict(x_test)
     decisions_custom = p_vals_custom < 0.05
     fdr_custom = false_discovery_rate(y_test, decisions_custom)

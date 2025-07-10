@@ -37,7 +37,17 @@ If calibration scores range from -0.9 to -0.1 with 1000 samples, then:
 - Scores ≤ -0.1: Use empirical p-values (range: `1/1001` to `1.0`)
 - Scores > -0.1: Use GPD to model the tiny tail probability below `1/1001`
 
-This ensures that the GPD only handles truly extreme cases while maintaining conformal guarantees for the bulk of the distribution. The result is monotonic p-values that decrease appropriately with increasing anomaly scores.
+The result is monotonic p-values that decrease appropriately with increasing anomaly scores.
+
+### Theoretical Justification
+
+The hybrid EVT-conformal approach maintains statistical validity under the standard EVT assumption that the GPD accurately models the extreme tail distribution. This approach is actually more conservative than alternatives:
+
+**Without EVT**: Practitioners are limited to p-values ≥ 1/(n+1), requiring massive calibration sets for detecting extreme anomalies that survive conservative multiple testing corrections.
+
+**With EVT**: The GPD provides principled tail probability estimates while respecting statistical uncertainty, offering a more conservative alternative to arbitrarily large calibration sets that would push extreme p-values to artificially small values.
+
+**Key assumption**: The validity relies on the GPD accurately modeling the tail of the calibration score distribution - a standard assumption in extreme value theory applications.
 
 ## Basic Usage
 

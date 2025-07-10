@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.jackknife import Jackknife
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Jackknife
+from unquad.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -29,7 +29,7 @@ base_detector = LOF()
 jackknife_strategy = Jackknife()
 
 # Initialize detector with jackknife strategy
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=jackknife_strategy,
     aggregation=Aggregation.MEDIAN,

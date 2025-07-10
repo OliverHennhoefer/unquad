@@ -152,7 +152,22 @@ autoapi_add_toctree_entry = False
 autoapi_root = "api"
 autoapi_keep_files = False
 
+# Suppress warnings for cross-reference ambiguity
+suppress_warnings = ['ref.python']
+
+# Configure autoapi to prefer the re-exported versions
+def autoapi_skip_member(app, what, name, obj, skip, options):
+    """Skip specific duplicate members to avoid cross-reference warnings."""
+    # Skip the original enum location in favor of the re-exported one
+    if name == "unquad.utils.func.enums.Aggregation":
+        return True
+    return skip
+
 # Enable todo items
 todo_include_todos = True
+
+# Register the autoapi skip function
+def setup(app):
+    app.connect('autoapi-skip-member', autoapi_skip_member)
 
 master_doc = "index"

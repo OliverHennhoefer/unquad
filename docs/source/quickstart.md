@@ -7,9 +7,9 @@ This guide will get you started with `unquad` in just a few minutes.
 For quick experimentation, unquad includes several benchmark anomaly detection datasets. Install with `pip install unquad[data]` to enable dataset functionality.
 
 ```python
-from unquad.utils.data.load import load_breast, load_shuttle, load_fraud
+from unquad.utils.data import load_breast, load_shuttle, load_fraud
 
-# Load a dataset - automatically downloads and caches in memory
+# Load a dataset - automatically downloads and caches
 x_train, x_test, y_test = load_breast(setup=True)
 
 print(f"Training data shape: {x_train.shape}")
@@ -17,7 +17,7 @@ print(f"Test data shape: {x_test.shape}")
 print(f"Anomaly ratio in test set: {y_test.mean():.2%}")
 ```
 
-**Note**: Datasets are downloaded on first use and cached in memory with zero disk footprint.
+**Note**: Datasets are downloaded on first use and cached both in memory and on disk for faster subsequent loads.
 
 Available datasets: `load_breast`, `load_fraud`, `load_ionosphere`, `load_mammography`, `load_musk`, `load_shuttle`, `load_thyroid`, `load_wbc`.
 
@@ -31,9 +31,9 @@ The most straightforward way to use unquad is with classical conformal anomaly d
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.func import Aggregation
 
 # Generate some example data
 X_normal, _ = make_blobs(n_samples=1000, centers=1, random_state=42)
@@ -90,12 +90,11 @@ print(f"Discovered anomaly indices: {anomaly_indices}")
 For better performance in low-data regimes, use resampling-based strategies:
 
 ```python
-from unquad.strategy.jackknife import JackknifeStrategy
-from unquad.strategy.cross_val import CrossValidationStrategy
+from unquad.strategy import Jackknife, CrossValidation
 
 # Jackknife (Leave-One-Out) Conformal Anomaly Detection
-jackknife_strategy = JackknifeStrategy()
-jackknife_detector = ConformalDetector(
+jackknife_strategy = Jackknife()
+jackknife_detector = StandardConformalDetector(
     detector=base_detector,
     strategy=jackknife_strategy,
     aggregation=Aggregation.MEDIAN,
@@ -105,8 +104,8 @@ jackknife_detector.fit(X_normal)
 jackknife_p_values = jackknife_detector.predict(X_test, raw=False)
 
 # Cross-Validation Conformal Anomaly Detection
-cv_strategy = CrossValidationStrategy(k=5)
-cv_detector = ConformalDetector(
+cv_strategy = CrossValidation(k=5)
+cv_detector = StandardConformalDetector(
     detector=base_detector,
     strategy=cv_strategy,
     aggregation=Aggregation.MEDIAN,
@@ -126,8 +125,8 @@ print(f"Cross-Validation: {(cv_p_values < 0.05).sum()} detections")
 When dealing with covariate shift, use weighted conformal p-values:
 
 ```python
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.split import Split
+from unquad.estimation import WeightedConformalDetector
+from unquad.strategy import Split
 
 # Create weighted conformal anomaly detector
 weighted_strategy = Split(calib_size=0.3)
@@ -154,7 +153,7 @@ unquad integrates seamlessly with PyOD detectors:
 from pyod.models.knn import KNN
 from pyod.models.lof import LOF
 from pyod.models.ocsvm import OCSVM
-from unquad.strategy.split import Split
+from unquad.strategy import Split
 
 # Try different PyOD detectors
 detectors = {
@@ -167,7 +166,7 @@ strategy = Split(calib_size=0.3)
 results = {}
 
 for name, base_det in detectors.items():
-    detector = ConformalDetector(
+    detector = StandardConformalDetector(
         detector=base_det,
         strategy=strategy,
         aggregation=Aggregation.MEDIAN,
@@ -190,9 +189,9 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
 from scipy.stats import false_discovery_control
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.func import Aggregation
 
 # Generate data
 np.random.seed(42)

@@ -36,7 +36,7 @@ $$
 
 Framing anomaly detection tasks as sets of statistical hypothesis tests, with $H_0$ claiming that the data is *normal* (no *discovery* to be made), enables controlling the FDR when statistically valid $p$-values (or test statistics) are available. When conducting multiple *simultaneous* hypothesis tests, it is furthermore necessary to *adjust* for multiple testing, as fixed *significance levels* (typically $\alpha \leq 0.05$) would lead to inflated overall error rates.
 
-The `unquad` (*<ins>un</ins>certainty-<ins>qu</ins>antified <ins>a</ins>nomaly <ins>d</ins>etection*) package provides the tools necessary for creating anomaly detectors whose outputs can be statistically controlled to cap the (*marginal*) FDR at a nominal level. It provides wrappers for a wide range of anomaly detectors (e.g., [Variational-]Autoencoder, IsolationForest, One-Class SVM) complemented by a rich range of conformalization strategies (mostly depending on the *data regime*) to compute classical conformal $p$-values or modified *weighted* conformal $p$-values. The need for *weighted* conformal $p$-values arises when the underlying statistical assumption of *exchangeability* is violated due to covariate shift between calibration and test data. Finally, `unquad` offers built-in statistical adjustment measures like Benjamini-Hochberg [@Benjamini1995] that correct obtained and statistically valid $p$-values for the multiple testing problem when testing a *batch* of observations simultaneously.
+The `unquad` (*<ins>un</ins>certainty-<ins>qu</ins>antified <ins>a</ins>nomaly <ins>d</ins>etection*) package provides the tools necessary for creating anomaly detectors whose outputs can be statistically controlled to cap the FDR at a nominal level among normal instances under exchangeability. It provides wrappers for a wide range of anomaly detectors (e.g., [Variational-]Autoencoder, IsolationForest, One-Class SVM) complemented by a rich range of conformalization strategies (mostly depending on the *data regime*) to compute classical conformal $p$-values or modified *weighted* conformal $p$-values. The need for *weighted* conformal $p$-values arises when the underlying statistical assumption of *exchangeability* is violated due to covariate shift between calibration and test data. Finally, `unquad` offers built-in statistical adjustment measures like Benjamini-Hochberg [@Benjamini1995] that correct obtained and statistically valid $p$-values for the multiple testing problem when testing a *batch* of observations simultaneously.
 
 # Features
 
@@ -54,11 +54,11 @@ Given a nonconformity score function $s(\cdot)$ and calibration set $D_{\text{ca
 
 $$p(X_{\text{test}}) = \frac{1 + \sum_{i=1}^{n} \mathbf{1}\{s(X_i) \geq s(X_{\text{test}})\}}{n+1}$$
 
-Under exchangeability, this p-value is marginally valid: $\mathbb{P}(p(X_{\text{test}}) \leq \alpha) \leq \alpha$ for any $\alpha \in (0,1)$.
+Under exchangeability and the null hypothesis that $X_{\text{test}}$ is from the same distribution as calibration data, this p-value is marginally valid: $\mathbb{P}(p(X_{\text{test}}) \leq \alpha) \leq \alpha$ for any $\alpha \in (0,1)$.
 
 ### Handling Covariate Shift
 
-When test data comes from a different distribution $Q$ than calibration data distribution $P$, weighted conformal p-values restore validity [@Jin2023; @Tibshirani2019]:
+When test data comes from a different distribution $Q$ than calibration data distribution $P$ (covariate shift), weighted conformal p-values can restore validity under the assumption that only $P(X)$ changes while $P(Y|X)$ remains constant [@Jin2023; @Tibshirani2019]:
 
 $$p_{\text{weighted}}(X_{\text{test}}) = \frac{\sum_{i=1}^n w(X_i) \mathbf{1}\{s(X_i) > s(X_{\text{test}})\} + U \cdot \text{ties}}{\sum_{i=1}^n w(X_i) + w(X_{\text{test}})}$$
 
@@ -71,7 +71,7 @@ For improved power in small-sample settings, `unquad` implements resampling-base
 - **Cross-Conformal**: Aggregates out-of-fold predictions
 - **Bootstrap**: Leverages out-of-bag samples
 
-These methods increase the effective calibration set size while maintaining validity under appropriate conditions.
+These methods increase the effective calibration set size while maintaining validity under exchangeability assumptions for the underlying data-generating process.
 
 ## Future Developments
 

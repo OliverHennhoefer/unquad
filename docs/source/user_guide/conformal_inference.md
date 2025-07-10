@@ -28,9 +28,9 @@ Conformal inference provides a principled way to convert scores to p-values:
 
 ```python
 # Conformal approach - statistically valid p-values
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.func import Aggregation
 
 # Create conformal detector
 strategy = Split(calib_size=0.2)
@@ -73,7 +73,9 @@ $$\mathbb{P}(p_{classical}(X_{test}) \leq \alpha) \leq \alpha$$
 
 for any $\alpha \in (0,1)$.
 
-This means that if we declare $X_{test}$ anomalous when $p_{classical}(X_{test}) \leq 0.05$, we'll have at most a 5% false positive rate.
+**Important Note**: This guarantee holds under the null hypothesis that $X_{test}$ is from the same distribution as the calibration data. For a test instance that is truly anomalous (not from the calibration distribution), this probability statement does not apply.
+
+This means that if we declare $X_{test}$ anomalous when $p_{classical}(X_{test}) \leq 0.05$, we'll have at most a 5% false positive rate **among normal instances**. The overall false positive rate in practice depends on the proportion of normal vs. anomalous instances in your test data.
 
 ### Intuitive Understanding
 
@@ -87,13 +89,15 @@ The p-value answers the question: "If this test instance were actually normal, w
 
 ### What is Exchangeability?
 
-Exchangeability is weaker than the i.i.d. assumption. A sequence of random variables is exchangeable if their joint distribution is invariant to permutations.
+Exchangeability is weaker than the i.i.d. assumption. A sequence of random variables $(X_1, X_2, \ldots, X_n)$ is exchangeable if their joint distribution is invariant to permutations. Formally, for any permutation $\pi$ of $\{1, 2, \ldots, n\}$:
 
-**Practical interpretation**: If your test instance is truly normal, then the set $\{X_1, \ldots, X_n, X_{test}\}$ should behave as if all elements were drawn in random order from the same distribution.
+$$P(X_1 \leq x_1, \ldots, X_n \leq x_n) = P(X_{\pi(1)} \leq x_1, \ldots, X_{\pi(n)} \leq x_n)$$
+
+**Key insight for conformal prediction**: Under exchangeability, if we add a new observation $X_{n+1}$ from the same distribution, then $(X_1, \ldots, X_n, X_{n+1})$ remains exchangeable. This means that $X_{n+1}$ is equally likely to have the $k$-th largest value among all $n+1$ observations for any $k \in \{1, \ldots, n+1\}$.
 
 ### When Exchangeability Holds
 
-**Statistical Definition**: Exchangeability holds when the joint distribution of observations remains unchanged under any permutation of the data indices. In practical terms, this means your calibration data and test instances come from the same underlying distribution.
+**Practical insight**: Exchangeability means that the order in which you observe your data points doesn't matter - there's no systematic pattern or trend that makes earlier observations systematically different from later ones.
 
 **Conditions for validity**:
 - Training and test data come from the same source/process
@@ -101,7 +105,7 @@ Exchangeability is weaker than the i.i.d. assumption. A sequence of random varia
 - Same measurement conditions and feature distributions
 - No covariate shift between calibration and test phases
 
-Under exchangeability, standard conformal p-values provide exact finite-sample coverage guarantees.
+Under exchangeability, standard conformal p-values provide exact finite-sample false positive rate control: for any significance level $\alpha$, the probability that a normal instance receives a p-value ≤ $\alpha$ is at most $\alpha$. This enables principled anomaly detection with known error rates and valid FDR control procedures.
 
 ### When Exchangeability is Violated
 
@@ -113,7 +117,15 @@ Under exchangeability, standard conformal p-values provide exact finite-sample c
 
 **Statistical consequence**: When exchangeability fails, standard conformal p-values lose their coverage guarantees and may become systematically miscalibrated.
 
-**Solution**: Weighted conformal prediction uses density ratio estimation to reweight calibration data, restoring valid inference under covariate shift. The method estimates the likelihood ratio between test and calibration distributions, then applies importance weighting to maintain statistical validity.
+**Solution**: Weighted conformal prediction uses density ratio estimation to reweight calibration data, potentially restoring valid inference under **specific types of covariate shift**. **Key limitations**: 
+
+1. **Assumption**: Requires that P(Y|X) remains constant while only P(X) changes
+2. **Density ratio estimation errors**: Inaccurate weight estimation can degrade or even worsen performance
+3. **High-dimensional challenges**: Density ratio estimation becomes unreliable in high dimensions or with limited data
+4. **Distribution support**: Requires sufficient overlap between calibration and test distributions
+5. **No guarantee**: Unlike standard conformal prediction, weighted methods may not maintain exact finite-sample guarantees when assumptions are violated
+
+The method estimates the likelihood ratio dP_test(X)/dP_calib(X) and reweights calibration data accordingly. Success depends critically on both the validity of the covariate shift assumption and the quality of density ratio estimation.
 
 ## Practical Implementation
 
@@ -122,9 +134,9 @@ Under exchangeability, standard conformal p-values provide exact finite-sample c
 ```python
 import numpy as np
 from sklearn.ensemble import IsolationForest
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.func import Aggregation
 
 # 1. Prepare your data
 X_train = load_normal_training_data()  # Normal data for training and calibration
@@ -182,13 +194,13 @@ for i, p_val in enumerate(p_values[:5]):
 Best for large datasets where you can afford to hold out calibration data:
 
 ```python
-from unquad.strategy.split import Split
+from unquad.strategy import Split
 
 # Use 20% of data for calibration
 strategy = Split(calib_size=0.2)
 
 # Or use absolute number for very large datasets
-strategy = SplitStrategy(calibration_size=1000)
+strategy = Split(calib_size=1000)
 ```
 
 ### 2. Cross-Validation Strategy
@@ -196,12 +208,12 @@ strategy = SplitStrategy(calibration_size=1000)
 Better utilization of data by using all samples for both training and calibration:
 
 ```python
-from unquad.strategy.cross_val import CrossValidation
+from unquad.strategy import CrossValidation
 
 # 5-fold cross-validation
 strategy = CrossValidation(k=5)
 
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -214,12 +226,12 @@ detector = ConformalDetector(
 Provides robust estimates through resampling:
 
 ```python
-from unquad.strategy.bootstrap import Bootstrap
+from unquad.strategy import Bootstrap
 
 # 100 bootstrap samples with 80% sampling ratio
 strategy = Bootstrap(n_bootstraps=100, resampling_ratio=0.8)
 
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -232,12 +244,12 @@ detector = ConformalDetector(
 Maximum use of small datasets:
 
 ```python
-from unquad.strategy.jackknife import Jackknife
+from unquad.strategy import Jackknife
 
 # Leave-one-out cross-validation
 strategy = Jackknife()
 
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -303,7 +315,7 @@ When using ensemble strategies, you can control how multiple model outputs are c
 aggregation_methods = [Aggregation.MEAN, Aggregation.MEDIAN, Aggregation.MAX]
 
 for agg_method in aggregation_methods:
-    detector = ConformalDetector(
+    detector = StandardConformalDetector(
         detector=base_detector,
         strategy=CrossValidation(k=5),
         aggregation=agg_method,
@@ -314,6 +326,8 @@ for agg_method in aggregation_methods:
     
     print(f"{agg_method.value}: {(p_values < 0.05).sum()} detections")
 ```
+
+**Note on p-value averaging**: The aggregation shown here averages conformal p-values from the same underlying procedure with different aggregation methods (e.g., MEAN vs. MEDIAN). This is distinct from traditional p-value combination methods and preserves conformal validity since all p-values derive from the same exchangeable framework.
 
 ### Custom Scoring Functions
 
@@ -345,7 +359,7 @@ class CustomDetector(BaseDetector):
 
 # Use with conformal detection
 custom_detector = CustomDetector()
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=custom_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -363,7 +377,7 @@ Different strategies have different computational costs:
 import time
 
 strategies = {
-    'Split': SplitStrategy(calibration_size=0.2),
+    'Split': Split(calib_size=0.2),
     'Cross-Val (5-fold)': CrossValidation(k=5),
     'Bootstrap (50)': Bootstrap(n_bootstraps=50, resampling_ratio=0.8),
     'Jackknife': Jackknife()
@@ -372,7 +386,7 @@ strategies = {
 for name, strategy in strategies.items():
     start_time = time.time()
     
-    detector = ConformalDetector(
+    detector = StandardConformalDetector(
         detector=base_detector,
         strategy=strategy,
         aggregation=Aggregation.MEDIAN,

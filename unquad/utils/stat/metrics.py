@@ -27,8 +27,8 @@ def false_discovery_rate(y: np.ndarray, y_hat: np.ndarray, dec: int = 3) -> floa
         float: The calculated False Discovery Rate, rounded to `dec`
             decimal places.
     """
-    y_true = y == 1
-    y_pred = y_hat == 1
+    y_true = y.astype(bool)
+    y_pred = y_hat.astype(bool)
 
     true_positives = np.sum(y_pred & y_true)
     false_positives = np.sum(y_pred & ~y_true)
