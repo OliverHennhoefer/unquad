@@ -1,21 +1,21 @@
 from scipy.stats import false_discovery_control
 
 from pyod.models.iforest import IForest
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split, Jackknife, Bootstrap
+from unquad.utils.data import load_wbc
+from unquad.utils.stat import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
 
     # Example Setup
-    x_train, x_test, y_test = load_shuttle(setup=True)
+    x_train, x_test, y_test = load_wbc(setup=True)
 
     # One-Class Classification
     model = IForest(behaviour="new")
 
     # Conformal Strategy
-    strategy = Split(calib_size=1_000)
+    strategy = Bootstrap(n_calib=1_000, resampling_ratio=0.95)
 
     # Conformal Anomaly Detector
     ce = StandardConformalDetector(detector=model, strategy=strategy)

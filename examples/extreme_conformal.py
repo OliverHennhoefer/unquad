@@ -1,12 +1,10 @@
 from online_fdr import BatchStoreyBH
 
 from pyod.models.iforest import IForest
-from unquad.estimation.extreme_conformal import ExtremeConformalDetector
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.data import create_batch_generator
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.estimation import ExtremeConformalDetector, StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.data import create_batch_generator, load_shuttle
+from unquad.utils.stat import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
 

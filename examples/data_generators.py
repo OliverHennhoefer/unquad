@@ -1,180 +1,178 @@
-"""Example demonstrating different data providing methods in unquad.utils.data."""
-
-from unquad.utils.data.generator.batch import BatchGenerator, create_batch_generator
-from unquad.utils.data.generator.online import OnlineGenerator
-from unquad.utils.data.load import get_cache_info, load_breast, load_shuttle
-
-
-def demonstrate_data_loading():
-    """Demonstrate dataset loading capabilities."""
-    print("=== Dataset Loading Examples ===")
-
-    # Load complete dataset
-    df_shuttle = load_shuttle()
-    print(
-        f"Shuttle dataset: {df_shuttle.shape} (features: {df_shuttle.columns.tolist()[:5]}...)"
-    )
-    print(f"Class distribution: {df_shuttle['Class'].value_counts().to_dict()}")
-
-    # Load with experimental setup
-    x_train, x_test, y_test = load_shuttle(setup=True)
-    print(
-        f"Setup split - Train: {x_train.shape}, Test: {x_test.shape}, Test anomalies: {y_test.sum()}"
-    )
-
-    # Show memory cache info
-    cache_info = get_cache_info()
-    print(
-        f"Memory cache: {len(cache_info['memory']['datasets'])} datasets, {cache_info['memory']['size_mb']} MB"
-    )
-    print()
+from unquad.utils.data.load import load_breast, load_shuttle
+from unquad.utils.data.generator import BatchGenerator, OnlineGenerator
 
 
 def demonstrate_batch_generation():
-    """Demonstrate batch generation for evaluation."""
+    """Demonstrate batch generation with both anomaly modes."""
     print("=== Batch Generation Examples ===")
-
-    # Load and prepare data
-    x_train, x_test, y_test = load_breast(setup=True)
-    x_normal = x_test[y_test == 0]
-    x_anomaly = x_test[y_test == 1]
-
-    print(f"Test data - Normal: {len(x_normal)}, Anomaly: {len(x_anomaly)}")
-
-    # Create batch generator with 15% anomalies
+    
+    # Proportional mode - fixed 10% anomalies per batch
+    print("1. Proportional Mode (10% anomalies per batch):")
     batch_gen = BatchGenerator(
-        x_normal=x_normal,
-        x_anomaly=x_anomaly,
-        batch_size=50,
-        anomaly_proportion=0.15,
-        random_state=42,
+        load_data_func=load_shuttle,
+        batch_size=100,
+        anomaly_proportion=0.1,
+        anomaly_mode="proportional",
+        random_state=42
     )
-
-    print(f"Batch generator: {batch_gen}")
-    print(f"Max theoretical batches: {batch_gen.max_batches}")
-
-    # Generate sample batches
+    
+    print(f"   Generator: {batch_gen}")
+    print(f"   Training data: {batch_gen.get_training_data().shape}")
+    
+    for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=3)):
+        anomaly_count = y_batch.sum()
+        print(f"   Batch {i+1}: {x_batch.shape}, Anomalies: {anomaly_count} ({anomaly_count/len(x_batch)*100:.1f}%)")
+    
+    # Probabilistic mode - global target across all batches
+    print("\n2. Probabilistic Mode (5% anomalies globally across 10 batches):")
+    batch_gen_prob = BatchGenerator(
+        load_data_func=load_breast,
+        batch_size=50,
+        anomaly_proportion=0.05,
+        anomaly_mode="probabilistic",
+        max_batches=10,
+        random_state=42
+    )
+    
+    print(f"   Generator: {batch_gen_prob}")
     total_instances = 0
     total_anomalies = 0
-
-    for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=3)):
-        batch_anomalies = y_batch.sum()
+    
+    for i, (x_batch, y_batch) in enumerate(batch_gen_prob.generate(n_batches=10)):
+        anomaly_count = y_batch.sum()
         total_instances += len(x_batch)
-        total_anomalies += batch_anomalies
-        print(
-            f"Batch {i+1}: {x_batch.shape}, Anomalies: {batch_anomalies} ({batch_anomalies/len(x_batch)*100:.1f}%)"
-        )
-
-    print(
-        f"Total: {total_instances} instances, {total_anomalies} anomalies ({total_anomalies/total_instances*100:.1f}%)"
-    )
+        total_anomalies += anomaly_count
+        if i < 3:  # Show first 3 batches
+            print(f"   Batch {i+1}: {x_batch.shape}, Anomalies: {anomaly_count} ({anomaly_count/len(x_batch)*100:.1f}%)")
+    
+    print(f"   ... (7 more batches)")
+    print(f"   Total: {total_instances} instances, {total_anomalies} anomalies ({total_anomalies/total_instances*100:.1f}%)")
     print()
 
 
-def demonstrate_online_streaming():
-    """Demonstrate online streaming generation."""
-    print("=== Online Streaming Examples ===")
-
-    # Use convenience function to create generator
-    df_shuttle = load_shuttle()
-    x_train, batch_gen = create_batch_generator(
-        df_shuttle,
-        train_size=0.6,
-        batch_size=100,
-        anomaly_proportion=0.05,
-        random_state=42,
-    )
-
-    # Extract data for online generator
-    x_normal = batch_gen.x_normal
-    x_anomaly = batch_gen.x_anomaly
-
-    print(f"Training data: {x_train.shape}")
-    print(f"Streaming data - Normal: {len(x_normal)}, Anomaly: {len(x_anomaly)}")
-
-    # Create online generator with exactly 2% anomalies
+def demonstrate_online_generation():
+    """Demonstrate online generation with exact global anomaly proportion."""
+    print("=== Online Generation Examples ===")
+    
+    # Online generator always uses probabilistic mode for exact global proportion
+    print("Online Generator (exactly 2% anomalies over 1000 instances):")
     online_gen = OnlineGenerator(
-        x_normal=x_normal,
-        x_anomaly=x_anomaly,
+        load_data_func=load_shuttle,
         anomaly_proportion=0.02,
-        pool_size=500,
-        random_state=42,
+        max_instances=1000,
+        random_state=42
     )
-
-    print(f"Online generator: {online_gen}")
-
-    # Demonstrate exact anomaly count prediction
-    n_instances = 100
-    predicted_anomalies = online_gen.get_exact_anomaly_count(n_instances)
-    print(f"Predicted anomalies in next {n_instances} instances: {predicted_anomalies}")
-
-    # Generate stream and verify
-    actual_anomalies = 0
-    feature_means = []
-
-    for i, (x_instance, y_label) in enumerate(
-        online_gen.generate_stream(n_instances=n_instances)
-    ):
-        actual_anomalies += y_label
-        feature_means.append(x_instance.iloc[0].mean())
-
-        if i < 10:  # Show first 10 instances
-            print(
-                f"Instance {i+1}: shape={x_instance.shape}, label={y_label}, mean_features={feature_means[-1]:.3f}"
-            )
-        elif i == 10:
-            print("...")
-
-    print(
-        f"Actual anomalies: {actual_anomalies} (matches prediction: {actual_anomalies == predicted_anomalies})"
+    
+    print(f"   Generator: {online_gen}")
+    print(f"   Training data: {online_gen.get_training_data().shape}")
+    print(f"   Expected anomalies in 1000 instances: {int(1000 * 0.02)} (exactly)")
+    
+    # Generate all 1000 instances
+    anomaly_count = 0
+    for i, (x_instance, y_label) in enumerate(online_gen.generate(n_instances=1000)):
+        anomaly_count += y_label
+        if i < 5:  # Show first 5 instances
+            print(f"   Instance {i+1}: {x_instance.shape}, Label: {y_label}")
+    
+    print(f"   ... (995 more instances)")
+    print(f"   Actual anomalies in 1000 instances: {anomaly_count} (exactly {int(1000 * 0.02)} as guaranteed)")
+    
+    # Smaller example to show exact control
+    print(f"\nSmaller Example (exactly 1% anomalies over 100 instances):")
+    online_gen_small = OnlineGenerator(
+        load_data_func=load_breast,
+        anomaly_proportion=0.01,
+        max_instances=100,
+        random_state=42
     )
+    
+    anomaly_count = 0
+    for i, (x_instance, y_label) in enumerate(online_gen_small.generate(n_instances=100)):
+        anomaly_count += y_label
+        if i < 5:  # Show first 5 instances
+            print(f"   Instance {i+1}: {x_instance.shape}, Label: {y_label}")
+    
+    print(f"   ... (95 more instances)")
+    print(f"   Total anomalies in 100 instances: {anomaly_count} (exactly {int(100 * 0.01)} as guaranteed)")
     print()
 
 
-def demonstrate_advanced_scenarios():
-    """Demonstrate advanced usage scenarios."""
-    print("=== Advanced Scenarios ===")
+def demonstrate_integration_workflow():
+    """Demonstrate complete workflow with training and generation."""
+    print("=== Complete Workflow Example ===")
+    
+    # Create batch generator
+    batch_gen = BatchGenerator(
+        load_data_func=load_shuttle,
+        batch_size=200,
+        anomaly_proportion=0.08,
+        train_size=0.7,
+        random_state=42
+    )
+    
+    # Get training data for detector
+    x_train = batch_gen.get_training_data()
+    print(f"Training data shape: {x_train.shape}")
+    print(f"Training data sample means: {x_train.mean().head()}")
+    
+    # Simulate detector training (normally you'd train a PyOD detector here)
+    print("Training detector on normal data...")
+    
+    # Generate evaluation batches
+    print("\nGenerating evaluation batches:")
+    for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=3)):
+        anomaly_count = y_batch.sum()
+        batch_mean = x_batch.mean().mean()
+        print(f"   Batch {i+1}: {x_batch.shape}, Anomalies: {anomaly_count}, Mean features: {batch_mean:.3f}")
+    
+    print()
 
-    # Different batch sizes and anomaly proportions
-    df = load_shuttle()
-    scenarios = [
-        (50, 0.1, "Small batches, 10% anomalies"),
-        (200, 0.05, "Large batches, 5% anomalies"),
-        (100, 5, "Fixed 5 anomalies per batch"),
+
+def demonstrate_different_datasets():
+    """Show generators working with different datasets."""
+    print("=== Different Datasets Example ===")
+    
+    datasets = [
+        (load_shuttle, "Shuttle"),
+        (load_breast, "Breast Cancer")
     ]
-
-    for batch_size, anomaly_prop, description in scenarios:
-        try:
-            x_train, batch_gen = create_batch_generator(
-                df,
-                batch_size=batch_size,
-                anomaly_proportion=anomaly_prop,
-                random_state=42,
-            )
-
-            # Generate one batch to test
-            x_batch, y_batch = next(batch_gen.generate(n_batches=1))
-            anomaly_count = y_batch.sum()
-
-            print(
-                f"{description}: {anomaly_count} anomalies in batch of {len(x_batch)}"
-            )
-
-        except Exception as e:
-            print(f"{description}: Error - {e}")
-
-    print()
+    
+    for load_func, name in datasets:
+        print(f"{name} Dataset:")
+        
+        # Create online generator with exact proportion over 200 instances
+        online_gen = OnlineGenerator(
+            load_data_func=load_func,
+            anomaly_proportion=0.05,
+            max_instances=200,
+            random_state=42
+        )
+        
+        x_train = online_gen.get_training_data()
+        print(f"   Training data: {x_train.shape}")
+        print(f"   Available for generation - Normal: {online_gen.n_normal}, Anomaly: {online_gen.n_anomaly}")
+        print(f"   Expected anomalies in 200 instances: {int(200 * 0.05)} (exactly)")
+        
+        # Generate all 200 instances
+        sample_anomalies = 0
+        for i, (x_instance, y_label) in enumerate(online_gen.generate(n_instances=200)):
+            sample_anomalies += y_label
+        
+        print(f"   Actual anomalies in 200 instances: {sample_anomalies} (exactly {int(200 * 0.05)} as guaranteed)")
+        print()
 
 
 def main():
     """Run all demonstrations."""
-    print("Data Generation Examples")
+    print("Data Generator Examples")
     print("=" * 50)
-
-    demonstrate_data_loading()
+    
     demonstrate_batch_generation()
-    demonstrate_online_streaming()
-    demonstrate_advanced_scenarios()
+    demonstrate_online_generation()
+    demonstrate_integration_workflow()
+    demonstrate_different_datasets()
+    
+    print("All examples completed successfully!")
 
 
 if __name__ == "__main__":

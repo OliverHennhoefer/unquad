@@ -204,27 +204,29 @@ for detector in detectors:
 ```python
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
+
 # Comprehensive evaluation
 def evaluate_detector(detector, batch_gen, n_batches=10):
     fdrs = []
     powers = []
-    
+
     for x_batch, y_batch in batch_gen.generate(n_batches=n_batches):
         p_values = detector.predict(x_batch)
         decisions = p_values < 0.05
-        
+
         fdr = false_discovery_rate(y_batch, decisions)
         power = statistical_power(y_batch, decisions)
-        
+
         fdrs.append(fdr)
         powers.append(power)
-    
+
     return {
         'mean_fdr': np.mean(fdrs),
         'mean_power': np.mean(powers),
         'fdr_std': np.std(fdrs),
         'power_std': np.std(powers)
     }
+
 
 # Usage
 results = evaluate_detector(detector, batch_gen)

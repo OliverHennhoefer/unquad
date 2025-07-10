@@ -1,20 +1,19 @@
+from pyod.models.lmdd import LMDD
 from scipy.stats import false_discovery_control
 
-from pyod.models.lmdd import LMDD
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from unquad.estimation import StandardConformalDetector
+from unquad.strategy import Split
+from unquad.utils.data import load_shuttle
+from unquad.utils.stat import false_discovery_rate, statistical_power
 
-if __name__ == "__main__":
-    x_train, x_test, y_test = load_shuttle(setup=True)
+x_train, x_test, y_test = load_shuttle(setup=True)
 
-    ce = StandardConformalDetector(detector=LMDD(), strategy=Split(calib_size=0.1))
+ce = StandardConformalDetector(detector=LMDD(), strategy=Split(calib_size=0.1))
 
-    ce.fit(x_train)
-    estimates = ce.predict(x_test)
+ce.fit(x_train)
+estimates = ce.predict(x_test)
 
-    decisions = false_discovery_control(estimates, method="bh") <= 0.2
+decisions = false_discovery_control(estimates, method="bh") <= 0.2
 
-    print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=decisions)}")
-    print(f"Empirical Power: {statistical_power(y=y_test, y_hat=decisions)}")
+print(f"Empirical FDR: {false_discovery_rate(y=y_test, y_hat=decisions)}")
+print(f"Empirical Power: {statistical_power(y=y_test, y_hat=decisions)}")

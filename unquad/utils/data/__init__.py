@@ -1,7 +1,5 @@
 """Data utilities for unquad."""
 
-from unquad.utils.data.generator.batch import BatchGenerator, create_batch_generator
-
 from .load import (
     clear_cache,
     get_cache_info,
@@ -18,9 +16,7 @@ from .load import (
 )
 
 __all__ = [
-    "BatchGenerator",
     "clear_cache",
-    "create_batch_generator",
     "get_cache_info",
     "get_cache_location",
     "list_cached_datasets",
