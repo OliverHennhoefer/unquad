@@ -17,16 +17,17 @@ import pandas as pd
 from tqdm import tqdm
 
 from pyod.models.base import BaseDetector as PyODBaseDetector
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.base import BaseConformalDetector
 from unquad.strategy.base import BaseStrategy
 from unquad.utils.func.decorator import ensure_numpy_array
 from unquad.utils.func.enums import Aggregation
+from unquad.utils.func.params import set_params
 from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.stat.extreme import fit_gpd, select_threshold
 from unquad.utils.stat.statistical import calculate_evt_p_val, calculate_p_val
 
 
-class EVTConformalDetector(ConformalDetector):
+class ExtremeConformalDetector(BaseConformalDetector):
     """Conformal anomaly detector with Extreme Value Theory enhancement.
 
     This detector extends the standard conformal prediction framework by
@@ -86,7 +87,23 @@ class EVTConformalDetector(ConformalDetector):
             evt_min_tail_size (int, optional): Minimum number of exceedances
                 required for GPD fitting. Defaults to 10.
         """
-        super().__init__(detector, strategy, aggregation, seed, silent)
+        # Parameter validation (moved from StandardConformalDetector)
+        if seed < 0:
+            raise ValueError(f"seed must be a non-negative integer, got {seed}")
+        if not isinstance(aggregation, Aggregation):
+            raise TypeError(
+                f"aggregation must be an Aggregation enum, got {type(aggregation)}"
+            )
+
+        # Initialize attributes (moved from StandardConformalDetector)
+        self.detector: PyODBaseDetector = set_params(detector, seed)
+        self.strategy: BaseStrategy = strategy
+        self.aggregation: Aggregation = aggregation
+        self.seed: int = seed
+        self.silent: bool = silent
+
+        self.detector_set: list[PyODBaseDetector] = []
+        self.calibration_set: list[float] = []
 
         # EVT-specific parameters
         self.evt_threshold_method: Literal[
@@ -115,8 +132,10 @@ class EVTConformalDetector(ConformalDetector):
         Args:
             x (Union[pd.DataFrame, np.ndarray]): Training data.
         """
-        # Call parent's fit method
-        super().fit(x)
+        # Fit using strategy (moved from StandardConformalDetector)
+        self.detector_set, self.calibration_set = self.strategy.fit_calibrate(
+            x=x, detector=self.detector, weighted=False, seed=self.seed
+        )
 
         # Fit EVT components
         if len(self.calibration_set) > 0:
@@ -208,4 +227,4 @@ class EVTConformalDetector(ConformalDetector):
             # Fall back to standard empirical p-values
             p_val = calculate_p_val(estimates, self.calibration_set)
 
-        return np.array(p_val)
+        return p_val

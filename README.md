@@ -36,13 +36,13 @@ from pyod.models.gmm import GMM
 from scipy.stats import false_discovery_control
 
 from unquad.strategy.split import Split
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
-ce = ConformalDetector(
+ce = StandardConformalDetector(
     detector=GMM(),
     strategy=Split(calib_size=1_000)
 )
@@ -74,14 +74,14 @@ calibration procedure when using a bootstrap strategy.
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
-ce = ConformalDetector(
+ce = StandardConformalDetector(
     detector=IForest(behaviour="new"),
     strategy=Bootstrap(resampling_ratio=0.99, n_bootstraps=20, plus=True)
 )

@@ -1,7 +1,7 @@
 from scipy.stats import false_discovery_control
 
 from pyod.models.hbos import HBOS
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
@@ -9,7 +9,7 @@ from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 if __name__ == "__main__":
     x_train, x_test, y_test = load_shuttle(setup=True)
 
-    ce = ConformalDetector(
+    ce = StandardConformalDetector(
         detector=HBOS(),
         strategy=CrossValidation(k=15),
     )

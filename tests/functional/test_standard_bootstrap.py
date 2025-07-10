@@ -3,7 +3,7 @@ import unittest
 from scipy.stats import false_discovery_control
 
 from pyod.models.iforest import IForest
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
@@ -13,7 +13,7 @@ class TestCaseBootstrapConformal(unittest.TestCase):
     def test_bootstrap_conformal_compute_n_bootstraps(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
 
-        ce = ConformalDetector(
+        ce = StandardConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Bootstrap(resampling_ratio=0.995, n_calib=1_000),
         )
@@ -33,7 +33,7 @@ class TestCaseBootstrapConformal(unittest.TestCase):
     def test_bootstrap_conformal_compute_n_calib(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
 
-        ce = ConformalDetector(
+        ce = StandardConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Bootstrap(resampling_ratio=0.99, n_bootstraps=15),
         )
@@ -53,7 +53,7 @@ class TestCaseBootstrapConformal(unittest.TestCase):
     def test_bootstrap_conformal_compute_resampling_ratio(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
 
-        ce = ConformalDetector(
+        ce = StandardConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Bootstrap(n_calib=1_000, n_bootstraps=25),
         )

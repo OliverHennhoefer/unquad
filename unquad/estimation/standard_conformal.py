@@ -27,7 +27,7 @@ from unquad.utils.stat.aggregation import aggregate
 from unquad.utils.stat.statistical import calculate_p_val
 
 
-class ConformalDetector(BaseConformalDetector):
+class StandardConformalDetector(BaseConformalDetector):
     """Calibrates an anomaly detector using conformal prediction.
 
     This detector inherits from BaseConformalDetector and uses an underlying

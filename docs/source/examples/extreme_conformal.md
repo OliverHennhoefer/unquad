@@ -10,8 +10,8 @@ import pandas as pd
 from pyod.models.lof import LOF
 from pyod.models.isolation_forest import IForest
 from pyod.models.ocsvm import OCSVM
-from unquad.estimation.extreme_conformal import EVTConformalDetector
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.extreme_conformal import ExtremeConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power

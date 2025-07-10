@@ -78,10 +78,10 @@ print(f"Number of anomalies detected: {(p_values_shifted < 0.05).sum()}")
 ## Comparison with Standard Conformal Detection
 
 ```python
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 
 # Standard conformal detector for comparison
-standard_detector = ConformalDetector(
+standard_detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,

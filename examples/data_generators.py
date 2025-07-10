@@ -1,8 +1,8 @@
 """Example demonstrating different data providing methods in unquad.utils.data."""
 
 from unquad.utils.data.generator.batch import BatchGenerator, create_batch_generator
-from unquad.utils.data.load import get_cache_info, load_breast, load_shuttle
 from unquad.utils.data.generator.online import OnlineGenerator
+from unquad.utils.data.load import get_cache_info, load_breast, load_shuttle
 
 
 def demonstrate_data_loading():

@@ -105,22 +105,22 @@ p_values_after_drift = detector.predict(X_after_drift, raw=False)
 ## Comparison with Standard Conformal
 
 ```python
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 
 # Standard conformal detector
-standard_detector = ConformalDetector(
-    detector=base_detector,
-    strategy=strategy,
-    aggregation=Aggregation.MEDIAN,
-    seed=42
+standard_detector = StandardConformalDetector(
+   detector=base_detector,
+   strategy=strategy,
+   aggregation=Aggregation.MEDIAN,
+   seed=42
 )
 
 # Weighted conformal detector
 weighted_detector = WeightedConformalDetector(
-    detector=base_detector,
-    strategy=strategy,
-    aggregation=Aggregation.MEDIAN,
-    seed=42
+   detector=base_detector,
+   strategy=strategy,
+   aggregation=Aggregation.MEDIAN,
+   seed=42
 )
 
 # Fit both on training data

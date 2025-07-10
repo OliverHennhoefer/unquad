@@ -1,7 +1,8 @@
 from online_fdr import BatchStoreyBH
 
 from pyod.models.iforest import IForest
-from unquad.estimation.extreme_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import ExtremeConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.data import create_batch_generator
 from unquad.utils.data.load import load_shuttle
@@ -16,27 +17,40 @@ if __name__ == "__main__":
     )
 
     # EVT-Enhanced Conformal Anomaly Detector
-    ce = EVTConformalDetector(
+    extreme_ce = ExtremeConformalDetector(
         detector=IForest(behaviour="new"),
-        strategy=Split(calib_size=5_000),
+        strategy=Split(calib_size=1_000),
         evt_threshold_method="percentile",
         evt_threshold_value=0.95,
         evt_min_tail_size=10,
     )
 
-    ce.fit(x_train)
+    standard_ce = StandardConformalDetector(
+        detector=IForest(behaviour="new"), strategy=Split(calib_size=1_000)
+    )
 
-    batch_fdr = BatchStoreyBH(alpha=0.2, lambda_=0.125)
+    extreme_ce.fit(x_train)
+    standard_ce.fit(x_train)
+
+    batch_fdr = BatchStoreyBH(alpha=0.2, lambda_=0.5)
 
     label = []
-    decision = []
+    x_decision = []
+    s_decision = []
 
     for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
-        p_values = ce.predict(x_batch)
-        decisions = batch_fdr.test_batch(p_values.tolist())
+        xp = extreme_ce.predict(x_batch)
+        sp = standard_ce.predict(x_batch)
+
+        x_decisions = batch_fdr.test_batch(xp)
+        s_decisions = batch_fdr.test_batch(sp)
 
         label.extend(y_batch.tolist())
-        decision.extend(decisions)
+        x_decision.extend(x_decisions)
+        s_decision.extend(s_decisions)
 
-    print(f"Empirical FDR: {false_discovery_rate(y=label, y_hat=decision)}")
-    print(f"Empirical Power: {statistical_power(y=label, y_hat=decision)}")
+    print(f"Empir. FDR: {false_discovery_rate(y=label, y_hat=x_decision)} (Extreme)")
+    print(f"Empir. Power: {statistical_power(y=label, y_hat=x_decision)} (Extreme)")
+    print("=" * 20)
+    print(f"Empir. FDR: {false_discovery_rate(y=label, y_hat=s_decision)} (Standard)")
+    print(f"Empir. Power: {statistical_power(y=label, y_hat=s_decision)} (Standard)")

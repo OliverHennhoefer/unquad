@@ -42,12 +42,12 @@ This ensures that the GPD only handles truly extreme cases while maintaining con
 ## Basic Usage
 
 ```python
-from unquad.estimation.extreme_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import ExtremeConformalDetector
 from unquad.strategy.split import Split
 from pyod.models.lof import LOF
 
 # Initialize detector
-detector = EVTConformalDetector(
+detector = ExtremeConformalDetector(
     detector=LOF(),
     strategy=Split(calibration_size=0.3),
     evt_threshold_method="percentile",

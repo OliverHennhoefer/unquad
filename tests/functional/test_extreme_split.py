@@ -5,7 +5,7 @@ from online_fdr.batching.bh import BatchBH
 from online_fdr.batching.prds import BatchPRDS
 
 from pyod.models.iforest import IForest
-from unquad.estimation.extreme_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import ExtremeConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.strategy.split import Split
 from unquad.utils.data.generator.batch import create_batch_generator
@@ -21,7 +21,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             df, train_size=0.6, batch_size=300, anomaly_proportion=0.13, random_state=42
         )
 
-        evt_detector = EVTConformalDetector(
+        evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Split(calib_size=1000),
             evt_threshold_method="percentile",
@@ -55,7 +55,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             df, train_size=0.6, batch_size=300, anomaly_proportion=0.01, random_state=42
         )
 
-        evt_detector = EVTConformalDetector(
+        evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Split(calib_size=1000),
             evt_threshold_method="percentile",
@@ -74,7 +74,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
 
             p_values = evt_detector.predict(x_batch)
-            decisions = batch_st_bh.test_batch(p_values.tolist())
+            decisions = batch_st_bh.test_batch(p_values)
 
             label.extend(y_batch.tolist())
             decision.extend(decisions)
@@ -93,7 +93,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             random_state=42,
         )
 
-        evt_detector = EVTConformalDetector(
+        evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Split(calib_size=1000),
             evt_threshold_method="percentile",
@@ -112,7 +112,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
 
             p_values = evt_detector.predict(x_batch)
-            decisions = batch_st_bh.test_batch(p_values.tolist())
+            decisions = batch_st_bh.test_batch(p_values)
 
             label.extend(y_batch.tolist())
             decision.extend(decisions)
@@ -127,7 +127,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             df, train_size=0.6, batch_size=100, anomaly_proportion=0.01, random_state=42
         )
 
-        evt_detector = EVTConformalDetector(
+        evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
             strategy=Bootstrap(n_calib=5_000, resampling_ratio=0.995),
             evt_threshold_method="mean_excess",
@@ -146,7 +146,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
 
             p_values = evt_detector.predict(x_batch)
-            decisions = batch_st_bh.test_batch(p_values.tolist())
+            decisions = batch_st_bh.test_batch(p_values)
 
             label.extend(y_batch.tolist())
             decision.extend(decisions)

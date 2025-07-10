@@ -102,7 +102,7 @@ accurate_detectors = {
 Consider using multiple detectors for improved robustness:
 
 ```python
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 from scipy.stats import false_discovery_control
@@ -119,7 +119,7 @@ all_p_values = {}
 strategy = SplitStrategy(calibration_size=0.2)
 
 for name, detector in detectors.items():
-    conf_detector = ConformalDetector(
+    conf_detector = StandardConformalDetector(
         detector=detector,
         strategy=strategy,
         aggregation=Aggregation.MEDIAN,

@@ -28,13 +28,13 @@ Conformal inference provides a principled way to convert scores to p-values:
 
 ```python
 # Conformal approach - statistically valid p-values
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
 # Create conformal detector
 strategy = Split(calib_size=0.2)
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -122,7 +122,7 @@ Under exchangeability, standard conformal p-values provide exact finite-sample c
 ```python
 import numpy as np
 from sklearn.ensemble import IsolationForest
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
@@ -135,7 +135,7 @@ base_detector = IsolationForest(random_state=42)
 
 # 3. Create conformal detector with strategy
 strategy = Split(calib_size=0.2)  # 20% for calibration
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,

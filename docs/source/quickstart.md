@@ -31,7 +31,7 @@ The most straightforward way to use unquad is with classical conformal anomaly d
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
@@ -48,7 +48,7 @@ base_detector = IsolationForest(random_state=42)
 
 # Create conformal anomaly detector with split strategy
 strategy = Split(calib_size=0.3)
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,
@@ -190,7 +190,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
 from scipy.stats import false_discovery_control
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 
@@ -207,7 +207,7 @@ y_true = np.hstack([np.zeros(80), np.ones(20)])
 # Setup and fit detector
 base_detector = IsolationForest(random_state=42)
 strategy = Split(calib_size=0.3)
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
     aggregation=Aggregation.MEDIAN,

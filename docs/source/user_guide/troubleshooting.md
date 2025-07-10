@@ -15,22 +15,22 @@ This guide addresses common issues you might encounter while using unquad and pr
 from unquad.estimation.configuration import DetectorConfig
 
 detector = ConformalDetector(
-    detector=LOF(),
-    strategy=Split(calib_size=0.2),
-    config=DetectorConfig(alpha=0.1)
+   detector=LOF(),
+   strategy=Split(calib_size=0.2),
+   config=DetectorConfig(alpha=0.1)
 )
 
 # New API
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import SplitStrategy
 from unquad.utils.func.enums import Aggregation
 
-detector = ConformalDetector(
-    detector=LOF(),
-    strategy=Split(calib_size=0.2),
-    aggregation=Aggregation.MEDIAN,
-    seed=42,
-    silent=False
+detector = StandardConformalDetector(
+   detector=LOF(),
+   strategy=Split(calib_size=0.2),
+   aggregation=Aggregation.MEDIAN,
+   seed=42,
+   silent=False
 )
 ```
 

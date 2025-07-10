@@ -3,7 +3,7 @@ import unittest
 from scipy.stats import false_discovery_control
 
 from pyod.models.iforest import IForest
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.data.load import load_fraud, load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
@@ -13,7 +13,7 @@ class TestCaseSplitConformal(unittest.TestCase):
     def test_split_conformal_fraud(self):
         x_train, x_test, y_test = load_fraud(setup=True)
 
-        ce = ConformalDetector(
+        ce = StandardConformalDetector(
             detector=IForest(behaviour="new"), strategy=Split(calib_size=2_000)
         )
 
@@ -31,7 +31,7 @@ class TestCaseSplitConformal(unittest.TestCase):
     def test_split_conformal_shuttle(self):
         x_train, x_test, y_test = load_shuttle(setup=True)
 
-        ce = ConformalDetector(
+        ce = StandardConformalDetector(
             detector=IForest(behaviour="new"), strategy=Split(calib_size=1_000)
         )
 

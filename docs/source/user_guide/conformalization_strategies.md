@@ -123,13 +123,13 @@ strategy = Jackknife(plus=True)
 All strategies work with any conformal detector:
 
 ```python
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.estimation.extreme_conformal import EVTConformalDetector
+from unquad.estimation.extreme_conformal import ExtremeConformalDetector
 from pyod.models.lof import LOF
 
 # Standard conformal with cross-validation
-detector = ConformalDetector(
+detector = StandardConformalDetector(
     detector=LOF(),
     strategy=CrossValidation(k=5)
 )
@@ -141,7 +141,7 @@ detector = WeightedConformalDetector(
 )
 
 # EVT conformal with split
-detector = EVTConformalDetector(
+detector = ExtremeConformalDetector(
     detector=LOF(),
     strategy=Split(calib_size=0.2)
 )

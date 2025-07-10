@@ -8,7 +8,7 @@ This example demonstrates how to use classical conformal prediction for anomaly 
 import numpy as np
 from pyod.models.lof import LOF
 from scipy.stats import false_discovery_control
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.split import Split
 from unquad.utils.func.enums import Aggregation
 from unquad.utils.data.load import load_breast

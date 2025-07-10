@@ -9,7 +9,7 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.func.enums import Aggregation
 

@@ -1,7 +1,7 @@
 from scipy.stats import false_discovery_control
 
 from pyod.models.inne import INNE
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.bootstrap import Bootstrap
 from unquad.utils.data.load import load_shuttle
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
@@ -9,7 +9,7 @@ from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
 if __name__ == "__main__":
     x_train, x_test, y_test = load_shuttle(setup=True)
 
-    ce = ConformalDetector(
+    ce = StandardConformalDetector(
         detector=INNE(),
         strategy=Bootstrap(resampling_ratio=0.99, n_calib=2_000),
     )

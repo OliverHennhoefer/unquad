@@ -2,7 +2,7 @@ from scipy.stats import false_discovery_control
 
 from pyod.models.lscp import LSCP
 from pyod.models.pca import PCA
-from unquad.estimation.conformal import ConformalDetector
+from unquad.estimation.standard_conformal import StandardConformalDetector
 from unquad.strategy.cross_val import CrossValidation
 from unquad.utils.data.load import load_fraud
 from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
@@ -17,7 +17,9 @@ if __name__ == "__main__":
         PCA(n_components=10),
     ]
 
-    ce = ConformalDetector(detector=LSCP(detector_list), strategy=CrossValidation(k=20))
+    ce = StandardConformalDetector(
+        detector=LSCP(detector_list), strategy=CrossValidation(k=20)
+    )
 
     ce.fit(x_train)
     estimates = ce.predict(x_test)
