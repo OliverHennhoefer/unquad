@@ -1,6 +1,6 @@
 [project]
 name = "unquad"
-version = "0.8.2"
+version = "0.8.3"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
