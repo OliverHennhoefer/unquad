@@ -1,6 +1,6 @@
 [project]
 name = "unquad"
-version = "0.8.4"
+version = "0.8.5"
 description = """
 DEPRECATED: This package has been renamed to 'nonconform'.
 Please install 'nonconform' instead with `pip install nonconform`.
