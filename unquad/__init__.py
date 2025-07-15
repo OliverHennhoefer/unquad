@@ -10,6 +10,15 @@ Main Components:
 - Statistical utilities and data handling tools
 """
 
+import warnings
+
 __version__ = "0.8.3"
 __author__ = "Oliver Hennhoefer"
 __email__ = "oliver.hennhoefer@mail.de"
+
+warnings.warn(
+    "The 'unquad' package is deprecated and has been renamed to 'nonconform'. "
+    "Please uninstall this package and install 'nonconform' instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

@@ -1,7 +1,12 @@
 [project]
 name = "unquad"
 version = "0.8.4"
-description = "Conformal Anomaly Detection"
+description = """
+DEPRECATED: This package has been renamed to 'nonconform'.
+Please install 'nonconform' instead with `pip install nonconform`.
+
+Conformal Anomaly Detection
+"""
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
 ]
