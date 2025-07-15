@@ -1,10 +1,10 @@
 from scipy.stats import false_discovery_control
 
 from pyod.models.iforest import IForest
-from unquad.estimation import WeightedConformalDetector
-from unquad.strategy import Split
-from unquad.utils.data import load_shuttle
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.estimation import WeightedConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.data import load_shuttle
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 if __name__ == "__main__":
     # Example Setup

@@ -1,6 +1,6 @@
 import unittest
 
-from unquad.utils.stat.statistical import calculate_p_val
+from nonconform.utils.stat.statistical import calculate_p_val
 
 
 class TestUtilsStatistical(unittest.TestCase):

@@ -15,8 +15,8 @@ Key features:
 ## Basic Usage
 
 ```python
-from unquad.utils.data import load_shuttle
-from unquad.utils.data.generator import OnlineGenerator
+from nonconform.utils.data import load_shuttle
+from nonconform.utils.data.generator import OnlineGenerator
 
 # Create online generator with exact 2% anomalies over 1000 instances
 online_gen = OnlineGenerator(
@@ -34,10 +34,10 @@ print(f"Training data shape: {x_train.shape}")
 anomaly_count = 0
 for i, (x_instance, y_label) in enumerate(online_gen.generate(n_instances=1000)):
     if i < 5:  # Show first few instances
-        print(f"Instance {i+1}: {x_instance.shape}, Label: {y_label}")
+        print(f"Instance {i + 1}: {x_instance.shape}, Label: {y_label}")
     anomaly_count += y_label
 
-print(f"Total anomalies: {anomaly_count}/1000 = {anomaly_count/1000:.3f}")  # Exactly 0.020
+print(f"Total anomalies: {anomaly_count}/1000 = {anomaly_count / 1000:.3f}")  # Exactly 0.020
 ```
 
 ## Exact Proportion Control
@@ -69,9 +69,9 @@ for prop in proportions:
 
 ```python
 from pyod.models.iforest import IForest
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 # Create online generator
 online_gen = OnlineGenerator(
@@ -98,16 +98,16 @@ running_metrics = []
 for i, (x_instance, y_label) in enumerate(online_gen.generate(n_instances=2000)):
     # Get p-value for instance
     p_value = detector.predict(x_instance.reshape(1, -1))[0]
-    
+
     predictions.append(p_value)
     labels.append(y_label)
-    
+
     # Calculate running metrics every 100 instances
     if (i + 1) % 100 == 0:
         current_decisions = [p < 0.05 for p in predictions]
         fdr = false_discovery_rate(labels, current_decisions)
         power = statistical_power(labels, current_decisions)
-        
+
         running_metrics.append({
             'instances': i + 1,
             'fdr': fdr,
@@ -115,16 +115,17 @@ for i, (x_instance, y_label) in enumerate(online_gen.generate(n_instances=2000))
             'anomalies_seen': sum(labels),
             'detections': sum(current_decisions)
         })
-        
-        print(f"Instances {i+1}: FDR={fdr:.3f}, Power={power:.3f}, Anomalies={sum(labels)}")
+
+        print(f"Instances {i + 1}: FDR={fdr:.3f}, Power={power:.3f}, Anomalies={sum(labels)}")
 
 # Final evaluation
 import numpy as np
+
 final_decisions = [p < 0.05 for p in predictions]
 final_fdr = false_discovery_rate(labels, final_decisions)
 final_power = statistical_power(labels, final_decisions)
 print(f"\nFinal Results: FDR={final_fdr:.3f}, Power={final_power:.3f}")
-print(f"Total anomalies: {sum(labels)}/2000 = {sum(labels)/2000:.3f}")
+print(f"Total anomalies: {sum(labels)}/2000 = {sum(labels) / 2000:.3f}")
 ```
 
 ## Windowed Streaming Analysis
@@ -329,7 +330,7 @@ if len(fdrs) > 2:
 Compare streaming vs batch evaluation approaches:
 
 ```python
-from unquad.utils.data.generator import BatchGenerator
+from nonconform.utils.data.generator import BatchGenerator
 
 # Streaming evaluation
 online_gen = OnlineGenerator(
@@ -375,10 +376,10 @@ batch_powers = []
 for x_batch, y_batch in batch_gen.generate(n_batches=6):
     p_values = detector.predict(x_batch)
     batch_decisions = p_values < 0.05
-    
+
     batch_fdr = false_discovery_rate(y_batch, batch_decisions)
     batch_power = statistical_power(y_batch, batch_decisions)
-    
+
     batch_fdrs.append(batch_fdr)
     batch_powers.append(batch_power)
 
@@ -402,7 +403,7 @@ print(f"  Total Anomalies: {sum(sum(y_batch.values) for _, y_batch in batch_gen.
 ### Different Datasets and Training Splits
 
 ```python
-from unquad.utils.data import load_breast, load_fraud
+from nonconform.utils.data import load_breast, load_fraud
 
 # Test with different datasets and training split ratios
 configs = [
@@ -413,7 +414,7 @@ configs = [
 
 for load_func, train_split, name in configs:
     print(f"\n{name} Dataset (train_size={train_split}):")
-    
+
     online_gen = OnlineGenerator(
         load_data_func=load_func,
         anomaly_proportion=0.03,
@@ -421,17 +422,17 @@ for load_func, train_split, name in configs:
         train_size=train_split,
         random_state=42
     )
-    
+
     x_train = online_gen.get_training_data()
     print(f"  Training data: {x_train.shape}")
     print(f"  Available for generation - Normal: {online_gen.n_normal}, Anomaly: {online_gen.n_anomaly}")
-    
+
     # Quick evaluation
     total_anomalies = 0
     for i, (x_instance, y_label) in enumerate(online_gen.generate(n_instances=300)):
         total_anomalies += y_label
         if i == 299:  # Last instance
-            print(f"  Total anomalies: {total_anomalies}/300 = {total_anomalies/300:.3f}")
+            print(f"  Total anomalies: {total_anomalies}/300 = {total_anomalies / 300:.3f}")
 ```
 
 ### Reproducibility and Reset Functionality

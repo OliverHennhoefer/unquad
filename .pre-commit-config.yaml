@@ -53,7 +53,7 @@ repos:
             "furo",                             # Your HTML theme
             "sphinx-autoapi",                   # For auto-generating API docs
             "myst-parser",                      # For parsing Markdown files
-            # Your project 'unquad' itself. AutoAPI needs to inspect its source code.
+            # Your project 'nonconform' itself. AutoAPI needs to inspect its source code.
             # Adding "." installs the current project in the pre-commit environment.
             "."
         ]
@@ -61,6 +61,6 @@ repos:
         # This regex triggers the hook if:
         # 1. Any .rst, .py, or .md file in docs/source/ changes.
         # 2. Your docs/source/conf.py changes.
-        # 3. Any .py file in your main 'unquad' package changes (because autoapi reads these).
-        files: ^docs/source/.*\.(rst|py|md)$|^(docs/source/conf\.py)$|^unquad/.*\.py$
+        # 3. Any .py file in your main 'nonconform' package changes (because autoapi reads these).
+        files: ^docs/source/.*\.(rst|py|md)$|^(docs/source/conf\.py)$|^nonconform/.*\.py$
         verbose: true

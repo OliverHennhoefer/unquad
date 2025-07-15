@@ -1,6 +1,6 @@
 # Weighted Conformal P-values
 
-This guide explains how to use weighted conformal p-values in `unquad` for handling distribution shift and covariate shift scenarios.
+This guide explains how to use weighted conformal p-values in `nonconform` for handling distribution shift and covariate shift scenarios.
 
 ## Overview
 
@@ -12,9 +12,9 @@ The `WeightedConformalDetector` automatically estimates importance weights using
 
 ```python
 import numpy as np
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from nonconform.estimation.weighted_conformal import WeightedConformalDetector
+from nonconform.strategy.split import Split
+from nonconform.utils.func.enums import Aggregation
 from pyod.models.lof import LOF
 
 # Initialize base detector
@@ -112,22 +112,22 @@ p_values_after_drift = detector.predict(X_after_drift, raw=False)
 ## Comparison with Standard Conformal
 
 ```python
-from unquad.estimation.standard_conformal import StandardConformalDetector
+from nonconform.estimation.standard_conformal import StandardConformalDetector
 
 # Standard conformal detector
 standard_detector = StandardConformalDetector(
-   detector=base_detector,
-   strategy=strategy,
-   aggregation=Aggregation.MEDIAN,
-   seed=42
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
 )
 
 # Weighted conformal detector
 weighted_detector = WeightedConformalDetector(
-   detector=base_detector,
-   strategy=strategy,
-   aggregation=Aggregation.MEDIAN,
-   seed=42
+    detector=base_detector,
+    strategy=strategy,
+    aggregation=Aggregation.MEDIAN,
+    seed=42
 )
 
 # Fit both on training data
@@ -174,8 +174,8 @@ for agg_method in aggregation_methods:
 Different strategies can be used with weighted conformal detection:
 
 ```python
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.strategy.cross_val import CrossValidation
+from nonconform.strategy.bootstrap import Bootstrap
+from nonconform.strategy.cross_val import CrossValidation
 
 # Bootstrap strategy for stability
 bootstrap_strategy = Bootstrap(n_bootstraps=100, resampling_ratio=0.8)

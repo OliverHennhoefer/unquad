@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Bootstrap
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Bootstrap
+from nonconform.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -166,7 +166,7 @@ plt.show()
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy import Split, Jackknife
+from nonconform.strategy import Split, Jackknife
 
 # Compare bootstrap with other strategies
 strategies = {

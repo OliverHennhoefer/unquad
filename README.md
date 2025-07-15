@@ -1,9 +1,7 @@
 ![Logo](./docs/img/banner_dark.png#gh-dark-mode-only)
 ![Logo](./docs/img/banner_light.png#gh-light-mode-only)
 
-[![PyPI Downloads](https://static.pepy.tech/badge/unquad)](https://pepy.tech/projects/unquad) [![PyPI Downloads](https://static.pepy.tech/badge/unquad/month)](https://pepy.tech/projects/unquad) [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/unquad) [![start with why](https://img.shields.io/badge/start%20with-why%3F-brightgreen.svg?style=flat)](https://www.diva-portal.org/smash/get/diva2:690997/FULLTEXT02.pdf)
-
-**unquad** is a Python library that enhances anomaly detection by providing uncertainty quantification. It acts as a wrapper around most detectors from the popular [*PyOD*](https://pyod.readthedocs.io/en/latest/) library (see [Supported Estimators](#supported-estimators)). By leveraging one-class classification principles and **conformal inference**, **unquad** enables **statistically rigorous anomaly detection**.
+**nonconform** is a Python library that enhances anomaly detection by providing uncertainty quantification. It acts as a wrapper around most detectors from the popular [*PyOD*](https://pyod.readthedocs.io/en/latest/) library (see [Supported Estimators](#supported-estimators)). By leveraging one-class classification principles and **conformal inference**, **nonconform** enables **statistically rigorous anomaly detection**.
 
 # Key Features
 
@@ -15,30 +13,30 @@
 # :hatching_chick: Getting Started
 
 ```sh
-pip install unquad
+pip install nonconform
 ```
 
 _For additional features, you might need optional dependencies:_
-- `pip install unquad[data]` - Includes pyarrow for loading example data (via remote download)
-- `pip install unquad[dl]` - Includes deep learning dependencies (TensorFlow, PyTorch)
-- `pip install unquad[all]` - Includes all optional dependencies
+- `pip install nonconform[data]` - Includes pyarrow for loading example data (via remote download)
+- `pip install nonconform[dl]` - Includes deep learning dependencies (TensorFlow, PyTorch)
+- `pip install nonconform[all]` - Includes all optional dependencies
 
-_Please refer to the [pyproject.toml](https://github.com/OliverHennhoefer/unquad/blob/main/pyproject.toml) for details._
+_Please refer to the [pyproject.toml](https://github.com/OliverHennhoefer/nonconform/blob/main/pyproject.toml) for details._
 
 ## Split-Conformal (also _Inductive_) Approach
 
 Using a _Gaussian Mixture Model_ on the _Shuttle_ dataset:
 
-> **Note:** The examples below use the built-in datasets. Install with `pip install unquad[data]` to run these examples.
+> **Note:** The examples below use the built-in datasets. Install with `pip install nonconform[data]` to run these examples.
 
 ```python
 from pyod.models.gmm import GMM
 from scipy.stats import false_discovery_control
 
-from unquad.strategy import Split
-from unquad.estimation import StandardConformalDetector
-from unquad.utils.data import load_shuttle
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.strategy import Split
+from nonconform.estimation import StandardConformalDetector
+from nonconform.utils.data import load_shuttle
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -74,10 +72,10 @@ calibration procedure when using a bootstrap strategy.
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Bootstrap
-from unquad.utils.data import load_shuttle
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Bootstrap
+from nonconform.utils.data import load_shuttle
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -109,10 +107,10 @@ The statistical validity of conformal anomaly detection depends on data *exchang
 from pyod.models.iforest import IForest
 from scipy.stats import false_discovery_control
 
-from unquad.utils.data import load_shuttle
-from unquad.estimation import WeightedConformalDetector
-from unquad.strategy import Split
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.utils.data import load_shuttle
+from nonconform.estimation import WeightedConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
@@ -218,4 +216,4 @@ Models that are **currently supported** include:
 * Scalable Unsupervised Outlier Detection (**SUOD**)
 
 # Contact
-**Bug reporting:** [https://github.com/OliverHennhoefer/unquad/issues](https://github.com/OliverHennhoefer/unquad/issues)
+**Bug reporting:** [https://github.com/OliverHennhoefer/nonconform/issues](https://github.com/OliverHennhoefer/nonconform/issues)

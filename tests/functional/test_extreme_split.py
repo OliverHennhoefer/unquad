@@ -5,12 +5,12 @@ from online_fdr.batching.bh import BatchBH
 from online_fdr.batching.prds import BatchPRDS
 
 from pyod.models.iforest import IForest
-from unquad.estimation.extreme_conformal import ExtremeConformalDetector
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.strategy.split import Split
-from unquad.utils.data.generator.batch import BatchGenerator
-from unquad.utils.data.load import load_fraud, load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from nonconform.estimation.extreme_conformal import ExtremeConformalDetector
+from nonconform.strategy.bootstrap import Bootstrap
+from nonconform.strategy.split import Split
+from nonconform.utils.data.generator.batch import BatchGenerator
+from nonconform.utils.data.load import load_fraud, load_shuttle
+from nonconform.utils.stat.metrics import false_discovery_rate, statistical_power
 
 
 class TestCaseExtremeSplit(unittest.TestCase):

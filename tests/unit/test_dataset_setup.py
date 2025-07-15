@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 from pandas._testing import assert_frame_equal, assert_series_equal
 
-from unquad.utils.data.load import load_wbc
+from nonconform.utils.data.load import load_wbc
 
 
 class TestDatasetSetup(unittest.TestCase):

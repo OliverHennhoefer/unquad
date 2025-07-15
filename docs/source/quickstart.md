@@ -1,13 +1,13 @@
 # Quickstart Guide
 
-This guide will get you started with `unquad` in just a few minutes.
+This guide will get you started with `nonconform` in just a few minutes.
 
 ## Built-in Datasets
 
-For quick experimentation, unquad includes several benchmark anomaly detection datasets. Install with `pip install unquad[data]` to enable dataset functionality.
+For quick experimentation, nonconform includes several benchmark anomaly detection datasets. Install with `pip install nonconform[data]` to enable dataset functionality.
 
 ```python
-from unquad.utils.data import load_breast, load_shuttle, load_fraud
+from nonconform.utils.data import load_breast, load_shuttle, load_fraud
 
 # Load a dataset - automatically downloads and caches
 x_train, x_test, y_test = load_breast(setup=True)
@@ -25,15 +25,15 @@ Available datasets: `load_breast`, `load_fraud`, `load_ionosphere`, `load_mammog
 
 ### 1. Classical Conformal Anomaly Detection
 
-The most straightforward way to use unquad is with classical conformal anomaly detection:
+The most straightforward way to use nonconform is with classical conformal anomaly detection:
 
 ```python
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.func import Aggregation
 
 # Generate some example data
 X_normal, _ = make_blobs(n_samples=1000, centers=1, random_state=42)
@@ -90,7 +90,7 @@ print(f"Discovered anomaly indices: {anomaly_indices}")
 For better performance in low-data regimes, use resampling-based strategies:
 
 ```python
-from unquad.strategy import Jackknife, CrossValidation
+from nonconform.strategy import Jackknife, CrossValidation
 
 # Jackknife (Leave-One-Out) Conformal Anomaly Detection
 jackknife_strategy = Jackknife()
@@ -125,8 +125,8 @@ print(f"Cross-Validation: {(cv_p_values < 0.05).sum()} detections")
 When dealing with covariate shift, use weighted conformal p-values:
 
 ```python
-from unquad.estimation import WeightedConformalDetector
-from unquad.strategy import Split
+from nonconform.estimation import WeightedConformalDetector
+from nonconform.strategy import Split
 
 # Create weighted conformal anomaly detector
 weighted_strategy = Split(calib_size=0.3)
@@ -147,13 +147,13 @@ print(f"Weighted p-values range: {weighted_p_values.min():.4f} - {weighted_p_val
 
 ## Integration with PyOD
 
-unquad integrates seamlessly with PyOD detectors:
+nonconform integrates seamlessly with PyOD detectors:
 
 ```python
 from pyod.models.knn import KNN
 from pyod.models.lof import LOF
 from pyod.models.ocsvm import OCSVM
-from unquad.strategy import Split
+from nonconform.strategy import Split
 
 # Try different PyOD detectors
 detectors = {
@@ -189,9 +189,9 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 from sklearn.datasets import make_blobs
 from scipy.stats import false_discovery_control
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.func import Aggregation
 
 # Generate data
 np.random.seed(42)
@@ -238,4 +238,4 @@ print(f"Empirical FDR: {false_positives / max(1, discoveries.sum()):.3f}")
 
 - Read the [User Guide](user_guide/conformal_inference.md) for detailed explanations
 - Check out the [Examples](examples/index.rst) for more complex use cases
-- Explore the [API Reference](api/unquad/index.rst) for detailed documentation
+- Explore the [API Reference](api/nonconform/index.rst) for detailed documentation

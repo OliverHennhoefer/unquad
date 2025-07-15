@@ -10,10 +10,10 @@ import pandas as pd
 from pyod.models.lof import LOF
 from pyod.models.isolation_forest import IForest
 from pyod.models.ocsvm import OCSVM
-from unquad.estimation import ExtremeConformalDetector, StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.data import load_shuttle
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.estimation import ExtremeConformalDetector, StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.data import load_shuttle
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 from scipy.stats import false_discovery_control
 
 # Load dataset

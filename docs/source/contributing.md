@@ -1,6 +1,6 @@
-# Contributing to unquad
+# Contributing to nonconform
 
-We welcome contributions to unquad! This guide will help you get started.
+We welcome contributions to nonconform! This guide will help you get started.
 
 ## Types of Contributions
 
@@ -35,8 +35,8 @@ We welcome contributions to unquad! This guide will help you get started.
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/yourusername/unquad.git
-   cd unquad
+   git clone https://github.com/yourusername/nonconform.git
+   cd nonconform
    ```
 
 2. **Create a virtual environment**
@@ -68,7 +68,7 @@ We welcome contributions to unquad! This guide will help you get started.
 
 2. **Sync with upstream**
    ```bash
-   git remote add upstream https://github.com/original/unquad.git
+   git remote add upstream https://github.com/original/nonconform.git
    git fetch upstream
    git rebase upstream/main
    ```
@@ -94,16 +94,16 @@ We welcome contributions to unquad! This guide will help you get started.
 4. **Check code quality**
    ```bash
    # Format code
-   black unquad/ tests/
+   black nonconform/ tests/
    
    # Check imports
-   isort unquad/ tests/
+   isort nonconform/ tests/
    
    # Lint code
-   flake8 unquad/ tests/
+   flake8 nonconform/ tests/
    
    # Type checking
-   mypy unquad/
+   mypy nonconform/
    ```
 
 ### Documentation

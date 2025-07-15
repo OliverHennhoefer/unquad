@@ -11,8 +11,8 @@ The `BatchGenerator` creates evaluation batches with configurable anomaly propor
 ## Basic Usage
 
 ```python
-from unquad.utils.data import load_shuttle
-from unquad.utils.data.generator import BatchGenerator
+from nonconform.utils.data import load_shuttle
+from nonconform.utils.data.generator import BatchGenerator
 
 # Create batch generator with proportional mode (default)
 batch_gen = BatchGenerator(
@@ -29,7 +29,7 @@ print(f"Training data shape: {x_train.shape}")
 # Generate batches
 for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=5)):
     anomaly_count = y_batch.sum()
-    print(f"Batch {i+1}: {x_batch.shape}, Anomalies: {anomaly_count} ({anomaly_count/len(x_batch)*100:.1f}%)")
+    print(f"Batch {i + 1}: {x_batch.shape}, Anomalies: {anomaly_count} ({anomaly_count / len(x_batch) * 100:.1f}%)")
 ```
 
 ## Anomaly Proportion Control Modes
@@ -84,9 +84,9 @@ print(f"Global proportion: {total_anomalies/total_instances:.3f}")  # Exactly 0.
 
 ```python
 from pyod.models.lof import LOF
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 # Create batch generator
 batch_gen = BatchGenerator(
@@ -110,24 +110,25 @@ batch_results = []
 for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
     # Get p-values
     p_values = detector.predict(x_batch)
-    
+
     # Apply significance threshold
     decisions = p_values < 0.05
-    
+
     # Calculate metrics
     fdr = false_discovery_rate(y_batch, decisions)
     power = statistical_power(y_batch, decisions)
-    
+
     batch_results.append({
-        'batch': i+1,
+        'batch': i + 1,
         'fdr': fdr,
         'power': power,
         'detections': decisions.sum()
     })
-    print(f"Batch {i+1}: FDR={fdr:.3f}, Power={power:.3f}")
+    print(f"Batch {i + 1}: FDR={fdr:.3f}, Power={power:.3f}")
 
 # Summary statistics
 import numpy as np
+
 mean_fdr = np.mean([r['fdr'] for r in batch_results])
 mean_power = np.mean([r['power'] for r in batch_results])
 print(f"Average FDR: {mean_fdr:.3f}, Average Power: {mean_power:.3f}")
@@ -138,7 +139,7 @@ print(f"Average FDR: {mean_fdr:.3f}, Average Power: {mean_power:.3f}")
 ### Different Datasets
 
 ```python
-from unquad.utils.data import load_breast, load_fraud
+from nonconform.utils.data import load_breast, load_fraud
 
 # Test with different datasets
 datasets = [
@@ -149,19 +150,19 @@ datasets = [
 
 for load_func, name in datasets:
     print(f"\n{name} Dataset:")
-    
+
     batch_gen = BatchGenerator(
         load_data_func=load_func,
         batch_size=100,
         anomaly_proportion=0.1,
         random_state=42
     )
-    
+
     # Check data availability
     x_train = batch_gen.get_training_data()
     print(f"  Training data: {x_train.shape}")
     print(f"  Available - Normal: {batch_gen.n_normal}, Anomaly: {batch_gen.n_anomaly}")
-    
+
     # Generate one batch
     x_batch, y_batch = next(batch_gen.generate(n_batches=1))
     print(f"  Batch generated: {x_batch.shape}, Anomalies: {y_batch.sum()}")

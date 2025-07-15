@@ -6,7 +6,7 @@ import unittest.mock as mock
 from pathlib import Path
 from urllib.error import URLError
 
-from unquad.utils.data import load
+from nonconform.utils.data import load
 
 
 class TestDatasetDownload(unittest.TestCase):
@@ -149,7 +149,7 @@ class TestDatasetDownload(unittest.TestCase):
 
         # Mock only the network call, not the entire _download_dataset function
         mock_data = b"fake_parquet_data"
-        with mock.patch("unquad.utils.data.load.urlopen") as mock_urlopen:
+        with mock.patch("nonconform.utils.data.load.urlopen") as mock_urlopen:
             # Mock the response object
             mock_response = mock.MagicMock()
             mock_response.read.return_value = mock_data
@@ -157,7 +157,7 @@ class TestDatasetDownload(unittest.TestCase):
             mock_response.__enter__.return_value = mock_response
             mock_urlopen.return_value = mock_response
 
-            with mock.patch("unquad.utils.data.load.Request"):
+            with mock.patch("nonconform.utils.data.load.Request"):
                 # First call should trigger download
                 load._download_dataset("test.parquet.gz", show_progress=False)
                 self.assertEqual(mock_urlopen.call_count, 1)
@@ -349,7 +349,7 @@ class TestDatasetDownload(unittest.TestCase):
 
         # Mock the network layer, not the entire download function
         test_data = b"cached_test_data"
-        with mock.patch("unquad.utils.data.load.urlopen") as mock_urlopen:
+        with mock.patch("nonconform.utils.data.load.urlopen") as mock_urlopen:
             # Mock the response object
             mock_response = mock.MagicMock()
             mock_response.read.return_value = test_data
@@ -357,7 +357,7 @@ class TestDatasetDownload(unittest.TestCase):
             mock_response.__enter__.return_value = mock_response
             mock_urlopen.return_value = mock_response
 
-            with mock.patch("unquad.utils.data.load.Request"):
+            with mock.patch("nonconform.utils.data.load.Request"):
                 # First call should trigger download
                 stream1 = load._download_dataset(
                     "cache_test.parquet.gz", show_progress=False

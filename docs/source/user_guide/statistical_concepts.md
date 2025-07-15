@@ -1,6 +1,6 @@
-# Statistical Concepts in unquad
+# Statistical Concepts in nonconform
 
-This guide explains the key statistical concepts that underpin unquad's functionality.
+This guide explains the key statistical concepts that underpin nonconform's functionality.
 
 ## Conformal Inference
 
@@ -20,7 +20,7 @@ The key assumption in conformal inference is exchangeability, which is weaker th
 
 ### P-values in Anomaly Detection
 
-In unquad, p-values represent the probability of observing a more extreme anomaly score under the null hypothesis (that the point is normal). Specifically:
+In nonconform, p-values represent the probability of observing a more extreme anomaly score under the null hypothesis (that the point is normal). Specifically:
 
 - Small p-values indicate strong evidence against the null hypothesis
 - Large p-values suggest the point is likely normal
@@ -28,7 +28,7 @@ In unquad, p-values represent the probability of observing a more extreme anomal
 
 ## False Discovery Rate (FDR) Control
 
-FDR control is a multiple testing procedure that limits the expected proportion of false discoveries among all discoveries. unquad implements the Benjamini-Hochberg procedure, which:
+FDR control is a multiple testing procedure that limits the expected proportion of false discoveries among all discoveries. nonconform implements the Benjamini-Hochberg procedure, which:
 
 1. Controls FDR at a specified level α
 2. Is more powerful than family-wise error rate control
@@ -50,7 +50,7 @@ When the exchangeability assumption is violated (e.g., due to covariate shift), 
 
 ## Calibration and Validation
 
-The calibration process in unquad involves:
+The calibration process in nonconform involves:
 
 1. Splitting the data into training and calibration sets
 2. Computing nonconformity scores on the calibration set
@@ -60,7 +60,7 @@ This process ensures that the resulting p-values are valid and can be used for s
 
 ## Statistical Guarantees
 
-unquad provides the following statistical guarantees:
+nonconform provides the following statistical guarantees:
 
 1. **Marginal Validity**: P-values are valid marginally over the calibration set
 2. **FDR Control**: The Benjamini-Hochberg procedure controls FDR at the specified level

@@ -1,6 +1,6 @@
 # Installation
 
-Here you will learn how to install the `unquad` package.
+Here you will learn how to install the `nonconform` package.
 
 ## Prerequisites
 
@@ -8,10 +8,10 @@ Here you will learn how to install the `unquad` package.
 
 ## Installation with pip
 
-To install `unquad`, run the following command in your terminal:
+To install `nonconform`, run the following command in your terminal:
 
 ```bash
-pip install unquad
+pip install nonconform
 ```
 ## Optional dependencies
 
@@ -27,19 +27,19 @@ Existing optional dependencies are grouped into `[data]`, `[dev]`, `[docs]`, `[d
 
 To install with datasets support:
 ```bash
-pip install unquad[data]
+pip install nonconform[data]
 ```
 
-**Note**: The datasets are downloaded automatically when first used and cached both in memory and on disk (in `~/.cache/unquad/`) for faster subsequent access.
+**Note**: The datasets are downloaded automatically when first used and cached both in memory and on disk (in `~/.cache/nonconform/`) for faster subsequent access.
 
 To install with online FDR control for streaming scenarios:
 ```bash
-pip install unquad[fdr]
+pip install nonconform[fdr]
 ```
 
 To install with all optional dependencies:
 ```bash
-pip install unquad[all]
+pip install nonconform[all]
 ```
 
 ## Get started
@@ -47,5 +47,5 @@ pip install unquad[all]
 You are all set to find your first anomalies!
 
 ```bash
-import unquad
+import nonconform
 ```

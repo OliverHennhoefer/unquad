@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This guide addresses common issues you might encounter while using unquad and provides solutions.
+This guide addresses common issues you might encounter while using nonconform and provides solutions.
 
 ## Common Issues and Solutions
 
@@ -12,25 +12,25 @@ This guide addresses common issues you might encounter while using unquad and pr
 
 ```python
 # Old API (deprecated)
-from unquad.estimation.configuration import DetectorConfig
+from nonconform.estimation.configuration import DetectorConfig
 
 detector = ConformalDetector(
-   detector=LOF(),
-   strategy=Split(calib_size=0.2),
-   config=DetectorConfig(alpha=0.1)
+    detector=LOF(),
+    strategy=Split(calib_size=0.2),
+    config=DetectorConfig(alpha=0.1)
 )
 
 # New API
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import SplitStrategy
-from unquad.utils.func.enums import Aggregation
+from nonconform.estimation.standard_conformal import StandardConformalDetector
+from nonconform.strategy.split import SplitStrategy
+from nonconform.utils.func.enums import Aggregation
 
 detector = StandardConformalDetector(
-   detector=LOF(),
-   strategy=Split(calib_size=0.2),
-   aggregation=Aggregation.MEDIAN,
-   seed=42,
-   silent=False
+    detector=LOF(),
+    strategy=Split(calib_size=0.2),
+    aggregation=Aggregation.MEDIAN,
+    seed=42,
+    silent=False
 )
 ```
 
@@ -162,8 +162,8 @@ if y_true is not None:
 
 ```python
 # Try multiple strategies for comparison
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.strategy.cross_val import CrossValidation
+from nonconform.strategy.bootstrap import Bootstrap
+from nonconform.strategy.cross_val import CrossValidation
 
 strategies = {
     'Split': Split(calib_size=0.2),
@@ -195,10 +195,10 @@ for name, strategy in strategies.items():
 # Removed - use individual imports
 
 # New imports
-from unquad.strategy.split import Split
-from unquad.strategy.cross_val import CrossValidation
-from unquad.strategy.jackknife import Jackknife
-from unquad.strategy.bootstrap import Bootstrap
+from nonconform.strategy.split import Split
+from nonconform.strategy.cross_val import CrossValidation
+from nonconform.strategy.jackknife import Jackknife
+from nonconform.strategy.bootstrap import Bootstrap
 ```
 
 ### 9. Parameter Name Changes
@@ -225,7 +225,7 @@ Bootstrap(sample_ratio=0.8) # -> resampling_ratio=0.8
 - Use the correct aggregation enum values
 
 ```python
-from unquad.utils.func.enums import Aggregation
+from nonconform.utils.func.enums import Aggregation
 
 # Correct usage of aggregation enums
 detector = ConformalDetector(
@@ -327,32 +327,32 @@ print_memory_usage("after prediction")
 def debug_weighted_conformal(detector, X_train, X_test):
     """Debug weighted conformal detection specifically."""
     print("=== Weighted Conformal Debug ===")
-    
+
     # Check if it's actually a weighted detector
-    from unquad.estimation.weighted_conformal import WeightedConformalDetector
+    from nonconform.estimation.weighted_conformal import WeightedConformalDetector
     if not isinstance(detector, WeightedConformalDetector):
         print("WARNING: Not a WeightedConformalDetector")
         return
-    
+
     # Fit and check calibration samples
     detector.fit(X_train)
-    
+
     if hasattr(detector, 'calibration_samples'):
         print(f"Calibration samples stored: {len(detector.calibration_samples)}")
         if len(detector.calibration_samples) == 0:
             print("ERROR: No calibration samples stored")
-    
+
     # Check for distribution shift
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import cross_val_score
-    
+
     X_combined = np.vstack([X_train, X_test])
     y_combined = np.hstack([np.zeros(len(X_train)), np.ones(len(X_test))])
-    
+
     clf = LogisticRegression(random_state=42)
     scores = cross_val_score(clf, X_combined, y_combined, cv=5)
     shift_score = scores.mean()
-    
+
     print(f"Distribution shift score: {shift_score:.3f}")
     if shift_score > 0.7:
         print("Significant shift detected - weighted conformal recommended")
@@ -422,18 +422,18 @@ If you encounter issues not covered in this guide:
 1. **Check the New API**: Ensure you're using the updated API with direct parameters instead of DetectorConfig
 2. **Update Import Statements**: Use the new module structure for strategy imports
 3. **Verify Parameter Names**: Check that parameter names match the new API
-4. **Check the [GitHub Issues](https://github.com/OliverHennhoefer/unquad/issues)** for similar problems
-5. **Search the [Discussions](https://github.com/OliverHennhoefer/unquad/discussions)** for solutions
+4. **Check the [GitHub Issues](https://github.com/OliverHennhoefer/nonconform/issues)** for similar problems
+5. **Search the [Discussions](https://github.com/OliverHennhoefer/nonconform/discussions)** for solutions
 6. **Create a new issue** with:
    - A minimal reproducible example using the new API
    - Expected vs actual behavior
-   - System information (Python version, unquad version, etc.)
+   - System information (Python version, nonconform version, etc.)
    - Relevant error messages
    - Whether you're migrating from the old API
 
 ## Migration Checklist
 
-When migrating from older versions of unquad:
+When migrating from older versions of nonconform:
 
 - [ ] Remove `DetectorConfig` imports and usage
 - [ ] Update detector initialization to use direct parameters

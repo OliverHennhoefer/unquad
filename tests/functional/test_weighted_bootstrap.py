@@ -3,10 +3,10 @@ import unittest
 from scipy.stats import false_discovery_control
 
 from pyod.models.iforest import IForest
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.utils.data.load import load_shuttle
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from nonconform.estimation.weighted_conformal import WeightedConformalDetector
+from nonconform.strategy.bootstrap import Bootstrap
+from nonconform.utils.data.load import load_shuttle
+from nonconform.utils.stat.metrics import false_discovery_rate, statistical_power
 
 
 class TestCaseBootstrapConformalWeighted(unittest.TestCase):

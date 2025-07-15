@@ -1,6 +1,6 @@
 [project]
-name = "unquad"
-version = "0.8.4"
+name = "nonconform"
+version = "0.9.0"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
@@ -60,12 +60,12 @@ fdr = [
     "online-fdr>=0.0.3"
 ]
 all = [
-    "unquad[data,dev,docs,dl,fdr]"
+    "nonconform[data,dev,docs,dl,fdr]"
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/OliverHennhoefer/unquad"
-"Bugs" = "https://github.com/OliverHennhoefer/unquad/issues"
+"Homepage" = "https://github.com/OliverHennhoefer/nonconform"
+"Bugs" = "https://github.com/OliverHennhoefer/nonconform/issues"
 
 [tool.black]
 line-length = 88
@@ -77,7 +77,7 @@ target-version = [
 line-length = 88
 target-version = "py312"
 src = [
-    "unquad", # Specify your source directory explicitly
+    "nonconform", # Specify your source directory explicitly
     "tests",  # Add your tests directory
     "examples", # Add your examples directory
     "."       # For files in root like pyproject.toml, conf.py if not in a subdir
@@ -123,10 +123,10 @@ exclude = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"unquad/estimation/conformal.py" = [
+"nonconform/estimation/conformal.py" = [
     "E402" # Module level import not at top of file
 ]
-"unquad/estimation/weighted_conformal.py" = [
+"nonconform/estimation/weighted_conformal.py" = [
     "E402" # Module level import not at top of file
 ]
 "docs/source/conf.py" = [

@@ -3,10 +3,10 @@ import unittest
 from scipy.stats import false_discovery_control
 
 from pyod.models.iforest import IForest
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.cross_val import CrossValidation
-from unquad.utils.data.load import load_fraud
-from unquad.utils.stat.metrics import false_discovery_rate, statistical_power
+from nonconform.estimation.standard_conformal import StandardConformalDetector
+from nonconform.strategy.cross_val import CrossValidation
+from nonconform.utils.data.load import load_fraud
+from nonconform.utils.stat.metrics import false_discovery_rate, statistical_power
 
 
 class TestCaseSplitConformal(unittest.TestCase):

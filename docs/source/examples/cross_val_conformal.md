@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import CrossValidation
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import CrossValidation
+from nonconform.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -170,9 +170,9 @@ print(f"Std detections: {np.std(cv_results):.1f}")
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy.split import Split
-from unquad.strategy.bootstrap import Bootstrap
-from unquad.strategy.jackknife import Jackknife
+from nonconform.strategy.split import Split
+from nonconform.strategy.bootstrap import Bootstrap
+from nonconform.strategy.jackknife import Jackknife
 
 # Compare cross-validation with other strategies
 strategies = {
@@ -194,10 +194,10 @@ for name, strategy in strategies.items():
     )
     detector.fit(X)
     p_vals = detector.predict(X, raw=False)
-    
+
     # Apply FDR control
     adj_p_vals = false_discovery_control(p_vals, method='bh')
-    
+
     comparison_results[name] = {
         'raw_detections': (p_vals < 0.05).sum(),
         'fdr_detections': (adj_p_vals < 0.05).sum(),

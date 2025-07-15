@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "Unquad"
+project = "Nonconform"
 copyright = "2024, Oliver Hennhöfer"
 author = "Oliver Hennhöfer"
 release = "0.2"
@@ -101,7 +101,7 @@ html_theme_options = {
 
 # -- Options for sphinx-autoapi ------------------------------------------------
 autoapi_type = "python"
-autoapi_dirs = ["../../unquad"]  # Point specifically to the unquad package
+autoapi_dirs = ["../../nonconform"]  # Point specifically to the nonconform package
 autoapi_root = "api"
 
 # AutoAPI options
@@ -159,7 +159,7 @@ suppress_warnings = ['ref.python']
 def autoapi_skip_member(app, what, name, obj, skip, options):
     """Skip specific duplicate members to avoid cross-reference warnings."""
     # Skip the original enum location in favor of the re-exported one
-    if name == "unquad.utils.func.enums.Aggregation":
+    if name == "nonconform.utils.func.enums.Aggregation":
         return True
     return skip
 

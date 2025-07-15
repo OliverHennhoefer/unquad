@@ -1,10 +1,10 @@
 from pyod.models.auto_encoder import AutoEncoder
 from scipy.stats import false_discovery_control
 
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.data import load_fraud
-from unquad.utils.stat import false_discovery_rate, statistical_power
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.data import load_fraud
+from nonconform.utils.stat import false_discovery_rate, statistical_power
 
 x_train, x_test, y_test = load_fraud(setup=True)
 

@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer, make_blobs
 from scipy.stats import false_discovery_control
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()

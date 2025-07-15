@@ -1,6 +1,6 @@
 # Best Practices Guide
 
-This guide provides recommendations for using unquad effectively in different scenarios with the new API.
+This guide provides recommendations for using nonconform effectively in different scenarios with the new API.
 
 ## Data Preparation
 
@@ -102,9 +102,9 @@ accurate_detectors = {
 Consider using multiple detectors for improved robustness:
 
 ```python
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from nonconform.estimation.standard_conformal import StandardConformalDetector
+from nonconform.strategy.split import Split
+from nonconform.utils.func.enums import Aggregation
 from scipy.stats import false_discovery_control
 
 # Create multiple detectors
@@ -144,7 +144,7 @@ Best for:
 - When you have enough data for reliable calibration
 
 ```python
-from unquad.strategy.split import Split
+from nonconform.strategy.split import Split
 
 # For large datasets
 strategy = Split(calib_size=0.2)  # Use 20% for calibration
@@ -161,7 +161,7 @@ Best for:
 - When computational cost is not a primary concern
 
 ```python
-from unquad.strategy.jackknife import Jackknife
+from nonconform.strategy.jackknife import Jackknife
 
 # For small datasets where every sample matters
 strategy = Jackknife()
@@ -175,7 +175,7 @@ Best for:
 - When you want to balance efficiency and power
 
 ```python
-from unquad.strategy.bootstrap import Bootstrap
+from nonconform.strategy.bootstrap import Bootstrap
 
 # Balanced approach for medium datasets
 strategy = Bootstrap(
@@ -192,7 +192,7 @@ Best for:
 - When you need stable performance estimates
 
 ```python
-from unquad.strategy.cross_val import CrossValidation
+from nonconform.strategy.cross_val import CrossValidation
 
 # Good balance of efficiency and stability
 strategy = CrossValidation(k=5)
@@ -446,7 +446,7 @@ class ScalableAnomalyDetector:
 ```python
 from dataclasses import dataclass
 from typing import Optional
-from unquad.utils.func.enums import Aggregation
+from nonconform.utils.func.enums import Aggregation
 
 
 @dataclass
@@ -606,4 +606,4 @@ print(f"Discoveries: {results['discoveries'].sum()}")
 print(f"Performance metrics: {results['metrics']}")
 ```
 
-This comprehensive approach ensures robust, scalable, and maintainable anomaly detection systems using the new unquad API.
+This comprehensive approach ensures robust, scalable, and maintainable anomaly detection systems using the new nonconform API.

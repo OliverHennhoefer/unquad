@@ -8,10 +8,10 @@ This example demonstrates how to use classical conformal prediction for anomaly 
 import numpy as np
 from pyod.models.lof import LOF
 from scipy.stats import false_discovery_control
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.func import Aggregation
-from unquad.utils.data import load_breast
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.func import Aggregation
+from nonconform.utils.data import load_breast
 
 # Load example data - downloads automatically and caches in memory
 x_train, x_test, y_test = load_breast(setup=True)
@@ -63,7 +63,7 @@ print(f"Empirical FDR: {(discoveries & (y_test == 0)).sum() / max(1, discoveries
 ## Advanced Usage with Cross-Validation
 
 ```python
-from unquad.strategy import CrossValidation
+from nonconform.strategy import CrossValidation
 
 # Use cross-validation strategy for better calibration
 cv_strategy = CrossValidation(k=5)

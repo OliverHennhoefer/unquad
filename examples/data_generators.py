@@ -1,5 +1,5 @@
-from unquad.utils.data.load import load_breast, load_shuttle
-from unquad.utils.data.generator import BatchGenerator, OnlineGenerator
+from nonconform.utils.data.load import load_breast, load_shuttle
+from nonconform.utils.data.generator import BatchGenerator, OnlineGenerator
 
 
 def demonstrate_batch_generation():

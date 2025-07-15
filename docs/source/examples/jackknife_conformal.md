@@ -9,9 +9,9 @@ import numpy as np
 from pyod.models.lof import LOF
 from sklearn.datasets import load_breast_cancer
 from scipy.stats import false_discovery_control
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Jackknife
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Jackknife
+from nonconform.utils.func import Aggregation
 
 # Load example data
 data = load_breast_cancer()
@@ -87,8 +87,8 @@ import time
 
 # Jackknife can be computationally expensive for large datasets
 # Let's compare computation time with other strategies
-from unquad.strategy.split import Split
-from unquad.strategy.cross_val import CrossValidation
+from nonconform.strategy.split import Split
+from nonconform.strategy.cross_val import CrossValidation
 
 # Use a subset for timing comparison
 X_subset = X[:100]  # Use first 100 samples
@@ -108,12 +108,12 @@ for name, strategy in strategies.items():
         seed=42,
         silent=True
     )
-    
+
     start_time = time.time()
     detector.fit(X_subset)
     _ = detector.predict(X_subset, raw=False)
     end_time = time.time()
-    
+
     timing_results[name] = end_time - start_time
     print(f"{name}: {timing_results[name]:.2f} seconds")
 
@@ -206,7 +206,7 @@ for config in leave_k_out_configs:
 ## Comparison with Other Strategies
 
 ```python
-from unquad.strategy.bootstrap import Bootstrap
+from nonconform.strategy.bootstrap import Bootstrap
 
 # Comprehensive comparison
 strategies = {
@@ -228,10 +228,10 @@ for name, strategy in strategies.items():
     )
     detector.fit(X)
     p_vals = detector.predict(X, raw=False)
-    
+
     # Apply FDR control
     adj_p_vals = false_discovery_control(p_vals, method='bh')
-    
+
     comparison_results[name] = {
         'raw_detections': (p_vals < 0.05).sum(),
         'fdr_detections': (adj_p_vals < 0.05).sum(),

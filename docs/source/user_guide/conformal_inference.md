@@ -1,6 +1,6 @@
 # Understanding Conformal Inference
 
-This guide explains the theoretical foundations and practical applications of conformal inference in anomaly detection using the new unquad API.
+This guide explains the theoretical foundations and practical applications of conformal inference in anomaly detection using the new nonconform API.
 
 ## What is Conformal Inference?
 
@@ -28,9 +28,9 @@ Conformal inference provides a principled way to convert scores to p-values:
 
 ```python
 # Conformal approach - statistically valid p-values
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.func import Aggregation
 
 # Create conformal detector
 strategy = Split(calib_size=0.2)
@@ -134,9 +134,9 @@ The method estimates the likelihood ratio dP_test(X)/dP_calib(X) and reweights c
 ```python
 import numpy as np
 from sklearn.ensemble import IsolationForest
-from unquad.estimation import StandardConformalDetector
-from unquad.strategy import Split
-from unquad.utils.func import Aggregation
+from nonconform.estimation import StandardConformalDetector
+from nonconform.strategy import Split
+from nonconform.utils.func import Aggregation
 
 # 1. Prepare your data
 X_train = load_normal_training_data()  # Normal data for training and calibration
@@ -194,7 +194,7 @@ for i, p_val in enumerate(p_values[:5]):
 Best for large datasets where you can afford to hold out calibration data:
 
 ```python
-from unquad.strategy import Split
+from nonconform.strategy import Split
 
 # Use 20% of data for calibration
 strategy = Split(calib_size=0.2)
@@ -208,7 +208,7 @@ strategy = Split(calib_size=1000)
 Better utilization of data by using all samples for both training and calibration:
 
 ```python
-from unquad.strategy import CrossValidation
+from nonconform.strategy import CrossValidation
 
 # 5-fold cross-validation
 strategy = CrossValidation(k=5)
@@ -226,7 +226,7 @@ detector = StandardConformalDetector(
 Provides robust estimates through resampling:
 
 ```python
-from unquad.strategy import Bootstrap
+from nonconform.strategy import Bootstrap
 
 # 100 bootstrap samples with 80% sampling ratio
 strategy = Bootstrap(n_bootstraps=100, resampling_ratio=0.8)
@@ -244,7 +244,7 @@ detector = StandardConformalDetector(
 Maximum use of small datasets:
 
 ```python
-from unquad.strategy import Jackknife
+from nonconform.strategy import Jackknife
 
 # Leave-one-out cross-validation
 strategy = Jackknife()

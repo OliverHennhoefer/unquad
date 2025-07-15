@@ -7,17 +7,17 @@ scipy>=1.13.0
 tqdm>=4.66.2
 
 # Optional dependencies for development
-# Data dependencies (unquad[data])
+# Data dependencies (nonconform[data])
 pyarrow>=16.1.0
 
-# Deep learning dependencies (unquad[dl])
+# Deep learning dependencies (nonconform[dl])
 tensorflow>=2.16.1
 torch>=2.2.2
 
-# Advanced FDR control dependencies (unquad[fdr])
+# Advanced FDR control dependencies (nonconform[fdr])
 online-fdr>=0.0.3
 
-# Development dependencies (unquad[dev])
+# Development dependencies (nonconform[dev])
 black
 ruff
 pre-commit

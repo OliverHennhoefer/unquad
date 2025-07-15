@@ -1,6 +1,6 @@
 # False Discovery Rate Control
 
-This guide explains how to use False Discovery Rate (FDR) control in `unquad` for multiple testing scenarios using scipy.stats.false_discovery_control.
+This guide explains how to use False Discovery Rate (FDR) control in `nonconform` for multiple testing scenarios using scipy.stats.false_discovery_control.
 
 ## Overview
 
@@ -11,9 +11,9 @@ FDR control is a statistical method for handling multiple hypothesis testing. In
 ```python
 import numpy as np
 from scipy.stats import false_discovery_control
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
-from unquad.utils.func.enums import Aggregation
+from nonconform.estimation.standard_conformal import StandardConformalDetector
+from nonconform.strategy.split import Split
+from nonconform.utils.func.enums import Aggregation
 from pyod.models.lof import LOF
 
 # Initialize detector
@@ -134,7 +134,7 @@ adjusted_p_vals = false_discovery_control(all_p_values, method='bh', alpha=0.05)
 FDR control works naturally with conformal prediction p-values:
 
 ```python
-from unquad.estimation.weighted_conformal import WeightedConformalDetector
+from nonconform.estimation.weighted_conformal import WeightedConformalDetector
 
 # Use with weighted conformal detection
 weighted_detector = WeightedConformalDetector(
@@ -280,7 +280,7 @@ For dynamic settings with streaming data batches, the optional `online-fdr` pack
 
 ```python
 # Install FDR dependencies
-# pip install unquad[fdr]
+# pip install nonconform[fdr]
 
 from onlinefdr import Alpha_investing, LORD
 

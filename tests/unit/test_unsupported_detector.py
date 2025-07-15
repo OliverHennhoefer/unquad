@@ -1,8 +1,8 @@
 import unittest
 
 from pyod.models.deep_svdd import DeepSVDD
-from unquad.estimation.standard_conformal import StandardConformalDetector
-from unquad.strategy.split import Split
+from nonconform.estimation.standard_conformal import StandardConformalDetector
+from nonconform.strategy.split import Split
 
 
 class TestUnsupportedDetector(unittest.TestCase):

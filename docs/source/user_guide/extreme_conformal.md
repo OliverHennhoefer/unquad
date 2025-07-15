@@ -52,8 +52,8 @@ The hybrid EVT-conformal approach maintains statistical validity under the stand
 ## Basic Usage
 
 ```python
-from unquad.estimation.extreme_conformal import ExtremeConformalDetector
-from unquad.strategy.split import Split
+from nonconform.estimation.extreme_conformal import ExtremeConformalDetector
+from nonconform.strategy.split import Split
 from pyod.models.lof import LOF
 
 # Initialize detector
@@ -147,8 +147,8 @@ detector = EVTConformalDetector(
 Extreme conformal works with all conformal strategies:
 
 ```python
-from unquad.strategy.cross_val import CrossValidation
-from unquad.strategy.bootstrap import Bootstrap
+from nonconform.strategy.cross_val import CrossValidation
+from nonconform.strategy.bootstrap import Bootstrap
 
 # Cross-validation strategy
 detector = EVTConformalDetector(
