@@ -29,7 +29,7 @@ The most straightforward way to use nonconform is with classical conformal anoma
 
 ```python
 import numpy as np
-from sklearn.ensemble import IsolationForest
+from pyod.models.iforest import IForest
 from sklearn.datasets import make_blobs
 from nonconform.estimation import StandardConformalDetector
 from nonconform.strategy import Split
@@ -44,7 +44,7 @@ X_anomalies = np.random.uniform(-10, 10, (20, X_test.shape[1]))
 X_test = np.vstack([X_test, X_anomalies])
 
 # Initialize base detector
-base_detector = IsolationForest(random_state=42)
+base_detector = IForest(behaviour="new", random_state=42)
 
 # Create conformal anomaly detector with split strategy
 strategy = Split(calib_size=0.3)
@@ -186,7 +186,7 @@ Here's a complete example that ties everything together:
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.ensemble import IsolationForest
+from pyod.models.iforest import IForest
 from sklearn.datasets import make_blobs
 from scipy.stats import false_discovery_control
 from nonconform.estimation import StandardConformalDetector
@@ -204,7 +204,7 @@ X_test = np.vstack([X_test_normal, X_test_anomalies])
 y_true = np.hstack([np.zeros(80), np.ones(20)])
 
 # Setup and fit detector
-base_detector = IsolationForest(random_state=42)
+base_detector = IForest(behaviour="new", random_state=42)
 strategy = Split(calib_size=0.3)
 detector = StandardConformalDetector(
     detector=base_detector,

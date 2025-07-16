@@ -8,7 +8,7 @@ Complete example demonstrating Extreme Value Theory enhanced conformal anomaly d
 import numpy as np
 import pandas as pd
 from pyod.models.lof import LOF
-from pyod.models.isolation_forest import IForest
+from pyod.models.iforest import IForest
 from pyod.models.ocsvm import OCSVM
 from nonconform.estimation import ExtremeConformalDetector, StandardConformalDetector
 from nonconform.strategy import Split
@@ -185,7 +185,7 @@ print(f"FDR controlled: {false_discovery_rate(y_test, fdr_decisions):.3f}")
 # Test extreme conformal with different base detectors
 detectors = [
     ("LOF", LOF(n_neighbors=20)),
-    ("IForest", IForest(n_estimators=100)),
+    ("IForest", IForest(behaviour="new", n_estimators=100)),
     ("OCSVM", OCSVM(gamma='scale'))
 ]
 
