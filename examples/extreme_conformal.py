@@ -1,18 +1,25 @@
-from online_fdr import BatchStoreyBH
+from online_fdr import BatchPRDS
 
 from nonconform.estimation import ExtremeConformalDetector, StandardConformalDetector
 from nonconform.strategy import Split
-from nonconform.utils.data import create_batch_generator, load_shuttle
+from nonconform.utils.data.generator import BatchGenerator
+from nonconform.utils.data.load import load_shuttle
 from nonconform.utils.stat import false_discovery_rate, statistical_power
 from pyod.models.iforest import IForest
 
 if __name__ == "__main__":
 
-    df = load_shuttle()
-
-    x_train, batch_gen = create_batch_generator(
-        df, train_size=0.6, batch_size=100, anomaly_proportion=0.01, random_state=42
+    # Create batch generator with new API
+    batch_gen = BatchGenerator(
+        load_data_func=load_shuttle,
+        batch_size=100,
+        anomaly_proportion=0.01,
+        train_size=0.6,
+        random_state=42
     )
+
+    # Get training data from generator
+    x_train = batch_gen.get_training_data()
 
     # EVT-Enhanced Conformal Anomaly Detector
     extreme_ce = ExtremeConformalDetector(
@@ -30,7 +37,7 @@ if __name__ == "__main__":
     extreme_ce.fit(x_train)
     standard_ce.fit(x_train)
 
-    batch_fdr = BatchStoreyBH(alpha=0.2, lambda_=0.5)
+    batch_fdr = BatchPRDS(alpha=0.2)
 
     label = []
     x_decision = []
