@@ -1,5 +1,4 @@
 from collections.abc import Callable, Iterator
-from typing import Literal
 
 import pandas as pd
 
@@ -8,10 +7,10 @@ from .base import BaseDataGenerator
 
 class OnlineGenerator(BaseDataGenerator):
     """Generate single instances with probabilistic anomaly contamination for streaming.
-    
+
     Online generators use probabilistic anomaly control to ensure exact global
     proportion over a specified number of instances.
-    
+
     Parameters
     ----------
     load_data_func : Callable[[], pd.DataFrame]
@@ -24,7 +23,7 @@ class OnlineGenerator(BaseDataGenerator):
         Proportion of normal instances to use for training.
     random_state : int, optional
         Seed for random number generator.
-        
+
     Examples
     --------
     >>> from nonconform.utils.data.load import load_shuttle
@@ -45,7 +44,7 @@ class OnlineGenerator(BaseDataGenerator):
     >>> for x_instance, y_label in online_gen.generate(n_instances=1000):
     ...     print(f"Instance: {x_instance.shape}, Label: {y_label}")
     """
-    
+
     def __init__(
         self,
         load_data_func: Callable[[], pd.DataFrame],
@@ -64,17 +63,17 @@ class OnlineGenerator(BaseDataGenerator):
             train_size=train_size,
             random_state=random_state,
         )
-    
+
     def generate(
         self, n_instances: int | None = None
     ) -> Iterator[tuple[pd.DataFrame, int]]:
         """Generate stream of single instances with exact anomaly proportion.
-        
+
         Parameters
         ----------
         n_instances : int, optional
             Number of instances to generate. If None, generates up to max_instances.
-            
+
         Yields
         ------
         x_instance : pd.DataFrame
@@ -85,26 +84,26 @@ class OnlineGenerator(BaseDataGenerator):
         # Default to max_instances if not specified
         if n_instances is None:
             n_instances = self.max_items
-        
+
         # Validate we don't exceed max_instances
         if n_instances > self.max_items:
             raise ValueError(
                 f"Requested {n_instances} instances exceeds max_instances "
                 f"({self.max_items}). Global proportion cannot be guaranteed."
             )
-        
+
         instance_count = 0
-        
+
         while instance_count < n_instances:
             # Determine if this instance should be anomaly using global tracking
             is_anomaly = self._should_generate_anomaly()
-            
+
             # Sample instance
             instance, label = self._sample_instance(is_anomaly)
-            
+
             # Update tracking
             self._current_anomalies += label
             self._items_generated += 1
-            
+
             yield instance, label
             instance_count += 1

@@ -1,6 +1,3 @@
-![Logo](./docs/img/banner_dark.png#gh-dark-mode-only)
-![Logo](./docs/img/banner_light.png#gh-light-mode-only)
-
 **nonconform** is a Python library that enhances anomaly detection by providing uncertainty quantification. It acts as a wrapper around most detectors from the popular [*PyOD*](https://pyod.readthedocs.io/en/latest/) library (see [Supported Estimators](#supported-estimators)). By leveraging one-class classification principles and **conformal inference**, **nonconform** enables **statistically rigorous anomaly detection**.
 
 # Key Features
@@ -10,7 +7,7 @@
 *   **Broad PyOD Compatibility:** Works with a wide range of PyOD estimators (see [Supported Estimators](#supported-estimators)).
 *   **Flexible Strategies:** Implements various conformal strategies like Split-Conformal and Bootstrap-after-Jackknife+ (JaB+).
 
-# :hatching_chick: Getting Started
+# Getting Started
 
 ```sh
 pip install nonconform
@@ -63,7 +60,7 @@ Empirical FDR: 0.108
 Empirical Power: 0.99
 ```
 
-# :hatched_chick: Advanced Usage
+# Advanced Usage
 
 ## Bootstrap-after-Jackknife+ (JaB+)
 

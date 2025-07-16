@@ -1,10 +1,10 @@
-from pyod.models.copod import COPOD
 from scipy.stats import false_discovery_control
 
 from nonconform.estimation import StandardConformalDetector
 from nonconform.strategy import Jackknife
 from nonconform.utils.data import load_breast
 from nonconform.utils.stat import false_discovery_rate, statistical_power
+from pyod.models.copod import COPOD
 
 x_train, x_test, y_test = load_breast(setup=True)
 

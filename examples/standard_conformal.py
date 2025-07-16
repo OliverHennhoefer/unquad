@@ -1,10 +1,10 @@
 from scipy.stats import false_discovery_control
 
-from pyod.models.iforest import IForest
 from nonconform.estimation import StandardConformalDetector
-from nonconform.strategy import Split, Jackknife, Bootstrap
+from nonconform.strategy import Bootstrap
 from nonconform.utils.data import load_wbc
 from nonconform.utils.stat import false_discovery_rate, statistical_power
+from pyod.models.iforest import IForest
 
 if __name__ == "__main__":
 

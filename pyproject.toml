@@ -1,6 +1,6 @@
 [project]
 name = "nonconform"
-version = "0.9.0"
+version = "0.9.11"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
@@ -9,7 +9,7 @@ maintainers = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" }
 ]
 license = { file = "LICENSE" }
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = { file = "./docs/pypi/README.md", content-type = "text/markdown" }
 keywords = [
     "conformal inference",
     "anomaly detection",
@@ -52,7 +52,7 @@ docs = [
     "sphinx-autoapi",
     "myst-parser"
 ]
-dl = [
+deep = [
     "tensorflow>=2.16.1",
     "torch>=2.7.0"
 ]
@@ -60,7 +60,7 @@ fdr = [
     "online-fdr>=0.0.3"
 ]
 all = [
-    "nonconform[data,dev,docs,dl,fdr]"
+    "nonconform[data,dev,docs,deep,fdr]"
 ]
 
 [project.urls]

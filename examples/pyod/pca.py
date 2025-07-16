@@ -1,10 +1,10 @@
-from pyod.models.pca import PCA
 from scipy.stats import false_discovery_control
 
 from nonconform.estimation import StandardConformalDetector
 from nonconform.strategy import Jackknife
 from nonconform.utils.data import load_thyroid
 from nonconform.utils.stat import false_discovery_rate, statistical_power
+from pyod.models.pca import PCA
 
 x_train, x_test, y_test = load_thyroid(setup=True)
 

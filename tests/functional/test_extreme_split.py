@@ -4,13 +4,13 @@ from online_fdr import BatchStoreyBH
 from online_fdr.batching.bh import BatchBH
 from online_fdr.batching.prds import BatchPRDS
 
-from pyod.models.iforest import IForest
 from nonconform.estimation.extreme_conformal import ExtremeConformalDetector
 from nonconform.strategy.bootstrap import Bootstrap
 from nonconform.strategy.split import Split
 from nonconform.utils.data.generator.batch import BatchGenerator
 from nonconform.utils.data.load import load_fraud, load_shuttle
 from nonconform.utils.stat.metrics import false_discovery_rate, statistical_power
+from pyod.models.iforest import IForest
 
 
 class TestCaseExtremeSplit(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             batch_size=300,
             anomaly_proportion=0.13,
             train_size=0.6,
-            random_state=42
+            random_state=42,
         )
         x_train = batch_gen.get_training_data()
 
@@ -59,7 +59,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             batch_size=300,
             anomaly_proportion=0.01,
             train_size=0.6,
-            random_state=42
+            random_state=42,
         )
         x_train = batch_gen.get_training_data()
 
@@ -97,7 +97,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             batch_size=1000,
             anomaly_proportion=0.001,
             train_size=0.6,
-            random_state=42
+            random_state=42,
         )
         x_train = batch_gen.get_training_data()
 
@@ -135,7 +135,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
             batch_size=250,
             anomaly_proportion=0.02,
             train_size=0.6,
-            random_state=42
+            random_state=42,
         )
         x_train = batch_gen.get_training_data()
 

@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from pyod.models.base import BaseDetector
 from nonconform.strategy.base import BaseStrategy
 from nonconform.strategy.cross_val import CrossValidation
+from pyod.models.base import BaseDetector
 
 
 class Jackknife(BaseStrategy):

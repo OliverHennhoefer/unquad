@@ -10,6 +10,6 @@ from .online import OnlineGenerator
 
 __all__ = [
     "BaseDataGenerator",
-    "BatchGenerator", 
+    "BatchGenerator",
     "OnlineGenerator",
 ]

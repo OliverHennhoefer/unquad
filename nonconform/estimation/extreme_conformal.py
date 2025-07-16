@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from pyod.models.base import BaseDetector as PyODBaseDetector
 from nonconform.estimation.base import BaseConformalDetector
 from nonconform.strategy.base import BaseStrategy
 from nonconform.utils.func.decorator import ensure_numpy_array
@@ -25,6 +24,7 @@ from nonconform.utils.func.params import set_params
 from nonconform.utils.stat.aggregation import aggregate
 from nonconform.utils.stat.extreme import fit_gpd, select_threshold
 from nonconform.utils.stat.statistical import calculate_evt_p_val, calculate_p_val
+from pyod.models.base import BaseDetector as PyODBaseDetector
 
 
 class ExtremeConformalDetector(BaseConformalDetector):

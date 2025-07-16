@@ -6,9 +6,9 @@ import pandas as pd
 from sklearn.model_selection import ShuffleSplit
 from tqdm import tqdm
 
-from pyod.models.base import BaseDetector
 from nonconform.strategy.base import BaseStrategy
 from nonconform.utils.func.params import set_params
+from pyod.models.base import BaseDetector
 
 
 class Bootstrap(BaseStrategy):

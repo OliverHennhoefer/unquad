@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from pyod.models.base import BaseDetector
 from nonconform.strategy.base import BaseStrategy
+from pyod.models.base import BaseDetector
 
 
 class Split(BaseStrategy):

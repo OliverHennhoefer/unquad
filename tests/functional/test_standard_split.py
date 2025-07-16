@@ -2,11 +2,11 @@ import unittest
 
 from scipy.stats import false_discovery_control
 
-from pyod.models.iforest import IForest
 from nonconform.estimation.standard_conformal import StandardConformalDetector
 from nonconform.strategy.split import Split
 from nonconform.utils.data.load import load_fraud, load_shuttle
 from nonconform.utils.stat.metrics import false_discovery_rate, statistical_power
+from pyod.models.iforest import IForest
 
 
 class TestCaseSplitConformal(unittest.TestCase):

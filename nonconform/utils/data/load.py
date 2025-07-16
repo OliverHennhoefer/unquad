@@ -26,7 +26,11 @@ def _get_cache_dir() -> Path:
     global _CACHE_DIR
     if _CACHE_DIR is None:
         _CACHE_DIR = (
-            Path(os.environ.get("UNQUAD_CACHE_DIR", Path.home() / ".cache" / "nonconform"))
+            Path(
+                os.environ.get(
+                    "UNQUAD_CACHE_DIR", Path.home() / ".cache" / "nonconform"
+                )
+            )
             / DATASET_VERSION
         )
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)

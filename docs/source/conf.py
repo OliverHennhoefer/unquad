@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 project = "Nonconform"
 copyright = "2024, Oliver Hennhöfer"
 author = "Oliver Hennhöfer"
-release = "0.2"
+release = "0.9.11"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -153,7 +153,8 @@ autoapi_root = "api"
 autoapi_keep_files = False
 
 # Suppress warnings for cross-reference ambiguity
-suppress_warnings = ['ref.python']
+suppress_warnings = ["ref.python"]
+
 
 # Configure autoapi to prefer the re-exported versions
 def autoapi_skip_member(app, what, name, obj, skip, options):
@@ -163,11 +164,15 @@ def autoapi_skip_member(app, what, name, obj, skip, options):
         return True
     return skip
 
+
 # Enable todo items
 todo_include_todos = True
 
+
 # Register the autoapi skip function
 def setup(app):
-    app.connect('autoapi-skip-member', autoapi_skip_member)
+    """Set up the Sphinx application."""
+    app.connect("autoapi-skip-member", autoapi_skip_member)
+
 
 master_doc = "index"

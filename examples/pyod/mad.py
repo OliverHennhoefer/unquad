@@ -1,10 +1,10 @@
-from pyod.models.mad import MAD
 from scipy.stats import false_discovery_control
 
 from nonconform.estimation import StandardConformalDetector
 from nonconform.strategy import CrossValidation
 from nonconform.utils.data import load_fraud
 from nonconform.utils.stat import false_discovery_rate, statistical_power
+from pyod.models.mad import MAD
 
 x_train, x_test, y_test = load_fraud(setup=True)
 

@@ -15,11 +15,11 @@ pip install nonconform
 ```
 ## Optional dependencies
 
-Existing optional dependencies are grouped into `[data]`, `[dev]`, `[docs]`, `[dl]`, `[fdr]` and `[all]`:
+Existing optional dependencies are grouped into `[data]`, `[dev]`, `[docs]`, `[deep]`, `[fdr]` and `[all]`:
 - `[data]`: Dataset loading functionality (includes `pyarrow`)
 - `[dev]`: Development dependencies
 - `[docs]`: Documentation dependencies
-- `[dl]`: Deep Learning dependencies (`tensorflow`, `pytorch`)
+- `[deep]`: Deep Learning dependencies (`tensorflow`, `pytorch`)
 - `[fdr]`: Online False Discovery Rate control (`online-fdr`)
 - `[all]`: All optional dependencies
 
