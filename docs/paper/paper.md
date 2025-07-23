@@ -8,7 +8,7 @@ tags:
   - uncertainty quantification
   - false discovery rate
 authors:
-  - name: Oliver N. Hennhöfer
+  - name: Oliver Hennhöfer
     orcid: 0000-0001-9834-4685
     affiliation: 1
 affiliations:
