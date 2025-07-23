@@ -1,13 +1,8 @@
-import os
-
+import numpy as np
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
-import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
 from nonconform.estimation.base import BaseConformalDetector

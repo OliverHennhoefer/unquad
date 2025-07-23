@@ -28,7 +28,7 @@ dependencies = [
     "numpy~=1.26.0",
     "pandas>=2.2.1",
     "scikit-learn>=1.6.1",
-    "pyod~=2.0.3",
+    "pyod==2.0.5",
     "scipy>=1.13.0",
     "tqdm>=4.66.2"
 ]
@@ -53,7 +53,6 @@ docs = [
     "myst-parser"
 ]
 deep = [
-    "tensorflow>=2.16.1",
     "torch>=2.7.0"
 ]
 fdr = [

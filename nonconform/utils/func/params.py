@@ -1,21 +1,15 @@
 """Manages and configures anomaly detection models from the PyOD library.
 
 This module provides utilities for setting up PyOD detector models,
-including handling a list of models that are restricted or unsupported.
-It dynamically checks for the availability of TensorFlow-dependent models
-and updates the list of forbidden models accordingly.
+including handling a list of models that are restricted or unsupported
+for use with conformal anomaly detection.
 
 Attributes
 ----------
     forbidden_model_list (list[type[BaseDetector]]): A list of PyOD detector
         classes that are considered unsupported or restricted for use by
-        the `set_params` function. This list is initially populated with
-        certain non-TensorFlow models and conditionally extended with
-        TensorFlow-based models (like ALAD, DeepSVDD, etc.) if
-        TensorFlow and those models can be imported.
-    tf (bool): A flag indicating whether TensorFlow-dependent PyOD models
-        (e.g., ALAD, DeepSVDD) were successfully imported. ``True`` if
-        imports succeeded, ``False`` otherwise.
+        the `set_params` function. These models are not suitable for
+        conformal anomaly detection due to their specific design requirements.
 """
 
 import sys
@@ -35,17 +29,6 @@ forbidden_model_list: list[type[BaseDetector]] = [
     SOS,
 ]
 
-tf: bool = True
-try:
-    from pyod.models.alad import ALAD  # noqa
-    from pyod.models.deep_svdd import DeepSVDD
-    from pyod.models.so_gaal import SO_GAAL
-    from pyod.models.mo_gaal import MO_GAAL
-    from pyod.models.vae import VAE
-
-    forbidden_model_list += [ALAD, DeepSVDD, SO_GAAL, MO_GAAL, VAE]
-except ImportError:
-    tf: bool = False
 
 
 def set_params(

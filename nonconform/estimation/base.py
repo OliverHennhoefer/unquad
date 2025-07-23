@@ -1,9 +1,3 @@
-"""Base abstract class for conformal anomaly detectors.
-
-This module provides the abstract base class that defines the common interface
-for all conformal anomaly detection implementations.
-"""
-
 from abc import ABC, abstractmethod
 
 import numpy as np

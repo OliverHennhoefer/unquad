@@ -19,7 +19,7 @@ Existing optional dependencies are grouped into `[data]`, `[dev]`, `[docs]`, `[d
 - `[data]`: Dataset loading functionality (includes `pyarrow`)
 - `[dev]`: Development dependencies
 - `[docs]`: Documentation dependencies
-- `[deep]`: Deep Learning dependencies (`tensorflow`, `pytorch`)
+- `[deep]`: Deep Learning dependencies (`pytorch`)
 - `[fdr]`: Online False Discovery Rate control (`online-fdr`)
 - `[all]`: All optional dependencies
 

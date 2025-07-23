@@ -1,16 +1,5 @@
-"""Extreme Value Theory enhanced conformal anomaly detection.
-
-This module provides the `EVTConformalDetector` class, which extends the base
-`ConformalDetector` with Extreme Value Theory capabilities for better modeling
-of extreme anomalies. It uses Generalized Pareto Distribution (GPD) to model
-the tail of the calibration score distribution.
-"""
-
-import os
 from collections.abc import Callable
 from typing import Literal
-
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import numpy as np
 import pandas as pd

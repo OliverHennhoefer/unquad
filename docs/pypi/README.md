@@ -15,7 +15,7 @@ pip install nonconform
 
 _For additional features, you might need optional dependencies:_
 - `pip install nonconform[data]` - Includes pyarrow for loading example data (via remote download)
-- `pip install nonconform[deep]` - Includes deep learning dependencies (TensorFlow, PyTorch)
+- `pip install nonconform[deep]` - Includes deep learning dependencies (PyTorch)
 - `pip install nonconform[fdr]` - Includes advanced FDR control methods (online-fdr)
 - `pip install nonconform[dev]` - Includes development tools (black, ruff, pre-commit)
 - `pip install nonconform[docs]` - Includes documentation building tools (sphinx, furo, etc.)

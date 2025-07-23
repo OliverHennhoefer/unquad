@@ -1,18 +1,3 @@
-"""Anomaly detection using conformal prediction strategies.
-
-This module provides the `ConformalDetector` class, which integrates a base
-anomaly detection model with a conformal prediction strategy to provide
-statistically grounded anomaly scores, p-values, and decisions.
-
-It also disables TensorFlow OneDNN optimizations by default via an environment
-variable to ensure consistent numerical behavior across different CPU architectures,
-which can be important for reproducibility in some anomaly detection models.
-"""
-
-import os
-
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
