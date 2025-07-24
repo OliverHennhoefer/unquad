@@ -1,6 +1,6 @@
 [project]
 name = "nonconform"
-version = "0.9.11"
+version = "0.9.12"
 description = "Conformal Anomaly Detection"
 authors = [
   { name = "Oliver Hennhoefer", email = "oliver.hennhoefer@mail.de" },
