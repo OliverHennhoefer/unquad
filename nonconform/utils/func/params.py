@@ -30,7 +30,6 @@ forbidden_model_list: list[type[BaseDetector]] = [
 ]
 
 
-
 def set_params(
     detector: BaseDetector,
     seed: int,

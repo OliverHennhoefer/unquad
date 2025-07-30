@@ -25,8 +25,8 @@ class BaseDataGenerator(ABC):
         How to control anomaly proportions:
         - "proportional": Fixed proportion per batch/instance
         - "probabilistic": Probabilistic with global target over all items
-    max_items : int, optional
-        Maximum number of batches/instances for "probabilistic" mode.
+    n_batches : int, optional
+        Number of batches/instances for "probabilistic" mode.
         Required when anomaly_mode="probabilistic".
     train_size : float, default=0.5
         Proportion of normal instances to use for training.
@@ -54,7 +54,7 @@ class BaseDataGenerator(ABC):
         load_data_func: Callable[[], pd.DataFrame],
         anomaly_proportion: float,
         anomaly_mode: Literal["proportional", "probabilistic"] = "proportional",
-        max_items: int | None = None,
+        n_batches: int | None = None,
         train_size: float = 0.5,
         random_state: int | None = None,
     ) -> None:
@@ -62,7 +62,7 @@ class BaseDataGenerator(ABC):
         self.load_data_func = load_data_func
         self.anomaly_proportion = anomaly_proportion
         self.anomaly_mode = anomaly_mode
-        self.max_items = max_items
+        self.n_batches = n_batches
         self.train_size = train_size
         self.random_state = random_state
 
@@ -98,13 +98,13 @@ class BaseDataGenerator(ABC):
                 f"got {self.anomaly_mode}"
             )
 
-        if self.anomaly_mode == "probabilistic" and self.max_items is None:
+        if self.anomaly_mode == "probabilistic" and self.n_batches is None:
             raise ValueError(
-                "max_items must be specified when anomaly_mode='probabilistic'"
+                "n_batches must be specified when anomaly_mode='probabilistic'"
             )
 
-        if self.max_items is not None and self.max_items <= 0:
-            raise ValueError(f"max_items must be positive, got {self.max_items}")
+        if self.n_batches is not None and self.n_batches <= 0:
+            raise ValueError(f"n_batches must be positive, got {self.n_batches}")
 
     def _prepare_data(self) -> None:
         """Load and prepare data for generation."""
@@ -143,10 +143,10 @@ class BaseDataGenerator(ABC):
         # to ensure exact global proportion
         if hasattr(self, "batch_size"):
             # Batch mode: calculate total instances across all batches
-            total_instances = self.max_items * self.batch_size
+            total_instances = self.n_batches * self.batch_size
         else:
-            # Online mode: max_items is the total instances
-            total_instances = self.max_items
+            # Online mode: n_batches is the total instances
+            total_instances = self.n_batches
 
         self._target_anomalies = int(total_instances * self.anomaly_proportion)
         self._current_anomalies = 0
@@ -177,11 +177,11 @@ class BaseDataGenerator(ABC):
         if self.anomaly_mode == "probabilistic":
             # Calculate remaining items and anomalies needed
             if hasattr(self, "batch_size"):
-                # Batch mode: total instances = max_batches * batch_size
-                total_instances = self.max_items * self.batch_size
+                # Batch mode: total instances = n_batches * batch_size
+                total_instances = self.n_batches * self.batch_size
             else:
-                # Online mode: max_items is total instances
-                total_instances = self.max_items
+                # Online mode: n_batches is total instances
+                total_instances = self.n_batches
 
             remaining_items = total_instances - self._items_generated
             remaining_anomalies = self._target_anomalies - self._current_anomalies

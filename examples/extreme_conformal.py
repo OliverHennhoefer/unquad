@@ -9,7 +9,6 @@ from pyod.models.iforest import IForest
 
 if __name__ == "__main__":
 
-    # Create batch generator with new API
     batch_gen = BatchGenerator(
         load_data_func=load_shuttle,
         batch_size=100,

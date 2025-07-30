@@ -19,6 +19,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         batch_gen = BatchGenerator(
             load_data_func=load_shuttle,
             batch_size=300,
+            n_batches=10,
             anomaly_proportion=0.13,
             train_size=0.6,
             random_state=42,
@@ -41,7 +42,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         label = []
         decision = []
 
-        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
+        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate()):
 
             p_values = evt_detector.predict(x_batch)
             decisions = batch_bh.test_batch(p_values)
@@ -57,6 +58,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         batch_gen = BatchGenerator(
             load_data_func=load_shuttle,
             batch_size=300,
+            n_batches=10,
             anomaly_proportion=0.01,
             train_size=0.6,
             random_state=42,
@@ -79,7 +81,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         label = []
         decision = []
 
-        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
+        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate()):
 
             p_values = evt_detector.predict(x_batch)
             decisions = batch_st_bh.test_batch(p_values)
@@ -95,6 +97,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         batch_gen = BatchGenerator(
             load_data_func=load_shuttle,
             batch_size=1000,
+            n_batches=10,
             anomaly_proportion=0.001,
             train_size=0.6,
             random_state=42,
@@ -117,7 +120,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         label = []
         decision = []
 
-        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
+        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate()):
 
             p_values = evt_detector.predict(x_batch)
             decisions = batch_st_bh.test_batch(p_values)
@@ -133,6 +136,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         batch_gen = BatchGenerator(
             load_data_func=load_fraud,
             batch_size=250,
+            n_batches=10,
             anomaly_proportion=0.02,
             train_size=0.6,
             random_state=42,
@@ -155,7 +159,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
         label = []
         decision = []
 
-        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
+        for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate()):
 
             p_values = evt_detector.predict(x_batch)
             decisions = batch_st_bh.test_batch(p_values)

@@ -22,7 +22,7 @@ from nonconform.utils.data.generator import OnlineGenerator
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.02,
-    max_instances=1000,
+    n_instances=1000,
     random_state=42
 )
 
@@ -52,7 +52,7 @@ for prop in proportions:
     online_gen = OnlineGenerator(
         load_data_func=load_shuttle,
         anomaly_proportion=prop,
-        max_instances=500,
+        n_instances=500,
         random_state=42
     )
     
@@ -77,7 +77,7 @@ from nonconform.utils.stat import false_discovery_rate, statistical_power
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.03,
-    max_instances=2000,
+    n_instances=2000,
     train_size=0.6,  # Use 60% of normal data for training
     random_state=42
 )
@@ -137,7 +137,7 @@ Analyze performance over sliding windows:
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.05,
-    max_instances=1000,
+    n_instances=1000,
     random_state=42
 )
 
@@ -208,7 +208,7 @@ import numpy as np
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.02,
-    max_instances=1000,
+    n_instances=1000,
     random_state=42
 )
 
@@ -258,7 +258,7 @@ Monitor for changes in performance over time:
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.04,
-    max_instances=1500,
+    n_instances=1500,
     random_state=42
 )
 
@@ -336,7 +336,7 @@ from nonconform.utils.data.generator import BatchGenerator
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.06,
-    max_instances=600,
+    n_instances=600,
     random_state=42
 )
 
@@ -366,14 +366,14 @@ batch_gen = BatchGenerator(
     batch_size=100,
     anomaly_proportion=0.06,
     anomaly_mode="probabilistic",
-    max_batches=6,  # 6 batches × 100 = 600 instances
+    n_batches=6,  # 6 batches × 100 = 600 instances
     random_state=42
 )
 
 batch_fdrs = []
 batch_powers = []
 
-for x_batch, y_batch in batch_gen.generate(n_batches=6):
+for x_batch, y_batch in batch_gen.generate():
     p_values = detector.predict(x_batch)
     batch_decisions = p_values < 0.05
 
@@ -395,7 +395,7 @@ print(f"  Total Anomalies: {sum(online_labels)}")
 print(f"Batch Processing:")
 print(f"  FDR: {batch_mean_fdr:.3f} ± {np.std(batch_fdrs):.3f}")
 print(f"  Power: {batch_mean_power:.3f} ± {np.std(batch_powers):.3f}")
-print(f"  Total Anomalies: {sum(sum(y_batch.values) for _, y_batch in batch_gen.generate(n_batches=6))}")
+print(f"  Total Anomalies: {sum(sum(y_batch.values) for _, y_batch in batch_gen.generate())}")
 ```
 
 ## Advanced Configuration
@@ -418,7 +418,7 @@ for load_func, train_split, name in configs:
     online_gen = OnlineGenerator(
         load_data_func=load_func,
         anomaly_proportion=0.03,
-        max_instances=300,
+        n_instances=300,
         train_size=train_split,
         random_state=42
     )
@@ -442,7 +442,7 @@ for load_func, train_split, name in configs:
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.05,
-    max_instances=200,
+    n_instances=200,
     random_state=42
 )
 
@@ -479,7 +479,7 @@ from scipy.stats import false_discovery_control
 online_gen = OnlineGenerator(
     load_data_func=load_shuttle,
     anomaly_proportion=0.04,
-    max_instances=500,
+    n_instances=500,
     random_state=42
 )
 
@@ -535,7 +535,7 @@ print(f"Total anomalies: {sum(all_labels)}")
 
 ## Best Practices
 
-1. **Use appropriate max_instances**: Set based on your evaluation requirements and computational constraints
+1. **Use appropriate n_instances**: Set based on your evaluation requirements and computational constraints
 2. **Monitor global proportion**: The generator guarantees exact proportions mathematically
 3. **Apply proper FDR control**: Use batch-wise FDR control for streaming scenarios
 4. **Track performance metrics**: Monitor latency and throughput for operational insights

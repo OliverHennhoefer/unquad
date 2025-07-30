@@ -13,13 +13,15 @@ def demonstrate_batch_generation():
         batch_size=100,
         anomaly_proportion=0.1,
         anomaly_mode="proportional",
+        n_batches=3,
+        train_size=0.5,
         random_state=42,
     )
 
     print(f"   Generator: {batch_gen}")
     print(f"   Training data: {batch_gen.get_training_data().shape}")
 
-    for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=3)):
+    for i, (x_batch, y_batch) in enumerate(batch_gen.generate()):
         anomaly_count = y_batch.sum()
         print(
             f"   Batch {i+1}: {x_batch.shape}, Anomalies: {anomaly_count} ({anomaly_count/len(x_batch)*100:.1f}%)"
@@ -32,7 +34,7 @@ def demonstrate_batch_generation():
         batch_size=50,
         anomaly_proportion=0.05,
         anomaly_mode="probabilistic",
-        max_batches=10,
+        n_batches=10,
         random_state=42,
     )
 
@@ -40,7 +42,7 @@ def demonstrate_batch_generation():
     total_instances = 0
     total_anomalies = 0
 
-    for i, (x_batch, y_batch) in enumerate(batch_gen_prob.generate(n_batches=10)):
+    for i, (x_batch, y_batch) in enumerate(batch_gen_prob.generate()):
         anomaly_count = y_batch.sum()
         total_instances += len(x_batch)
         total_anomalies += anomaly_count
@@ -65,7 +67,7 @@ def demonstrate_online_generation():
     online_gen = OnlineGenerator(
         load_data_func=load_shuttle,
         anomaly_proportion=0.02,
-        max_instances=1000,
+        n_instances=1000,
         random_state=42,
     )
 
@@ -90,7 +92,7 @@ def demonstrate_online_generation():
     online_gen_small = OnlineGenerator(
         load_data_func=load_breast,
         anomaly_proportion=0.01,
-        max_instances=100,
+        n_instances=100,
         random_state=42,
     )
 
@@ -118,6 +120,8 @@ def demonstrate_integration_workflow():
         load_data_func=load_shuttle,
         batch_size=200,
         anomaly_proportion=0.08,
+        anomaly_mode="proportional",
+        n_batches=3,
         train_size=0.7,
         random_state=42,
     )
@@ -132,7 +136,7 @@ def demonstrate_integration_workflow():
 
     # Generate evaluation batches
     print("\nGenerating evaluation batches:")
-    for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=3)):
+    for i, (x_batch, y_batch) in enumerate(batch_gen.generate()):
         anomaly_count = y_batch.sum()
         batch_mean = x_batch.mean().mean()
         print(
@@ -155,7 +159,7 @@ def demonstrate_different_datasets():
         online_gen = OnlineGenerator(
             load_data_func=load_func,
             anomaly_proportion=0.05,
-            max_instances=200,
+            n_instances=200,
             random_state=42,
         )
 

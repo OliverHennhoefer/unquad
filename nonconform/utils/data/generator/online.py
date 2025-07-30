@@ -17,8 +17,8 @@ class OnlineGenerator(BaseDataGenerator):
         Function from nonconform.utils.data.load (e.g., load_shuttle).
     anomaly_proportion : float
         Target proportion of anomalies (0.0 to 1.0).
-    max_instances : int
-        Maximum number of instances to ensure exact global proportion.
+    n_instances : int
+        Number of instances to ensure exact global proportion.
     train_size : float, default=0.5
         Proportion of normal instances to use for training.
     random_state : int, optional
@@ -33,7 +33,7 @@ class OnlineGenerator(BaseDataGenerator):
     >>> online_gen = OnlineGenerator(
     ...     load_data_func=load_shuttle,
     ...     anomaly_proportion=0.01,
-    ...     max_instances=1000,
+    ...     n_instances=1000,
     ...     random_state=42
     ... )
     >>>
@@ -49,7 +49,7 @@ class OnlineGenerator(BaseDataGenerator):
         self,
         load_data_func: Callable[[], pd.DataFrame],
         anomaly_proportion: float,
-        max_instances: int,
+        n_instances: int,
         train_size: float = 0.5,
         random_state: int | None = None,
     ) -> None:
@@ -59,7 +59,7 @@ class OnlineGenerator(BaseDataGenerator):
             load_data_func=load_data_func,
             anomaly_proportion=anomaly_proportion,
             anomaly_mode="probabilistic",
-            max_items=max_instances,
+            n_batches=n_instances,
             train_size=train_size,
             random_state=random_state,
         )
@@ -81,15 +81,15 @@ class OnlineGenerator(BaseDataGenerator):
         y_label : int
             Label for the instance (0=normal, 1=anomaly).
         """
-        # Default to max_instances if not specified
+        # Default to n_instances if not specified
         if n_instances is None:
-            n_instances = self.max_items
+            n_instances = self.n_batches
 
-        # Validate we don't exceed max_instances
-        if n_instances > self.max_items:
+        # Validate we don't exceed n_instances
+        if n_instances > self.n_batches:
             raise ValueError(
-                f"Requested {n_instances} instances exceeds max_instances "
-                f"({self.max_items}). Global proportion cannot be guaranteed."
+                f"Requested {n_instances} instances exceeds n_instances "
+                f"({self.n_batches}). Global proportion cannot be guaranteed."
             )
 
         instance_count = 0

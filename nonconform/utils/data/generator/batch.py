@@ -19,8 +19,10 @@ class BatchGenerator(BaseDataGenerator):
         Target proportion of anomalies (0.0 to 1.0).
     anomaly_mode : {"proportional", "probabilistic"}, default="proportional"
         How to control anomaly proportions.
-    max_batches : int, optional
-        Maximum number of batches for "probabilistic" mode.
+    n_batches : int, optional
+        Number of batches to generate.
+        - Required for "probabilistic" mode
+        - Optional for "proportional" mode (if None, generates indefinitely)
     train_size : float, default=0.5
         Proportion of normal instances to use for training.
     random_state : int, optional
@@ -39,11 +41,41 @@ class BatchGenerator(BaseDataGenerator):
     ...     random_state=42
     ... )
     >>>
+    >>> # Proportional mode with limited batches - 10% anomalies for exactly 5 batches
+    >>> batch_gen = BatchGenerator(
+    ...     load_data_func=load_shuttle,
+    ...     batch_size=100,
+    ...     anomaly_proportion=0.1,
+    ...     anomaly_mode="proportional",
+    ...     n_batches=5,
+    ...     random_state=42
+    ... )
+    >>>
+    >>> # Probabilistic mode - 5% anomalies across 10 batches
+    >>> batch_gen = BatchGenerator(
+    ...     load_data_func=load_shuttle,
+    ...     batch_size=100,
+    ...     anomaly_proportion=0.05,
+    ...     anomaly_mode="probabilistic",
+    ...     n_batches=10,
+    ...     random_state=42
+    ... )
+    >>>
     >>> # Get training data
     >>> x_train = batch_gen.get_training_data()
     >>>
-    >>> # Generate batches
-    >>> for x_batch, y_batch in batch_gen.generate(n_batches=5):
+    >>> # Generate batches (infinite for proportional mode)
+    >>> for i, (x_batch, y_batch) in enumerate(batch_gen.generate()):
+    ...     print(f"Batch: {x_batch.shape}, Anomalies: {y_batch.sum()}")
+    ...     if i >= 4:  # Stop after 5 batches
+    ...         break
+    >>>
+    >>> # Proportional mode with n_batches - automatic stopping after 5 batches
+    >>> for x_batch, y_batch in batch_gen.generate():
+    ...     print(f"Batch: {x_batch.shape}, Anomalies: {y_batch.sum()}")
+    >>>
+    >>> # Probabilistic mode - automatic stopping after n_batches
+    >>> for x_batch, y_batch in batch_gen.generate():
     ...     print(f"Batch: {x_batch.shape}, Anomalies: {y_batch.sum()}")
     """
 
@@ -53,7 +85,7 @@ class BatchGenerator(BaseDataGenerator):
         batch_size: int,
         anomaly_proportion: float,
         anomaly_mode: Literal["proportional", "probabilistic"] = "proportional",
-        max_batches: int | None = None,
+        n_batches: int | None = None,
         train_size: float = 0.5,
         random_state: int | None = None,
     ) -> None:
@@ -69,7 +101,7 @@ class BatchGenerator(BaseDataGenerator):
             load_data_func=load_data_func,
             anomaly_proportion=anomaly_proportion,
             anomaly_mode=anomaly_mode,
-            max_items=max_batches,
+            n_batches=n_batches,
             train_size=train_size,
             random_state=random_state,
         )
@@ -94,15 +126,13 @@ class BatchGenerator(BaseDataGenerator):
                     f"batch size ({self.n_anomaly_per_batch} needed per batch)"
                 )
 
-    def generate(
-        self, n_batches: int | None = None
-    ) -> Iterator[tuple[pd.DataFrame, pd.Series]]:
+    def generate(self) -> Iterator[tuple[pd.DataFrame, pd.Series]]:
         """Generate batches with mixed normal and anomalous instances.
 
-        Parameters
-        ----------
-        n_batches : int, optional
-            Number of batches to generate. If None, generates indefinitely.
+        - For proportional mode: generates batches indefinitely if n_batches=None,
+          or exactly n_batches batches if specified in constructor
+        - For probabilistic mode: generates exactly n_batches batches
+          (required in constructor)
 
         Yields
         ------
@@ -113,7 +143,17 @@ class BatchGenerator(BaseDataGenerator):
         """
         batch_count = 0
 
-        while n_batches is None or batch_count < n_batches:
+        # Determine stopping condition based on mode and n_batches
+        def _should_continue():
+            if self.anomaly_mode == "proportional":
+                # Proportional: stop when n_batches reached (if specified),
+                # otherwise infinite
+                return self.n_batches is None or batch_count < self.n_batches
+            else:
+                # Probabilistic: always stop at n_batches (required)
+                return batch_count < self.n_batches
+
+        while _should_continue():
             if self.anomaly_mode == "proportional":
                 # Proportional mode: exact number of anomalies per batch
                 batch_data = []

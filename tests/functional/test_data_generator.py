@@ -15,6 +15,7 @@ class TestDataGenerators(unittest.TestCase):
             batch_size=100,
             anomaly_proportion=0.1,
             anomaly_mode="proportional",
+            n_batches=5,
             random_state=42,
         )
 
@@ -23,7 +24,7 @@ class TestDataGenerators(unittest.TestCase):
         self.assertGreater(len(x_train), 0)
 
         # Generate 5 batches and check each has exactly 10 anomalies
-        for i, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=5)):
+        for i, (x_batch, y_batch) in enumerate(batch_gen.generate()):
             with self.subTest(batch=i):
                 self.assertEqual(len(x_batch), 100)
                 self.assertEqual(len(y_batch), 100)
@@ -36,10 +37,11 @@ class TestDataGenerators(unittest.TestCase):
             batch_size=100,
             anomaly_proportion=0.01,
             anomaly_mode="proportional",
+            n_batches=3,
             random_state=42,
         )
 
-        for i, (x_batch, y_batch) in enumerate(batch_gen_small.generate(n_batches=3)):
+        for i, (x_batch, y_batch) in enumerate(batch_gen_small.generate()):
             with self.subTest(batch=i):
                 self.assertEqual(y_batch.sum(), 1)  # Exactly 1 anomaly per batch
 
@@ -51,7 +53,7 @@ class TestDataGenerators(unittest.TestCase):
             batch_size=50,
             anomaly_proportion=0.05,
             anomaly_mode="probabilistic",
-            max_batches=10,
+            n_batches=10,
             random_state=42,
         )
 
@@ -59,7 +61,7 @@ class TestDataGenerators(unittest.TestCase):
         total_anomalies = 0
         batch_anomaly_counts = []
 
-        for x_batch, y_batch in batch_gen.generate(n_batches=10):
+        for x_batch, y_batch in batch_gen.generate():
             batch_anomalies = y_batch.sum()
             total_instances += len(x_batch)
             total_anomalies += batch_anomalies
@@ -83,7 +85,7 @@ class TestDataGenerators(unittest.TestCase):
         online_gen = OnlineGenerator(
             load_data_func=load_shuttle,
             anomaly_proportion=0.02,
-            max_instances=1000,
+            n_instances=1000,
             random_state=42,
         )
 
@@ -109,7 +111,7 @@ class TestDataGenerators(unittest.TestCase):
         online_gen_small = OnlineGenerator(
             load_data_func=load_breast,
             anomaly_proportion=0.01,
-            max_instances=100,
+            n_instances=100,
             random_state=42,
         )
 
@@ -149,14 +151,14 @@ class TestDataGenerators(unittest.TestCase):
                 random_state=42,
             )
 
-        # Test probabilistic mode without max_batches
+        # Test probabilistic mode without n_batches
         with self.assertRaises(ValueError):
             BatchGenerator(
                 load_data_func=load_shuttle,
                 batch_size=100,
                 anomaly_proportion=0.1,
                 anomaly_mode="probabilistic",
-                # max_batches=None (missing)
+                # n_batches=None (missing)
                 random_state=42,
             )
 
@@ -167,29 +169,29 @@ class TestDataGenerators(unittest.TestCase):
             OnlineGenerator(
                 load_data_func=load_shuttle,
                 anomaly_proportion=-0.1,  # < 0
-                max_instances=100,
+                n_instances=100,
                 random_state=42,
             )
 
-        # Test invalid max_instances
+        # Test invalid n_instances
         with self.assertRaises(ValueError):
             OnlineGenerator(
                 load_data_func=load_shuttle,
                 anomaly_proportion=0.1,
-                max_instances=0,  # <= 0
+                n_instances=0,  # <= 0
                 random_state=42,
             )
 
-        # Test exceeding max_instances in generate
+        # Test exceeding n_instances in generate
         online_gen = OnlineGenerator(
             load_data_func=load_shuttle,
             anomaly_proportion=0.1,
-            max_instances=100,
+            n_instances=100,
             random_state=42,
         )
 
         with self.assertRaises(ValueError):
-            list(online_gen.generate(n_instances=200))  # Exceeds max_instances
+            list(online_gen.generate(n_instances=200))  # Exceeds n_instances
 
     def test_different_datasets_compatibility(self):
         """Test generators work with different datasets."""
@@ -202,6 +204,7 @@ class TestDataGenerators(unittest.TestCase):
                     load_data_func=load_func,
                     batch_size=50,
                     anomaly_proportion=0.1,
+                    n_batches=1,
                     random_state=42,
                 )
 
@@ -209,7 +212,7 @@ class TestDataGenerators(unittest.TestCase):
                 self.assertGreater(len(x_train), 0)
 
                 # Generate one batch
-                x_batch, y_batch = next(batch_gen.generate(n_batches=1))
+                x_batch, y_batch = next(batch_gen.generate())
                 self.assertEqual(len(x_batch), 50)
                 self.assertEqual(y_batch.sum(), 5)  # 10% of 50
 
@@ -217,7 +220,7 @@ class TestDataGenerators(unittest.TestCase):
                 online_gen = OnlineGenerator(
                     load_data_func=load_func,
                     anomaly_proportion=0.05,
-                    max_instances=100,
+                    n_instances=100,
                     random_state=42,
                 )
 
@@ -237,16 +240,17 @@ class TestDataGenerators(unittest.TestCase):
             batch_size=50,
             anomaly_proportion=0.1,
             anomaly_mode="proportional",
+            n_batches=3,
             random_state=42,
         )
 
         # Generate some batches
-        batches1 = list(batch_gen.generate(n_batches=3))
+        batches1 = list(batch_gen.generate())
         total_anomalies1 = sum(y.sum() for _, y in batches1)
 
         # Reset and generate again
         batch_gen.reset()
-        batches2 = list(batch_gen.generate(n_batches=3))
+        batches2 = list(batch_gen.generate())
         total_anomalies2 = sum(y.sum() for _, y in batches2)
 
         # Check that properties are maintained after reset
@@ -263,7 +267,7 @@ class TestDataGenerators(unittest.TestCase):
         online_gen = OnlineGenerator(
             load_data_func=load_shuttle,
             anomaly_proportion=0.1,
-            max_instances=20,
+            n_instances=20,
             random_state=42,
         )
 
@@ -292,10 +296,11 @@ class TestDataGenerators(unittest.TestCase):
             load_data_func=load_shuttle,
             batch_size=100,
             anomaly_proportion=0.0,
+            n_batches=1,
             random_state=42,
         )
 
-        x_batch, y_batch = next(batch_gen_zero.generate(n_batches=1))
+        x_batch, y_batch = next(batch_gen_zero.generate())
         self.assertEqual(y_batch.sum(), 0)  # No anomalies
 
         # Test 100% anomalies (would require enough anomaly data)
@@ -306,10 +311,11 @@ class TestDataGenerators(unittest.TestCase):
                 load_data_func=load_shuttle,
                 batch_size=10,  # Small batch to avoid data issues
                 anomaly_proportion=0.5,  # 50% anomalies
+                n_batches=1,
                 random_state=42,
             )
 
-            x_batch, y_batch = next(batch_gen_high.generate(n_batches=1))
+            x_batch, y_batch = next(batch_gen_high.generate())
             self.assertEqual(y_batch.sum(), 5)  # 50% of 10
         except ValueError:
             # Expected if insufficient anomaly data
