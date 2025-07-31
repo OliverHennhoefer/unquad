@@ -12,6 +12,7 @@ if __name__ == "__main__":
     batch_gen = BatchGenerator(
         load_data_func=load_shuttle,
         batch_size=100,
+        n_batches=10,
         anomaly_proportion=0.01,
         train_size=0.6,
         random_state=42,
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     x_decision = []
     s_decision = []
 
-    for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate(n_batches=10)):
+    for batch_id, (x_batch, y_batch) in enumerate(batch_gen.generate()):
         xp = extreme_ce.predict(x_batch)
         sp = standard_ce.predict(x_batch)
 

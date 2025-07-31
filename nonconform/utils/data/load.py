@@ -10,6 +10,8 @@ from urllib.request import Request, urlopen
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from nonconform.utils.logging import get_logger
+
 DATASET_VERSION = os.environ.get("UNQUAD_DATASET_VERSION", "v.0.8.1-datasets")
 DATASET_BASE_URL = os.environ.get(
     "UNQUAD_DATASET_URL",
@@ -303,7 +305,8 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
     cache_dir = _get_cache_dir()
     cache_file = cache_dir / filename
     if cache_file.exists():
-        print(f"Loading {filename} from disk cache (v{DATASET_VERSION})")
+        logger = get_logger("utils.data.load")
+        logger.debug("Loading %s from disk cache (v%s)", filename, DATASET_VERSION)
         with open(cache_file, "rb") as f:
             data = f.read()
         _DATASET_CACHE[filename] = data
@@ -314,7 +317,8 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
 
     # Download file
     url = urljoin(DATASET_BASE_URL, filename)
-    print(f"Downloading {filename} from {url}...")
+    logger = get_logger("utils.data.load")
+    logger.info("Downloading %s from %s...", filename, url)
 
     try:
         # Add headers to avoid GitHub rate limiting
@@ -356,7 +360,7 @@ def _download_dataset(filename: str, show_progress: bool = True) -> io.BytesIO:
     with open(cache_file, "wb") as f:
         f.write(data)
 
-    print(f"Successfully cached {filename} ({len(data)/1024:.1f} KB)")
+    logger.debug("Successfully cached %s (%.1f KB)", filename, len(data)/1024)
     return io.BytesIO(data)
 
 
@@ -497,7 +501,8 @@ def _cleanup_old_versions() -> None:
                 pass
 
     if removed_count > 0:
-        print(f"Cleaned up {removed_count} old dataset versions")
+        logger = get_logger("utils.data.load")
+        logger.info("Cleaned up %d old dataset versions", removed_count)
 
 
 def clear_cache(dataset: str | None = None, all_versions: bool = False) -> None:
@@ -517,10 +522,12 @@ def clear_cache(dataset: str | None = None, all_versions: bool = False) -> None:
         if cache_root.exists():
             try:
                 shutil.rmtree(cache_root)
-                print("Cleared all dataset cache (all versions)")
+                logger = get_logger("utils.data.load")
+                logger.info("Cleared all dataset cache (all versions)")
             except PermissionError:
                 # On Windows, files may be locked by other processes
-                print("Warning: Could not clear all cache due to file permissions")
+                logger = get_logger("utils.data.load")
+                logger.warning("Could not clear all cache due to file permissions")
         _DATASET_CACHE.clear()
         return
 
@@ -536,21 +543,25 @@ def clear_cache(dataset: str | None = None, all_versions: bool = False) -> None:
         cache_file = cache_dir / filename
         if cache_file.exists():
             cache_file.unlink()
-            print(f"Cleared cache for dataset: {dataset}")
+            logger = get_logger("utils.data.load")
+            logger.info("Cleared cache for dataset: %s", dataset)
         else:
-            print(f"No cache found for dataset: {dataset}")
+            logger = get_logger("utils.data.load")
+            logger.info("No cache found for dataset: %s", dataset)
     else:
         # Clear all datasets for current version
         cache_dir = _get_cache_dir()
         if cache_dir.exists():
             try:
                 shutil.rmtree(cache_dir)
-                print(f"Cleared all dataset cache (v{DATASET_VERSION})")
+                logger = get_logger("utils.data.load")
+                logger.info("Cleared all dataset cache (v%s)", DATASET_VERSION)
             except PermissionError:
                 # On Windows, files may be locked by other processes
-                print(
-                    f"Warning: Could not clear cache directory (v{DATASET_VERSION}) "
-                    f"due to file permissions"
+                logger = get_logger("utils.data.load")
+                logger.warning(
+                    "Could not clear cache directory (v%s) due to file permissions",
+                    DATASET_VERSION
                 )
         _DATASET_CACHE.clear()
 

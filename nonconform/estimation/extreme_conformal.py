@@ -13,6 +13,7 @@ from nonconform.utils.func.params import set_params
 from nonconform.utils.stat.aggregation import aggregate
 from nonconform.utils.stat.extreme import fit_gpd, select_threshold
 from nonconform.utils.stat.statistical import calculate_evt_p_val, calculate_p_val
+from nonconform.utils.logging import get_logger
 from pyod.models.base import BaseDetector as PyODBaseDetector
 
 
@@ -35,7 +36,7 @@ class ExtremeConformalDetector(BaseConformalDetector):
         aggregation (Aggregation): Method used for aggregating scores from
             multiple detector models.
         seed (int): Random seed for reproducibility in stochastic processes.
-        silent (bool): Whether to suppress progress bars and logs.
+        silent (bool): Whether to suppress progress bars.
         evt_threshold_method (Literal): Method for selecting EVT threshold.
         evt_threshold_value (Union[float, Callable]): Parameter for threshold method.
         evt_min_tail_size (int): Minimum number of exceedances required for GPD fitting.
@@ -67,7 +68,7 @@ class ExtremeConformalDetector(BaseConformalDetector):
             aggregation (Aggregation, optional): Method used for aggregating
                 scores from multiple detector models. Defaults to Aggregation.MEDIAN.
             seed (int, optional): Random seed for reproducibility. Defaults to 1.
-            silent (bool, optional): Whether to suppress progress bars and logs.
+            silent (bool, optional): Whether to suppress progress bars.
                 Defaults to True.
             evt_threshold_method (Literal, optional): Method for selecting EVT
                 threshold. Defaults to "percentile".
@@ -148,19 +149,17 @@ class ExtremeConformalDetector(BaseConformalDetector):
                     self.gpd_params = fit_gpd(exceedances)
                 except Exception as e:
                     # If GPD fitting fails, fall back to standard approach
-                    if not self.silent:
-                        print(
-                            f"Warning: GPD fitting failed: {e}. "
-                            f"Using standard approach."
-                        )
+                    logger = get_logger("estimation.extreme_conformal")
+                    logger.warning(
+                        "GPD fitting failed: %s. Using standard approach.", e
+                    )
                     self.gpd_params = None
             else:
-                if not self.silent:
-                    print(
-                        f"Warning: Only {len(exceedances)} exceedances, "
-                        f"need at least {self.evt_min_tail_size}. "
-                        f"Using standard approach."
-                    )
+                logger = get_logger("estimation.extreme_conformal")
+                logger.warning(
+                    "Only %d exceedances, need at least %d. Using standard approach.",
+                    len(exceedances), self.evt_min_tail_size
+                )
                 self.gpd_params = None
 
     @ensure_numpy_array

@@ -41,7 +41,7 @@ class WeightedConformalDetector(BaseConformalDetector):
         aggregation (Aggregation): Method used for aggregating scores from
             multiple detector models.
         seed (int): Random seed for reproducibility in stochastic processes.
-        silent (bool): Whether to suppress progress bars and logs.
+        silent (bool): Whether to suppress progress bars.
         detector_set (List[BaseDetector]): A list of one or more trained
             detector instances, populated by the `fit` method via the strategy.
         calibration_set (List[float]): A list of non-conformity scores obtained
@@ -68,7 +68,7 @@ class WeightedConformalDetector(BaseConformalDetector):
             aggregation (Aggregation, optional): Method used for aggregating
                 scores from multiple detector models. Defaults to Aggregation.MEDIAN.
             seed (int, optional): Random seed for reproducibility. Defaults to 1.
-            silent (bool, optional): Whether to suppress progress bars and logs.
+            silent (bool, optional): Whether to suppress progress bars.
                 Defaults to True.
 
         Raises

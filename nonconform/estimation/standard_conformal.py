@@ -30,7 +30,7 @@ class StandardConformalDetector(BaseConformalDetector):
         aggregation (Aggregation): Method used for aggregating scores from
             multiple detector models.
         seed (int): Random seed for reproducibility in stochastic processes.
-        silent (bool): Whether to suppress progress bars and logs.
+        silent (bool): Whether to suppress progress bars.
         detector_set (List[PyODBaseDetector]): A list of trained anomaly detector
             models. Populated after the `fit` method is called. Depending on
             the strategy, this might contain one or multiple models.
@@ -57,7 +57,7 @@ class StandardConformalDetector(BaseConformalDetector):
             aggregation (Aggregation, optional): Method used for aggregating
                 scores from multiple detector models. Defaults to Aggregation.MEDIAN.
             seed (int, optional): Random seed for reproducibility. Defaults to 1.
-            silent (bool, optional): Whether to suppress progress bars and logs.
+            silent (bool, optional): Whether to suppress progress bars.
                 Defaults to True.
 
         Raises
