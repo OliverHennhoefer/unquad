@@ -119,7 +119,7 @@ batch_gen = BatchGenerator(
 x_train = batch_gen.get_training_data()
 detector = StandardConformalDetector(
     detector=LOF(n_neighbors=20),
-    strategy=Split(calib_size=0.3)
+    strategy=Split(n_calib=0.3)
 )
 detector.fit(x_train)
 

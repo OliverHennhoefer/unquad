@@ -33,7 +33,7 @@ from nonconform.strategy import Split
 from nonconform.utils.func import Aggregation
 
 # Create conformal detector
-strategy = Split(calib_size=0.2)
+strategy = Split(n_calib=0.2)
 detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -146,7 +146,7 @@ X_test = load_test_data()  # Data to be tested
 base_detector = IsolationForest(random_state=42)
 
 # 3. Create conformal detector with strategy
-strategy = Split(calib_size=0.2)  # 20% for calibration
+strategy = Split(n_calib=0.2)  # 20% for calibration
 detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -197,10 +197,10 @@ Best for large datasets where you can afford to hold out calibration data:
 from nonconform.strategy import Split
 
 # Use 20% of data for calibration
-strategy = Split(calib_size=0.2)
+strategy = Split(n_calib=0.2)
 
 # Or use absolute number for very large datasets
-strategy = Split(calib_size=1000)
+strategy = Split(n_calib=1000)
 ```
 
 ### 2. Cross-Validation Strategy

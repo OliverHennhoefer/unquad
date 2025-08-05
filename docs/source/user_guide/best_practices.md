@@ -147,10 +147,10 @@ Best for:
 from nonconform.strategy.split import Split
 
 # For large datasets
-strategy = Split(calib_size=0.2)  # Use 20% for calibration
+strategy = Split(n_calib=0.2)  # Use 20% for calibration
 
 # For very large datasets, use absolute number
-strategy = Split(calib_size=1000)  # Use 1000 samples
+strategy = Split(n_calib=1000)  # Use 1000 samples
 ```
 
 ### 2. Jackknife (Leave-One-Out)

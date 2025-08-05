@@ -176,7 +176,7 @@ from nonconform.strategy.jackknife import Jackknife
 
 # Compare cross-validation with other strategies
 strategies = {
-    'Split': Split(calib_size=0.2),
+    'Split': Split(n_calib=0.2),
     '5-fold CV': CrossValidation(k=5),
     '10-fold CV': CrossValidation(k=10),
     'Bootstrap': Bootstrap(n_bootstraps=100, resampling_ratio=0.8),

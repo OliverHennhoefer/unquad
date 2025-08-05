@@ -45,7 +45,7 @@ x_train, x_test, y_test = load_shuttle(setup=True)
 
 ce = StandardConformalDetector(
     detector=GMM(),
-    strategy=Split(calib_size=1_000)
+    strategy=Split(n_calib=1_000)
 )
 
 ce.fit(x_train)
@@ -118,7 +118,7 @@ from nonconform.utils.stat import false_discovery_rate, statistical_power
 x_train, x_test, y_test = load_shuttle(setup=True)
 
 model = IForest(behaviour="new")
-strategy = Split(calib_size=1_000)
+strategy = Split(n_calib=1_000)
 
 ce = WeightedConformalDetector(detector=model, strategy=strategy)
 ce.fit(x_train)

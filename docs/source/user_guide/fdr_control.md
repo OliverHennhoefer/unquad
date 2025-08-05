@@ -18,7 +18,7 @@ from pyod.models.lof import LOF
 
 # Initialize detector
 base_detector = LOF()
-strategy = Split(calib_size=0.2)
+strategy = Split(n_calib=0.2)
 
 detector = StandardConformalDetector(
     detector=base_detector,

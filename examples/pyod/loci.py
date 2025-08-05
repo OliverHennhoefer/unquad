@@ -8,7 +8,7 @@ from pyod.models.loci import LOCI
 
 x_train, x_test, y_test = load_thyroid(setup=True)
 
-ce = StandardConformalDetector(detector=LOCI(k=1), strategy=Split(calib_size=1_000))
+ce = StandardConformalDetector(detector=LOCI(k=1), strategy=Split(n_calib=1_000))
 
 ce.fit(x_train)
 estimates = ce.predict(x_test)

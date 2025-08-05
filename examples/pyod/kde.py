@@ -8,7 +8,7 @@ from pyod.models.kde import KDE
 
 x_train, x_test, y_test = load_mammography(setup=True)
 
-ce = StandardConformalDetector(detector=KDE(), strategy=Split(calib_size=2_000))
+ce = StandardConformalDetector(detector=KDE(), strategy=Split(n_calib=2_000))
 
 ce.fit(x_train)
 estimates = ce.predict(x_test)

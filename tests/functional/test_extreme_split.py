@@ -28,7 +28,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
 
         evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=Split(calib_size=1000),
+            strategy=Split(n_calib=1000),
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
@@ -67,7 +67,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
 
         evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=Split(calib_size=1000),
+            strategy=Split(n_calib=1000),
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,
@@ -106,7 +106,7 @@ class TestCaseExtremeSplit(unittest.TestCase):
 
         evt_detector = ExtremeConformalDetector(
             detector=IForest(behaviour="new"),
-            strategy=Split(calib_size=1000),
+            strategy=Split(n_calib=1000),
             evt_threshold_method="percentile",
             evt_threshold_value=0.95,
             evt_min_tail_size=25,

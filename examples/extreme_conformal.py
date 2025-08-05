@@ -24,14 +24,14 @@ if __name__ == "__main__":
     # EVT-Enhanced Conformal Anomaly Detector
     extreme_ce = ExtremeConformalDetector(
         detector=IForest(behaviour="new"),
-        strategy=Split(calib_size=1_000),
+        strategy=Split(n_calib=1_000),
         evt_threshold_method="percentile",
         evt_threshold_value=0.95,
         evt_min_tail_size=10,
     )
 
     standard_ce = StandardConformalDetector(
-        detector=IForest(behaviour="new"), strategy=Split(calib_size=1_000)
+        detector=IForest(behaviour="new"), strategy=Split(n_calib=1_000)
     )
 
     extreme_ce.fit(x_train)

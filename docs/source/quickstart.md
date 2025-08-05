@@ -47,7 +47,7 @@ X_test = np.vstack([X_test, X_anomalies])
 base_detector = IForest(behaviour="new", random_state=42)
 
 # Create conformal anomaly detector with split strategy
-strategy = Split(calib_size=0.3)
+strategy = Split(n_calib=0.3)
 detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,
@@ -129,7 +129,7 @@ from nonconform.estimation import WeightedConformalDetector
 from nonconform.strategy import Split
 
 # Create weighted conformal anomaly detector
-weighted_strategy = Split(calib_size=0.3)
+weighted_strategy = Split(n_calib=0.3)
 weighted_detector = WeightedConformalDetector(
     detector=base_detector,
     strategy=weighted_strategy,
@@ -162,7 +162,7 @@ detectors = {
     'OCSVM': OCSVM()
 }
 
-strategy = Split(calib_size=0.3)
+strategy = Split(n_calib=0.3)
 results = {}
 
 for name, base_det in detectors.items():
@@ -205,7 +205,7 @@ y_true = np.hstack([np.zeros(80), np.ones(20)])
 
 # Setup and fit detector
 base_detector = IForest(behaviour="new", random_state=42)
-strategy = Split(calib_size=0.3)
+strategy = Split(n_calib=0.3)
 detector = StandardConformalDetector(
     detector=base_detector,
     strategy=strategy,

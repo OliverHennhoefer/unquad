@@ -14,7 +14,7 @@ if __name__ == "__main__":
     model = IForest(behaviour="new")
 
     # Conformal Strategy
-    strategy = Split(calib_size=1_000)
+    strategy = Split(n_calib=1_000)
 
     # Weighted Conformal Anomaly Detector
     ce = WeightedConformalDetector(detector=model, strategy=strategy)

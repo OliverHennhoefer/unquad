@@ -28,18 +28,18 @@ class Split(BaseStrategy):
             :attr:`calibration_ids` property.
     """
 
-    def __init__(self, calib_size: float | int = 0.1) -> None:
+    def __init__(self, n_calib: float | int = 0.1) -> None:
         """Initialize the Split strategy.
 
         Args:
-            calib_size (Union[float, int], optional): The size or proportion
+            n_calib (Union[float, int], optional): The size or proportion
                 of the dataset to use for the calibration set. If a float,
                 it must be between 0.0 and 1.0 (exclusive of 0.0 and 1.0
                 in practice for `train_test_split`). If an int, it's the
                 absolute number of samples. Defaults to ``0.1`` (10%).
         """
         super().__init__()  # `plus` is not relevant for a single split
-        self._calib_size: float | int = calib_size
+        self._calib_size: float | int = n_calib
         self._calibration_ids: list[int] | None = None
 
     def fit_calibrate(

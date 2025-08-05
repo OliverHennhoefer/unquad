@@ -10,7 +10,7 @@ x_train, x_test, y_test = load_fraud(setup=True)
 
 ce = StandardConformalDetector(
     detector=AutoEncoder(epoch_num=10, batch_size=256),
-    strategy=Split(calib_size=2_000),
+    strategy=Split(n_calib=2_000),
 )
 
 ce.fit(x_train)

@@ -94,7 +94,7 @@ from nonconform.strategy.cross_val import CrossValidation
 X_subset = X[:100]  # Use first 100 samples
 
 strategies = {
-    'Split': Split(calib_size=0.2),
+    'Split': Split(n_calib=0.2),
     '5-fold CV': CrossValidation(k=5),
     'Jackknife': Jackknife()
 }

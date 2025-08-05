@@ -8,7 +8,7 @@ from pyod.models.gmm import GMM
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
-ce = StandardConformalDetector(detector=GMM(), strategy=Split(calib_size=1_000))
+ce = StandardConformalDetector(detector=GMM(), strategy=Split(n_calib=1_000))
 
 ce.fit(x_train)
 estimates = ce.predict(x_test)

@@ -8,7 +8,7 @@ from pyod.models.lmdd import LMDD
 
 x_train, x_test, y_test = load_shuttle(setup=True)
 
-ce = StandardConformalDetector(detector=LMDD(), strategy=Split(calib_size=0.1))
+ce = StandardConformalDetector(detector=LMDD(), strategy=Split(n_calib=0.1))
 
 ce.fit(x_train)
 estimates = ce.predict(x_test)

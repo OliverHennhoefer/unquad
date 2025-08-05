@@ -171,7 +171,7 @@ from nonconform.strategy import Split, Jackknife
 # Compare bootstrap with other strategies
 strategies = {
     'Bootstrap': Bootstrap(n_bootstraps=100, resampling_ratio=0.8),
-    'Split': Split(calib_size=0.2),
+    'Split': Split(n_calib=0.2),
     'Jackknife': Jackknife()
 }
 

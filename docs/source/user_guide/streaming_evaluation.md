@@ -86,7 +86,7 @@ online_gen = OnlineGenerator(
 x_train = online_gen.get_training_data()
 detector = StandardConformalDetector(
     detector=IForest(behaviour="new"),
-    strategy=Split(calib_size=0.3)
+    strategy=Split(n_calib=0.3)
 )
 detector.fit(x_train)
 

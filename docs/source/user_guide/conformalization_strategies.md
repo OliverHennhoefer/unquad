@@ -12,10 +12,10 @@ Simple train/calibration split for fast, straightforward conformal prediction.
 from nonconform.strategy.split import Split
 
 # Use 30% of data for calibration
-strategy = Split(calib_size=0.3)
+strategy = Split(n_calib=0.3)
 
 # Use fixed number of samples for calibration
-strategy = Split(calib_size=100)
+strategy = Split(n_calib=100)
 ```
 
 **Characteristics:**
