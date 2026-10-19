@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from numbers import Integral
+
 import numpy as np
 
 
@@ -61,14 +63,17 @@ def validate_positive_integer(name: str, value: int) -> int:
 
 
 def validate_optional_seed(name: str, value: int | None) -> int | None:
-    """Validate an optional non-negative built-in integer seed."""
+    """Validate an optional non-negative integer seed as a built-in ``int``.
+
+    NumPy integer scalars are accepted and normalized; Boolean values are not.
+    """
     if value is None:
         return None
-    if isinstance(value, bool) or not isinstance(value, int):
+    if isinstance(value, bool | np.bool_) or not isinstance(value, Integral):
         raise TypeError(f"{name} must be a non-negative integer or None.")
     if value < 0:
         raise ValueError(f"{name} must be a non-negative integer or None.")
-    return value
+    return int(value)
 
 
 def validate_positive_finite(name: str, value: float) -> float:

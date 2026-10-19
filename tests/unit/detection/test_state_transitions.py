@@ -159,3 +159,38 @@ def test_owned_calibration_and_weight_state_support_current_pickle_roundtrips(
     restored = pickle.loads(pickle.dumps(detector))
     np.testing.assert_array_equal(restored.calibration_set, detector.calibration_set)
     np.testing.assert_array_equal(restored.select(test, refit_weights=False), expected)
+
+
+def test_numpy_integer_seed_is_accepted_and_normalized(batches):
+    reference, _ = batches
+    detector = ConformalDetector(OneClassSVM(), Split(10), seed=np.int64(3))
+    assert detector.seed == 3
+    assert type(detector.seed) is int
+    assert clone(detector).seed == 3
+    detector.fit(reference)
+    with pytest.raises(TypeError, match="seed must be"):
+        ConformalDetector(OneClassSVM(), Split(10), seed=np.bool_(True))
+
+
+def test_pickled_pre_2_layout_raises_clear_error():
+    detector = ConformalDetector(OneClassSVM(), Split(10))
+    state = dict(detector.__dict__)
+    del state["_calibration"]
+    restored = ConformalDetector.__new__(ConformalDetector)
+    with pytest.raises(TypeError, match=r"pickled with nonconform 1\.x"):
+        restored.__setstate__(state)
+
+
+class _SlottedDetector(ConformalDetector):
+    __slots__ = ("tag",)
+
+
+def test_slotted_subclass_pickle_roundtrip(batches):
+    reference, test = batches
+    detector = _SlottedDetector(OneClassSVM(), Split(10)).fit(reference)
+    detector.tag = "kept"
+    restored = pickle.loads(pickle.dumps(detector))
+    assert restored.tag == "kept"
+    np.testing.assert_array_equal(
+        restored.compute_p_values(test), detector.compute_p_values(test)
+    )

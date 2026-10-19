@@ -366,6 +366,26 @@ class ConformalDetector(BaseConformalDetector):
             verify_prepared_batch_content=verify_prepared_batch_content,
         )
 
+    def __setstate__(
+        self, state: dict[str, Any] | tuple[dict[str, Any] | None, dict[str, Any]]
+    ) -> None:
+        """Restore pickled state, rejecting the pre-2.0 fitted-state layout."""
+        # Subclasses defining __slots__ pickle state as (dict_state, slot_state).
+        slot_state: dict[str, Any] = {}
+        if isinstance(state, tuple):
+            state, slot_state = state
+            state = state or {}
+            slot_state = slot_state or {}
+        if "_calibration" not in state or "_constructor_params" not in state:
+            raise TypeError(
+                "This ConformalDetector was pickled with nonconform 1.x, whose "
+                "fitted-state layout is not supported in 2.0. Recreate the "
+                "detector and fit or calibrate it again."
+            )
+        self.__dict__.update(state)
+        for name, value in slot_state.items():
+            setattr(self, name, value)
+
     def _reset_fit_state(self) -> None:
         """Clear all learned state derived from fit()."""
         self._calibration: FittedCalibration | None = None
@@ -891,8 +911,7 @@ class ConformalDetector(BaseConformalDetector):
             NotFittedError: If fit() has not been called.
             RuntimeError: If weighted mode is disabled.
         """
-        if not self.is_fitted:
-            raise NotFittedError("This ConformalDetector instance is not fitted yet.")
+        self._require_calibration()
         if not self._is_weighted_mode or self.weight_estimator is None:
             raise RuntimeError(
                 "prepare_weights_for() requires weighted mode with a weight_estimator."
@@ -986,8 +1005,7 @@ class ConformalDetector(BaseConformalDetector):
             call.
         """
         self._require_p_value_strategy()
-        if not self.is_fitted:
-            raise NotFittedError("This ConformalDetector instance is not fitted yet.")
+        calibration = self._require_calibration()
         if self._is_weighted_mode:
             raise RuntimeError(
                 "compute_p_value() is unavailable in weighted mode because "
@@ -1002,7 +1020,7 @@ class ConformalDetector(BaseConformalDetector):
                 f"got shape {x_array.shape}."
             )
 
-        expected_features = self._require_calibration().n_features
+        expected_features = calibration.n_features
         if x_array.shape[0] != expected_features:
             raise ValueError(
                 f"x has {x_array.shape[0]} features, but this ConformalDetector "
@@ -1043,8 +1061,9 @@ class ConformalDetector(BaseConformalDetector):
         )
         calib_weights, test_weights = weights if weights else (None, None)
 
+        calibration_scores = self._require_calibration().scores
         p_values = self.estimation.compute_p_values(
-            estimates, self._require_calibration().scores, weights
+            estimates, calibration_scores, weights
         )
 
         metadata = self._result_metadata()
@@ -1056,7 +1075,7 @@ class ConformalDetector(BaseConformalDetector):
         result = ConformalResult(
             p_values=p_values.copy(),
             test_scores=estimates.copy(),
-            calib_scores=self._require_calibration().scores.copy(),
+            calib_scores=calibration_scores.copy(),
             test_weights=_safe_copy(test_weights),
             calib_weights=_safe_copy(calib_weights),
             metadata=metadata,
@@ -1135,11 +1154,10 @@ class ConformalDetector(BaseConformalDetector):
         from nonconform._internal.certificates import validate_scope
         from nonconform.fdr import FPRCertificate
 
-        if not self.is_fitted:
-            raise NotFittedError("This ConformalDetector instance is not fitted yet.")
+        calibration = self._require_calibration()
         validate_scope(self._result_provenance(None), procedure="fpr_bounds")
         return FPRCertificate.from_scores(
-            self._require_calibration().scores,
+            calibration.scores,
             confidence=confidence,
         )
 
