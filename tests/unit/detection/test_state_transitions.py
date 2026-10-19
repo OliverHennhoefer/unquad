@@ -179,3 +179,18 @@ def test_pickled_pre_2_layout_raises_clear_error():
     restored = ConformalDetector.__new__(ConformalDetector)
     with pytest.raises(TypeError, match=r"pickled with nonconform 1\.x"):
         restored.__setstate__(state)
+
+
+class _SlottedDetector(ConformalDetector):
+    __slots__ = ("tag",)
+
+
+def test_slotted_subclass_pickle_roundtrip(batches):
+    reference, test = batches
+    detector = _SlottedDetector(OneClassSVM(), Split(10)).fit(reference)
+    detector.tag = "kept"
+    restored = pickle.loads(pickle.dumps(detector))
+    assert restored.tag == "kept"
+    np.testing.assert_array_equal(
+        restored.compute_p_values(test), detector.compute_p_values(test)
+    )

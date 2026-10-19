@@ -366,8 +366,16 @@ class ConformalDetector(BaseConformalDetector):
             verify_prepared_batch_content=verify_prepared_batch_content,
         )
 
-    def __setstate__(self, state: dict[str, Any]) -> None:
+    def __setstate__(
+        self, state: dict[str, Any] | tuple[dict[str, Any] | None, dict[str, Any]]
+    ) -> None:
         """Restore pickled state, rejecting the pre-2.0 fitted-state layout."""
+        # Subclasses defining __slots__ pickle state as (dict_state, slot_state).
+        slot_state: dict[str, Any] = {}
+        if isinstance(state, tuple):
+            state, slot_state = state
+            state = state or {}
+            slot_state = slot_state or {}
         if "_calibration" not in state or "_constructor_params" not in state:
             raise TypeError(
                 "This ConformalDetector was pickled with nonconform 1.x, whose "
@@ -375,6 +383,8 @@ class ConformalDetector(BaseConformalDetector):
                 "detector and fit or calibrate it again."
             )
         self.__dict__.update(state)
+        for name, value in slot_state.items():
+            setattr(self, name, value)
 
     def _reset_fit_state(self) -> None:
         """Clear all learned state derived from fit()."""
