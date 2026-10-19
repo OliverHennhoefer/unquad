@@ -46,6 +46,12 @@ jobs:
           dependency = next(p for p in lock["package"] if p["name"] == "online-fdr")
           if dependency["source"] != {"registry": "https://pypi.org/simple"}:
               raise SystemExit("online-fdr must be locked to its published PyPI distribution.")
+          guide = Path("docs/source/user_guide/fdr_control.md").read_text(encoding="utf-8")
+          if "nonconform.git@" in guide or "online-fdr.git@" in guide:
+              raise SystemExit(
+                  "Remove the temporary Git review-install instructions from "
+                  "docs/source/user_guide/fdr_control.md before tagging nonconform."
+              )
           PY
 
       - name: Install dependencies

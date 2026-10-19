@@ -61,7 +61,7 @@ def prepare_configuration(
     verify_prepared_batch_content: bool,
 ) -> DetectorConfiguration:
     """Resolve a complete candidate before the detector commits any changes."""
-    validate_optional_seed("seed", seed)
+    seed = validate_optional_seed("seed", seed)
     if not isinstance(verbose, bool):
         raise TypeError(
             f"verbose must be a boolean value, got {type(verbose).__name__}."

@@ -487,3 +487,17 @@ def test_frozen_bagged_weights_compare_object_values_instead_of_memory_addresses
     independent_test[0, 0] += 1
     with pytest.raises(NotImplementedError, match="cannot rescore new data"):
         estimator.get_weights(independent_calibration, independent_test)
+
+
+def test_frozen_bagged_weights_distinguish_object_values_with_equal_strings():
+    calibration = np.array([[1], [2], [3]], dtype=object)
+    test = np.array([[4], [5]], dtype=object)
+    estimator = BootstrapBaggedWeightEstimator(
+        SklearnWeightEstimator(FixedProbClassifier()),
+        n_bootstraps=2,
+        clip_quantile=None,
+    )
+    estimator.fit(calibration, test)
+    string_test = np.array([["4"], ["5"]], dtype=object)
+    with pytest.raises(NotImplementedError, match="cannot rescore new data"):
+        estimator.get_weights(calibration, string_test)

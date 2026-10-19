@@ -17,7 +17,7 @@ validity, adequate power, or reliable importance weights.
 |---|---|---|
 | `aggregation` | `"mean"`, `"median"`, `"minimum"`, `"maximum"` | Case and surrounding whitespace are normalized; aggregation is across raw test scores from retained models |
 | `score_polarity` | `None`, `"auto"`, `"higher_is_anomalous"`, `"higher_is_normal"`, or the corresponding enum | Explicitly configure custom detectors when the direction cannot be inferred safely |
-| `seed` | `None` or a nonnegative built-in integer, excluding Boolean values | Controls supported stochastic components and deterministic seed derivation |
+| `seed` | `None` or a nonnegative integer (built-in or NumPy integer), excluding Boolean values | Controls supported stochastic components and deterministic seed derivation |
 | `verbose` | `True` or `False` | Controls aggregation progress; resampling and weighting progress also depend on logger levels |
 | `verify_prepared_batch_content` | `True` or `False` | When true, prepared weighted state is tied to batch values, shape, and dtype |
 | `select(..., alpha=...)` | float strictly between `0` and `1` | Target level for the selected FDR procedure |

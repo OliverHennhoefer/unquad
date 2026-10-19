@@ -59,15 +59,22 @@ class ResultProvenance:
 def batch_signature(x: np.ndarray) -> BatchSignature:
     """Return a stable signature for a concrete batch."""
     contiguous = np.ascontiguousarray(x)
-    values = contiguous
+    hasher = hashlib.blake2b(digest_size=16)
     if contiguous.dtype.hasobject:
         # Object-array bytes contain pointers. Hash values without losing integer
         # precision through a float conversion (e.g. nullable pandas Int64 inputs).
-        values = pd.util.hash_array(contiguous.ravel(), categorize=False)
-    digest = hashlib.blake2b(
-        values.tobytes(),
-        digest_size=16,
-    ).hexdigest()
+        flat = contiguous.ravel()
+        hasher.update(pd.util.hash_array(flat, categorize=False).tobytes())
+        # pandas hashes mixed objects by their string form, so 1 and "1" would
+        # collide. Bind each element's type to keep such batches distinct.
+        element_types = np.array(
+            [f"{type(v).__module__}.{type(v).__qualname__}" for v in flat],
+            dtype=object,
+        )
+        hasher.update(pd.util.hash_array(element_types, categorize=True).tobytes())
+    else:
+        hasher.update(contiguous.tobytes())
+    digest = hasher.hexdigest()
     return BatchSignature(
         shape=contiguous.shape,
         dtype=str(contiguous.dtype),
