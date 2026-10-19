@@ -100,24 +100,6 @@ jobs:
         run: |
           uv venv .smoke --python 3.12
 
-      - name: Install pinned online-FDR candidate for manual review
-        if: "!startsWith(github.ref, 'refs/tags/')"
-        run: |
-          uv run --no-project --python 3.12 python - <<'PY'
-          import subprocess
-          import tomllib
-          from pathlib import Path
-
-          project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-          source = project.get("tool", {}).get("uv", {}).get("sources", {}).get("online-fdr")
-          if source is not None:
-              requirement = f"online-fdr @ git+{source['git']}@{source['rev']}"
-              subprocess.run(
-                  ["uv", "pip", "install", "--python", ".smoke/bin/python", requirement],
-                  check=True,
-              )
-          PY
-
       - name: Wheel smoke test
         run: |
           uv pip install --python .smoke/bin/python "$(ls dist/*.whl)[fdr]"

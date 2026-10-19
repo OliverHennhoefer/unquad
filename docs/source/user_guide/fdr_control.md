@@ -531,16 +531,6 @@ method whose assumptions match the p-value process.
 The optional `fdr` extra requires `online-fdr>=1.0.0`. The example below uses
 its `online_fdr.p_values` API.
 
-Nonconform 2.0.0 and online-fdr 1.0.0 are currently under release review. Until
-both versions are published on PyPI, install the review branch and the pinned
-online-fdr candidate together:
-
-```bash
-pip install "online-fdr @ git+https://github.com/OliverHennhoefer/online-fdr.git@fd0c257dedb3686b0b1854d9e3b8f5b26c5c3cc7" "nonconform[fdr] @ git+https://github.com/OliverHennhoefer/nonconform.git@codex/prepare-pypi-2.0.0"
-```
-
-After both releases are available on PyPI, use:
-
 ```bash
 pip install "nonconform[fdr]>=2.0.0"
 ```

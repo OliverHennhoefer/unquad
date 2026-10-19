@@ -99,12 +99,6 @@ dev = [
 "Documentation" = "https://oliverhennhoefer.github.io/nonconform/"
 "Bugs" = "https://github.com/OliverHennhoefer/nonconform/issues"
 
-# Temporary review source until online-fdr 1.0.0 is published. Remove this
-# override and refresh only online-fdr in uv.lock before tagging nonconform 2.0.
-# Built wheel metadata still requires the PyPI distribution, not this Git source.
-[tool.uv.sources]
-online-fdr = { git = "https://github.com/OliverHennhoefer/online-fdr.git", rev = "fd0c257dedb3686b0b1854d9e3b8f5b26c5c3cc7" }
-
 [tool.ruff]
 line-length = 88
 target-version = "py312"
