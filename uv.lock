@@ -1055,8 +1055,8 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.2.0" },
     { name = "oddball", marker = "extra == 'all'", specifier = ">=1.3.0" },
     { name = "oddball", marker = "extra == 'data'", specifier = ">=1.3.0" },
-    { name = "online-fdr", marker = "extra == 'all'", git = "https://github.com/OliverHennhoefer/online-fdr.git?rev=fd0c257dedb3686b0b1854d9e3b8f5b26c5c3cc7" },
-    { name = "online-fdr", marker = "extra == 'fdr'", git = "https://github.com/OliverHennhoefer/online-fdr.git?rev=fd0c257dedb3686b0b1854d9e3b8f5b26c5c3cc7" },
+    { name = "online-fdr", marker = "extra == 'all'", specifier = ">=1.0.0" },
+    { name = "online-fdr", marker = "extra == 'fdr'", specifier = ">=1.0.0" },
     { name = "optuna", marker = "extra == 'all'", specifier = ">=4.5.0" },
     { name = "optuna", marker = "extra == 'probabilistic'", specifier = ">=4.5.0" },
     { name = "pandas", specifier = ">=2.2.1" },
@@ -1176,10 +1176,14 @@ wheels = [
 [[package]]
 name = "online-fdr"
 version = "1.0.0"
-source = { git = "https://github.com/OliverHennhoefer/online-fdr.git?rev=fd0c257dedb3686b0b1854d9e3b8f5b26c5c3cc7#fd0c257dedb3686b0b1854d9e3b8f5b26c5c3cc7" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ae/c5/ec53f5196ca2f2c3fcc8408d44747555512d3c8f4222160a664679dbb318/online_fdr-1.0.0.tar.gz", hash = "sha256:60c1c461521a1bbb72d319974158409706da3fef754f0e84ec67cdde9fe185e3", size = 54544, upload-time = "2026-10-19T17:41:31.67Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/66/2eac83b528616cdffedadbb351624398441d65f263a808b5f1d0d7aad529/online_fdr-1.0.0-py3-none-any.whl", hash = "sha256:1134c1627620d26fc11f1705c4be8fdbc35cc4fb4c7bcc8d36455285dc9ecfbb", size = 84705, upload-time = "2026-10-19T17:41:30.071Z" },
 ]
 
 [[package]]
