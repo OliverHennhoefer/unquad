@@ -27,6 +27,11 @@ jobs:
       - name: Check distribution metadata
         run: uvx twine check --strict dist/*
 
+      - name: Include online-FDR smoke inputs
+        run: |
+          mkdir -p dist/smoke
+          cp scripts/check_online_fdr_example.py docs/source/user_guide/fdr_control.md dist/smoke/
+
       - name: Upload dist artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -54,9 +59,11 @@ jobs:
 
       - name: Install wheel with all extras
         # Install the built wheel directly — no source tree present, no editable
-        # install. pip resolves extras from the wheel metadata and fetches
-        # dependencies from PyPI as a normal user would.
+        # install. pip resolves extras from the wheel metadata.
         run: pip install "$(ls dist/*.whl)[all]"
+
+      - name: Verify documented online-FDR example
+        run: python -I dist/smoke/check_online_fdr_example.py dist/smoke/fdr_control.md
 
       - name: Verify public API imports
         run: |
