@@ -21,10 +21,9 @@ from .validation import (
 
 def as_calibration_scores(name: str, values: np.ndarray) -> np.ndarray:
     """Normalize a nonempty, finite one-dimensional score array."""
-    scores = as_1d_numeric(name, values).astype(float, copy=True)
+    scores = as_scores(name, values)
     if scores.size == 0:
         raise ValueError(f"{name} must contain at least one score.")
-    validate_finite(name, scores)
     return scores
 
 

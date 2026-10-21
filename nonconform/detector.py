@@ -107,7 +107,9 @@ class BaseConformalDetector(ABC):
        estimation strategy, while `select()` combines estimation with the
        configured batch selection procedure
 
-    Subclasses must implement both abstract methods.
+    Subclasses must implement ``fit()``, ``compute_p_values()``, and
+    ``score_samples()``. ``calibrate()`` is optional and raises
+    ``NotImplementedError`` unless overridden.
 
     Note:
         This is an abstract class and cannot be instantiated directly.

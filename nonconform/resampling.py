@@ -169,8 +169,8 @@ class Split(BaseStrategy):
         self._calib_size: float | int = n_calib
         self._calibration_ids: list[int] | None = None
 
-    def _validate_n_calib(self, n_samples: int) -> None:
-        """Validate calibration size against dataset size."""
+    def _validate_n_calib(self, n_samples: int) -> int:
+        """Validate calibration size and return the absolute calibration count."""
         n_calib = self._calib_size
         if isinstance(n_calib, float):
             if not (0 < n_calib < 1):
@@ -196,6 +196,7 @@ class Split(BaseStrategy):
             raise ValueError(
                 f"Calibration size ({n_calib_abs}) exceeds training size ({n_samples})"
             )
+        return n_calib_abs
 
     @ensure_numpy_array
     def fit_calibrate(
@@ -354,12 +355,7 @@ class DerandomizedSplits(BaseStrategy):
         validate_optional_seed("seed", seed)
         validate_positive_integer("n_repetitions", self.n_repetitions)
         split = Split(n_calib=self.n_calib)
-        split._validate_n_calib(len(x))
-        n_calibration = (
-            math.ceil(len(x) * self.n_calib)
-            if isinstance(self.n_calib, float)
-            else self.n_calib
-        )
+        n_calibration = split._validate_n_calib(len(x))
         split_stream, tie_stream = np.random.SeedSequence(seed).spawn(2)
         models = []
         calibration_rows = []
@@ -508,7 +504,6 @@ class CrossValidation(BaseStrategy):
         self._detector_list.clear()
         self._calibration_ids = []
 
-        detector_ = detector
         n_samples = len(x)
 
         # Determine k (for jackknife mode, k=n)
@@ -548,10 +543,10 @@ class CrossValidation(BaseStrategy):
             else folds.split(x)
         )
 
-        for i, (train_idx, calib_idx) in enumerate(fold_iterator):
+        for train_idx, calib_idx in fold_iterator:
             self._calibration_ids.extend(calib_idx.tolist())
 
-            model = copy(detector_)
+            model = copy(detector)
             _try_set_random_state(model, seed)
             model.fit(x[train_idx])
 
@@ -565,7 +560,7 @@ class CrossValidation(BaseStrategy):
             calibration_offset += n_fold_samples
 
         if self._mode is ConformalMode.SINGLE_MODEL:
-            model = copy(detector_)
+            model = copy(detector)
             _try_set_random_state(model, seed)
             model.fit(x)
             self._detector_list.append(deepcopy(model))

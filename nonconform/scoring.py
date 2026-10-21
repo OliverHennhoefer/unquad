@@ -23,7 +23,9 @@ from ._internal.conditional_calibration import (
     ConditionalCalibrationMethod,
     calibrate_conditional_p_values,
     normalize_conditional_calibration_method,
+    validate_delta,
 )
+from ._internal.validation import validate_finite
 
 TieBreakModeInput = TieBreakMode | Literal["classical", "randomized"]
 
@@ -50,14 +52,6 @@ def _as_1d(name: str, values: np.ndarray) -> np.ndarray:
             f"{name} must be a 1D array (or shape (n, 1)/(1, n)), got {arr.shape}."
         )
     return arr.ravel()
-
-
-def _validate_finite(name: str, values: np.ndarray) -> None:
-    """Validate that values are finite."""
-    if values.size == 0:
-        return
-    if not np.all(np.isfinite(values)):
-        raise ValueError(f"{name} must be finite.")
 
 
 class BaseEstimation(ABC):
@@ -228,12 +222,7 @@ class ConditionalEmpirical(Empirical):
         mc_num_simulations: int = 10_000,
     ) -> None:
         super().__init__(tie_break=tie_break)
-        try:
-            delta_float = float(delta)
-        except (TypeError, ValueError) as exc:
-            raise ValueError("delta must be a float in (0, 1).") from exc
-        if not np.isfinite(delta_float) or not (0.0 < delta_float < 1.0):
-            raise ValueError(f"delta must be in (0, 1), got {delta!r}.")
+        delta_float = validate_delta(delta)
         if (
             isinstance(simes_kden, bool)
             or not isinstance(simes_kden, int)
@@ -295,7 +284,7 @@ class ConditionalEmpirical(Empirical):
         return calibrated
 
 
-# Standalone p-value functions (consolidated from utils/stat/statistical.py)
+# Standalone p-value functions
 def calculate_p_val(
     scores: np.ndarray,
     calibration_set: np.ndarray,
@@ -407,10 +396,10 @@ def calculate_weighted_p_val(
             "calibration_set and calib_weights must have the same length. "
             f"Got {len(calibration_set)} and {len(w_calib)}."
         )
-    _validate_finite("scores", scores)
-    _validate_finite("calibration_set", calibration_set)
-    _validate_finite("test_weights", w_scores)
-    _validate_finite("calib_weights", w_calib)
+    validate_finite("scores", scores)
+    validate_finite("calibration_set", calibration_set)
+    validate_finite("test_weights", w_scores)
+    validate_finite("calib_weights", w_calib)
     if np.any(w_scores < 0):
         raise ValueError("test_weights must be non-negative.")
     if np.any(w_calib < 0):
@@ -517,14 +506,11 @@ class Probabilistic(BaseEstimation):
         weights to shape the KDE. Test weights are accepted for API parity but
         do not set a positive lower bound on p-values.
         """
-        if weights is not None:
-            w_calib, _w_test = weights
-        else:
-            w_calib, _w_test = None, None
-
         if weights is None:
+            w_calib = None
             current_hash = hash(calibration_set.tobytes())
         else:
+            w_calib, _w_test = weights
             current_hash = hash((calibration_set.tobytes(), w_calib.tobytes()))
 
         if self._kde_model is None or self._calibration_hash != current_hash:
@@ -551,16 +537,9 @@ class Probabilistic(BaseEstimation):
                 'or pip install "nonconform[all]".'
             ) from exc
 
-        from ._internal.tuning import tune_kde_hyperparameters
+        from ._internal.tuning import sort_with_weights, tune_kde_hyperparameters
 
-        calibration_set = calibration_set.ravel()
-
-        if weights is not None:
-            sort_idx = np.argsort(calibration_set)
-            calibration_set = calibration_set[sort_idx]
-            weights = weights[sort_idx]
-        else:
-            calibration_set = np.sort(calibration_set)
+        calibration_set, weights = sort_with_weights(calibration_set, weights)
 
         tuning_result = tune_kde_hyperparameters(
             calibration_set=calibration_set,

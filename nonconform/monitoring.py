@@ -24,12 +24,7 @@ from sklearn.exceptions import NotFittedError
 
 from nonconform._internal import set_params
 from nonconform._internal.monitoring import _snapshot_split_detector
-from nonconform.adapters import (
-    adapt,
-    apply_score_polarity,
-    resolve_implicit_score_polarity,
-    resolve_score_polarity,
-)
+from nonconform.adapters import _adapt_with_score_polarity
 from nonconform.detector import ConformalDetector
 from nonconform.enums import ScorePolarity
 from nonconform.martingales import (
@@ -275,12 +270,7 @@ class ExchangeabilityMonitor:
         seed: int | None = None,
     ) -> None:
         self.seed = _validate_seed(seed)
-        adapted_detector = adapt(detector)
-        if score_polarity is None:
-            resolved_polarity = resolve_implicit_score_polarity(adapted_detector)
-        else:
-            resolved_polarity = resolve_score_polarity(adapted_detector, score_polarity)
-        normalized_detector = apply_score_polarity(adapted_detector, resolved_polarity)
+        normalized_detector, _ = _adapt_with_score_polarity(detector, score_polarity)
         owned_detector: AnomalyDetector = set_params(
             _copy_component("detector", normalized_detector), self.seed
         )

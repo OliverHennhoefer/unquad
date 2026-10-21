@@ -59,6 +59,17 @@ def _require_kdepy_fftkde() -> type[FFTKDE]:
     return FFTKDE
 
 
+def sort_with_weights(
+    values: np.ndarray, weights: np.ndarray | None
+) -> tuple[np.ndarray, np.ndarray | None]:
+    """Return flattened values in ascending order with weights kept aligned."""
+    values = values.ravel()
+    if weights is None:
+        return np.sort(values), None
+    order = np.argsort(values)
+    return values[order], weights[order]
+
+
 def _scott_bandwidth(data: np.ndarray) -> float:
     """Scott's rule-of-thumb bandwidth estimation.
 
@@ -142,15 +153,7 @@ def tune_kde_hyperparameters(
     Returns:
         Dictionary with 'bandwidth', 'kernel', 'best_score', 'study'.
     """
-    calibration_set = calibration_set.ravel()
-
-    # Sort data and weights together to maintain correspondence
-    if weights is not None:
-        sort_idx = np.argsort(calibration_set)
-        calibration_set = calibration_set[sort_idx]
-        weights = weights[sort_idx]
-    else:
-        calibration_set = np.sort(calibration_set)
+    calibration_set, weights = sort_with_weights(calibration_set, weights)
 
     kernels = _normalise_kernels(kernel_options)
 
@@ -247,10 +250,7 @@ def _normalise_kernels(kernel_options: Sequence[Kernel] | Kernel) -> list[Kernel
     if isinstance(kernel_options, Kernel):
         return [kernel_options]
 
-    kernels = [kernel for kernel in kernel_options]
-    if not kernels:
-        kernels = [Kernel.GAUSSIAN]
-    return kernels
+    return list(kernel_options) or [Kernel.GAUSSIAN]
 
 
 def _collect_heuristic_bandwidths(
@@ -330,15 +330,7 @@ def _fit_kde(
 ) -> FFTKDE:
     """Fit FFTKDE model."""
     fft_kde_cls = _require_kdepy_fftkde()
-    data = data.ravel()
-
-    # Sort data and weights together to maintain correspondence
-    if weights is not None:
-        sort_idx = np.argsort(data)
-        data = data[sort_idx]
-        weights = weights[sort_idx]
-    else:
-        data = np.sort(data)
+    data, weights = sort_with_weights(data, weights)
 
     kde = fft_kde_cls(kernel=kernel.value, bw=bandwidth)
     if weights is not None:
@@ -361,5 +353,6 @@ __all__ = [
     "_sheather_jones_bandwidth",
     "_silverman_bandwidth",
     "compute_bandwidth_range",
+    "sort_with_weights",
     "tune_kde_hyperparameters",
 ]

@@ -33,7 +33,7 @@ def set_params(
     Sets common parameters following sklearn conventions with fallback aliases:
     - contamination: Set to minimum for one-class training (optional)
     - n_jobs/n_threads: Set to -1 to use all cores (optional)
-    - random_state/seed: Set for reproducibility (required if seed provided)
+    - random_state/seed: Set for reproducibility (only if seed provided)
 
     Args:
         detector: Detector instance to configure.
@@ -46,7 +46,9 @@ def set_params(
         Configured detector instance.
 
     Note:
-        Logs warnings if optional parameters (contamination, n_jobs) unavailable.
+        Missing contamination or parallelism parameters are logged at debug
+        level. A missing random-state parameter is logged as a warning when a
+        seed is provided.
     """
     params = detector.get_params()
 
@@ -55,10 +57,8 @@ def set_params(
 
     if seed is not None:
         if random_iteration and iteration is not None:
-            dynamic_seed = derive_seed(iteration, seed)
-            _set_random_state(detector, params, dynamic_seed)
-        else:
-            _set_random_state(detector, params, seed)
+            seed = derive_seed(iteration, seed)
+        _set_random_state(detector, params, seed)
 
     return detector
 

@@ -20,7 +20,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 import numpy as np
 
@@ -129,31 +129,12 @@ class AlarmConfig:
 
     def __post_init__(self) -> None:
         """Validate optional threshold values after dataclass initialization."""
-        object.__setattr__(
-            self,
-            "ville_threshold",
-            _validate_positive_threshold("ville_threshold", self.ville_threshold),
-        )
-        object.__setattr__(
-            self,
-            "restarted_ville_threshold",
-            _validate_positive_threshold(
-                "restarted_ville_threshold", self.restarted_ville_threshold
-            ),
-        )
-        object.__setattr__(
-            self,
-            "cusum_threshold",
-            _validate_positive_threshold("cusum_threshold", self.cusum_threshold),
-        )
-        object.__setattr__(
-            self,
-            "shiryaev_roberts_threshold",
-            _validate_positive_threshold(
-                "shiryaev_roberts_threshold",
-                self.shiryaev_roberts_threshold,
-            ),
-        )
+        # Every field is an optional alarm threshold.
+        for threshold_field in fields(self):
+            name = threshold_field.name
+            object.__setattr__(
+                self, name, _validate_positive_threshold(name, getattr(self, name))
+            )
 
 
 @dataclass(slots=True, frozen=True)
@@ -285,29 +266,26 @@ class BaseMartingale(ABC):
 
     def _triggered_alarms(self) -> tuple[str, ...]:
         """Return tuple of currently triggered alarm names."""
-        alarms: list[str] = []
-        if (
-            self._alarm_config.ville_threshold is not None
-            and self._log_martingale >= np.log(self._alarm_config.ville_threshold)
-        ):
-            alarms.append("ville")
-        if (
-            self._alarm_config.restarted_ville_threshold is not None
-            and self._log_restarted_martingale
-            >= np.log(self._alarm_config.restarted_ville_threshold)
-        ):
-            alarms.append("restarted_ville")
-        if self._alarm_config.cusum_threshold is not None and self._log_cusum >= np.log(
-            self._alarm_config.cusum_threshold
-        ):
-            alarms.append("cusum")
-        if (
-            self._alarm_config.shiryaev_roberts_threshold is not None
-            and self._log_shiryaev_roberts
-            >= np.log(self._alarm_config.shiryaev_roberts_threshold)
-        ):
-            alarms.append("shiryaev_roberts")
-        return tuple(alarms)
+        config = self._alarm_config
+        checks = (
+            ("ville", config.ville_threshold, self._log_martingale),
+            (
+                "restarted_ville",
+                config.restarted_ville_threshold,
+                self._log_restarted_martingale,
+            ),
+            ("cusum", config.cusum_threshold, self._log_cusum),
+            (
+                "shiryaev_roberts",
+                config.shiryaev_roberts_threshold,
+                self._log_shiryaev_roberts,
+            ),
+        )
+        return tuple(
+            name
+            for name, threshold, log_statistic in checks
+            if threshold is not None and log_statistic >= np.log(threshold)
+        )
 
 
 class PowerMartingale(BaseMartingale):
