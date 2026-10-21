@@ -77,6 +77,7 @@ nav:
     - examples/index.md
     - Classical Conformal: examples/classical_conformal.md
     - Conditional Conformal: examples/conditional_conformal.md
+    - Group-Conditional Conformal: examples/group_conditional.md
     - Data-Efficient Resampling: examples/resampling_conformal.md
     - Weighted Conformal: examples/weighted_conformal.md
     - FDR Control: examples/fdr_control.md

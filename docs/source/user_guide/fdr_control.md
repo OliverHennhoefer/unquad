@@ -712,6 +712,7 @@ multiple-testing problem.
 |---|---|
 | Select anomalies in one fixed batch | `detector.select(batch, alpha=...)` |
 | Select more when anomalies are a sizable share of the batch | `detector.select(batch, alpha=..., method="storey")` |
+| Select when groups have different normal behavior or the group mix shifts | `fit(x, groups=...)`, then `detector.select(batch, alpha=..., groups=...)` |
 | Report adjusted p-values for a native unweighted snapshot | `result.adjusted_p_values(method=...)` |
 | Adjust external p-values or apply BY | SciPy BH or BY, after checking assumptions |
 | Select under modeled covariate shift | Weighted `detector.select(...)`, which uses WCS |

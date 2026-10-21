@@ -1,5 +1,5 @@
 ---
-description: "Understand conformal anomaly scores, empirical p-values, exchangeability, conditional calibration, multiple testing, and sequential ranks."
+description: "Understand conformal anomaly scores, empirical p-values, exchangeability, group-conditional and conditional calibration, multiple testing, and sequential ranks."
 ---
 
 # Understanding conformal inference
@@ -215,6 +215,86 @@ class, BY is more conservative; it still cannot correct invalid p-values.
 See [False discovery rate control](fdr_control.md) for the procedures and their
 distinct targets.
 
+## Group-conditional (Mondrian) p-values
+
+Pooled calibration ranks every test score against the whole calibration set.
+When the data come from groups with different normal score levels, such as
+sites, sensors, or customer segments, a pooled p-value is valid only for the
+group mix of the reference data. If the test batch over-represents a group
+whose normal points score high, its true nulls receive p-values that are too
+small.
+
+Passing `groups=` to `fit(...)` or `calibrate(...)` records the group of every
+calibration score. Each test point is then ranked only among the
+`n_g` calibration scores of its own group `g`:
+
+$$
+p(x)=\frac{1+\sum_{i\in\mathcal C_g}\mathbf{1}\{S_i\ge S(x)\}}{n_g+1}.
+$$
+
+If, given the group labels, the calibration scores of group `g` and a
+true-null test score from group `g` are exchangeable, then
+`Pr{p(x) <= a | groups} <= a` within every group. This group-conditional
+validity holds whatever the group proportions in the test batch. It is the
+attribute-conditional case of Mondrian conformal prediction (Vovk, Gammerman,
+and Shafer 2005, Section 4.5; Vovk 2012).
+
+```python
+import numpy as np
+from sklearn.ensemble import IsolationForest
+
+from nonconform import ConformalDetector, Split
+
+rng = np.random.default_rng(42)
+site_reference = rng.choice(np.array(["a", "b"]), size=3_000, p=[0.6, 0.4])
+x_reference = rng.normal(size=(3_000, 3))
+x_reference[site_reference == "b"] *= 2.0  # site b is noisier
+
+site_test = np.array(["a"] * 25 + ["b"] * 25)
+x_test = rng.normal(size=(50, 3))
+x_test[site_test == "b"] *= 2.0
+x_test[[0, 25]] += 8.0  # one anomaly per site
+
+detector = ConformalDetector(
+    detector=IsolationForest(random_state=42),
+    strategy=Split(n_calib=0.5),
+    seed=42,
+).fit(x_reference, groups=site_reference)
+
+p_values = detector.compute_p_values(x_test, groups=site_test)
+selected = detector.select(x_test, alpha=0.1, groups=site_test)
+labels, counts = np.unique_counts(detector.calibration_groups)
+print("calibration scores:", dict(zip(labels.tolist(), counts.tolist())))
+print("discoveries:", np.flatnonzero(selected))
+```
+
+The base detector is still fitted on all groups together; only calibration is
+split by group. Group labels are matched to rows by position, and every test
+label must have calibration scores. `select(..., groups=...)` applies BH once
+to the whole batch of group-conditional p-values.
+
+BH remains valid under a within-group version of the usual conditions.
+Suppose that, given all labels and a score map fitted independently of the
+calibration and test data, calibration and test points are independent,
+calibration and true-null test points of the same group are identically
+distributed, and scores are continuous. Then the p-values within each group
+are PRDS on the true nulls (Bates et al. 2023, Theorem 2), different groups are
+independent, and the whole family is again PRDS. BH therefore controls FDR at
+`pi0 * alpha`.
+
+Each group has its own resolution floor `1 / (n_g + 1)`, so small groups give
+coarse p-values. An empty `select(...)` that the largest test group's floor
+explains logs the calibration-size warning. With `Split`, a small group can
+lose all of its rows to training; test points from such a group raise an
+error.
+
+Group-conditional calibration supports unweighted `Split`, detached `Split`,
+`CrossValidation`, and `JackknifeBootstrap` with
+`Empirical(tie_break="classical")`. As without groups, the resampling
+strategies carry no finite-sample guarantee. Randomized, conditional, and KDE
+p-values, weighted mode, `DerandomizedSplits`, `method="storey"`, FDP and FPR
+certificates, and result-aware e-values reject grouped calibration.
+
 ## Conditionally calibrated p-values
 
 Standard conformal p-values are marginally valid over the random calibration
@@ -373,7 +453,8 @@ restart mixtures, CUSUM, and Shiryaev-Roberts interpretations.
 - Confirm calibration and true-null test observations satisfy the required
   exchangeability or weighted-shift design.
 - Verify score polarity.
-- Calculate empirical p-value resolution from the actual calibration count.
+- Calculate empirical p-value resolution from the actual calibration count,
+  per group for group-conditional p-values.
 - Match the multiple-testing procedure to the p-value dependence structure.
 - Keep batch, conditional-calibration, weighted, and sequential guarantees
   distinct.
@@ -382,11 +463,15 @@ restart mixtures, CUSUM, and Shiryaev-Roberts interpretations.
 ## References
 
 - [Vovk, Gammerman, and Shafer (2005), *Algorithmic Learning in a Random World*](https://doi.org/10.1007/b106715)
-  develops the foundational conformal framework.
+  develops the foundational conformal framework, including Mondrian conformal
+  predictors (Section 4.5).
 - [Shafer and Vovk (2008), *A Tutorial on Conformal Prediction*](https://jmlr.org/papers/v9/shafer08a.html)
   provides an accessible formal tutorial.
 - [Lei et al. (2018), *Distribution-Free Predictive Inference for Regression*](https://doi.org/10.1080/01621459.2017.1307116)
   presents split conformal inference and related methods.
+- [Vovk (2012), *Conditional Validity of Inductive Conformal Predictors*](https://proceedings.mlr.press/v25/vovk12.html)
+  proves category-conditional validity of split conformal predictors, which
+  underlies group-conditional p-values.
 - [Bates et al. (2023), *Testing for Outliers with Conformal p-values*](https://doi.org/10.1214/22-AOS2244)
   analyzes marginal and conditionally calibrated conformal p-values and their
   multiple-testing behavior.

@@ -37,6 +37,11 @@ def normalize_method(method: str) -> SelectionMethod:
 
 def validate_storey_scope(provenance: ResultProvenance) -> None:
     """Require the classical rank-based p-values covered by Storey-BH theory."""
+    if provenance.grouped:
+        raise ValueError(
+            "method='storey' does not support group-conditional calibration. "
+            "Use method='bh' with groups=."
+        )
     if (
         provenance.estimation_family not in _CLASSICAL_FAMILIES
         or provenance.tie_break is not TieBreakMode.CLASSICAL
@@ -120,13 +125,15 @@ def warn_if_floor_blocks_discovery(
     alpha: float,
     method: SelectionMethod,
     n_calibration: int,
+    grouped: bool = False,
 ) -> None:
     """Warn when the classical p-value floor rules out a single discovery.
 
     Call only after an empty selection of classical empirical p-values. With
     ``n`` calibration scores those p-values are at least ``1 / (n + 1)``, so
     the step-up rule cannot select one isolated point when that floor exceeds
-    its first threshold ``alpha / (m * pi0)``.
+    its first threshold ``alpha / (m * pi0)``. For group-conditional p-values,
+    ``n`` is the largest calibration group among the test points.
     """
     n_test = p_values.size
     proportion = null_proportion(p_values, method=method, n_calibration=n_calibration)
@@ -158,17 +165,23 @@ def warn_if_floor_blocks_discovery(
             "attain that minimum."
         )
     required = math.ceil(n_test * proportion / alpha * (1.0 - 1e-12)) - 1
+    if grouped:
+        calibration = f"at most {n_calibration} calibration scores per test group"
+        target = "calibration scores per group"
+    else:
+        calibration = f"{n_calibration} calibration scores"
+        target = "calibration scores"
     _logger.warning(
-        "select() made no discoveries. With %d calibration scores, classical "
-        "conformal p-values cannot fall below 1/%d = %.3g, but %s. %s Use at "
-        "least %d calibration scores, or smaller test batches, so that a "
-        "single anomaly can be discovered.",
-        n_calibration,
+        "select() made no discoveries. With %s, classical conformal p-values "
+        "cannot fall below 1/%d = %.3g, but %s. %s Use at least %d %s, or "
+        "smaller test batches, so that a single anomaly can be discovered.",
+        calibration,
         n_calibration + 1,
         1.0 / (n_calibration + 1),
         rule,
         consequence,
         required,
+        target,
     )
 
 

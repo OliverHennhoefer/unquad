@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from collections.abc import Sequence
+from dataclasses import dataclass, fields
 from enum import Enum, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -58,6 +59,20 @@ class ResultProvenance:
     test_batch_signature: BatchSignature | None
     # Empirical tie handling; None for non-empirical estimators.
     tie_break: TieBreakMode | None = None
+    # Group-conditional (Mondrian) calibration.
+    grouped: bool = False
+
+    def __setstate__(self, state: Sequence[Any]) -> None:
+        """Restore pickles, including 2.0 ones written before ``grouped``."""
+        restore_fields(self, state, grouped=False)
+
+
+def restore_fields(instance: Any, state: Sequence[Any], **defaults: Any) -> None:
+    """Restore a slotted frozen dataclass; default fields that old pickles lack."""
+    names = [item.name for item in fields(instance)]
+    values = {**defaults, **dict(zip(names, state, strict=False))}
+    for name, value in values.items():
+        object.__setattr__(instance, name, value)
 
 
 def batch_signature(x: np.ndarray) -> BatchSignature:

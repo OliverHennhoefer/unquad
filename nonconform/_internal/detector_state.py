@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from .provenance import BatchSignature, CalibrationMode
+from .groups import CalibrationGroups
+from .provenance import BatchSignature, CalibrationMode, restore_fields
 
 if TYPE_CHECKING:
     from nonconform.structures import AnomalyDetector
@@ -36,6 +38,12 @@ class FittedCalibration:
     samples: np.ndarray
     n_features: int
     mode: CalibrationMode
+    # Group of each calibration score; None for pooled calibration.
+    groups: CalibrationGroups | None = None
+
+    def __setstate__(self, state: Sequence[Any]) -> None:
+        """Restore pickles, including 2.0 ones written before ``groups``."""
+        restore_fields(self, state, groups=None)
 
 
 @dataclass(frozen=True, slots=True)

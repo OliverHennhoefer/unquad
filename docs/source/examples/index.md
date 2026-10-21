@@ -1,5 +1,5 @@
 ---
-description: "Independently runnable nonconform examples for batch, conditional, resampling, weighted, derandomized e-value, FDR, and sequential workflows."
+description: "Independently runnable nonconform examples for batch, conditional, group-conditional, resampling, weighted, derandomized e-value, FDR, and sequential workflows."
 ---
 
 # Examples
@@ -14,6 +14,7 @@ into a fresh Python process after installing the dependencies named on its page.
 |---|---|---|
 | [Classical split conformal](classical_conformal.md) | Calibration and test nulls are exchangeable | Empirical p-values and BH discovery mask |
 | [Conditional conformal](conditional_conformal.md) | You need calibration-set-conditional p-value maps | Conditionally transformed p-values and BH mask |
+| [Group-conditional conformal](group_conditional.md) | Groups differ in normal behavior or the test group mix shifts | Pooled and per-group (Mondrian) BH selections compared |
 | [Data-efficient resampling](resampling_conformal.md) | A fixed holdout is costly and resampling is justified | Strategy comparison with fit cost, FDP, and power |
 | [Weighted conformal](weighted_conformal.md) | The target null follows a defensible covariate-shift model | Weighted p-values, WCS mask, and weight diagnostics |
 | [Derandomized conformal e-values](derandomized_e_values.md) | Random calibration splits make selections unstable | Uniformly averaged split evidence and e-BH mask |
