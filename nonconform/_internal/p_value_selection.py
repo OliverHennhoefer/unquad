@@ -66,8 +66,11 @@ def storey_null_proportion(p_values: np.ndarray, *, n_calibration: int) -> float
     """Estimate the null proportion with Storey's finite-sample estimator.
 
     Uses ``(1 + #{p >= lambda}) / (m (1 - lambda))`` without capping at one;
-    the leading one and the uncapped value are needed for FDR control.
+    the leading one and the uncapped value are needed for FDR control. An
+    empty family returns one, so Storey-BH, like BH, selects nothing.
     """
+    if p_values.size == 0:
+        return 1.0
     k = _storey_grid_index(n_calibration)
     n_large = int(np.count_nonzero(p_values >= storey_lambda(n_calibration)))
     # 1 - lambda = (n + 1 - k) / (n + 1); kept in integers for exactness.

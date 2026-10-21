@@ -125,6 +125,19 @@ def test_storey_adjustment_scales_bh_by_null_proportion_and_caps_at_one():
     assert np.all((0.0 <= adjusted) & (adjusted <= 1.0))
 
 
+@pytest.mark.parametrize("method", ["bh", "storey"])
+def test_empty_family_has_empty_adjustment_and_no_warning(fdr_records, method):
+    p_values = np.empty(0)
+
+    adjusted = selection.adjusted_p_values(p_values, method=method, n_calibration=19)
+    selection.warn_if_floor_blocks_discovery(
+        p_values, alpha=0.1, method=method, n_calibration=19
+    )
+
+    assert adjusted.shape == (0,)
+    assert fdr_records == []
+
+
 @pytest.mark.parametrize("seed", range(20))
 @pytest.mark.parametrize("alpha", [0.05, 0.1, 0.3])
 def test_storey_adjusted_mask_matches_step_up_at_scaled_level(seed, alpha):

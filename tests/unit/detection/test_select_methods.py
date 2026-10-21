@@ -338,6 +338,18 @@ def test_select_does_not_warn_after_discoveries(fdr_records):
     assert fdr_records == []
 
 
+@pytest.mark.parametrize("method", ["bh", "storey"])
+def test_select_returns_empty_mask_for_empty_batch(fdr_records, method):
+    x_reference, _ = _data(seed=18, n_reference=400)
+    detector = _detector(strategy=Split(n_calib=49)).fit(x_reference)
+
+    selected = detector.select(np.empty((0, 3)), alpha=0.05, method=method)
+
+    assert selected.shape == (0,)
+    assert selected.dtype == bool
+    assert fdr_records == []
+
+
 @pytest.mark.parametrize(
     "kwargs",
     [
