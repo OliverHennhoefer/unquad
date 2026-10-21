@@ -44,6 +44,13 @@ observation has a 95% probability of being anomalous. The FDR guarantee is a
 property of the selection procedure under its assumptions and across the
 declared testing family.
 
+Pass `method="storey"` to use Storey's adaptive BH, which estimates the share
+of true nulls and can discover more when anomalies are common. After a call,
+`detector.last_result.adjusted_p_values(method=...)` returns the adjusted
+p-values whose `<= alpha` mask reproduces the selection. See
+[Adaptive BH with Storey's estimator](../user_guide/fdr_control.md#adaptive-bh-with-storeys-estimator)
+for its scope.
+
 ## Raw-score false-alarm control
 
 Use an `FPRCertificate` when the deployment requirement is a per-inlier
