@@ -73,11 +73,16 @@ def test_strategies_generate_expected_calibration(simple_dataset, case):
 
     detector = _build_detector(case.factory())
     detector.fit(x_train)
-    detector.compute_p_values(x_test[:6])
+    p_values = detector.compute_p_values(x_test[:6])
 
     calibration = detector.calibration_set
     assert len(calibration) == case.expected_calib(len(x_train))
     assert np.isfinite(calibration).all()
+
+    # Same seed should give identical p-values per strategy.
+    rerun = _build_detector(case.factory())
+    rerun.fit(x_train)
+    np.testing.assert_allclose(rerun.compute_p_values(x_test[:6]), p_values, atol=1e-8)
 
 
 ModeCase = namedtuple("ModeCase", "name factory expected_models")
@@ -118,29 +123,3 @@ def test_mode_variants_change_model_count(simple_dataset, case):
     assert len(det_std.detector_set) == case.expected_models(
         "single_model", len(x_train)
     )
-
-
-SeedCase = namedtuple("SeedCase", "name factory")
-
-SEED_CASES = (
-    SeedCase("split", lambda: Split(n_calib=0.2)),
-    SeedCase("cross-validation", lambda: CrossValidation(k=4, mode="plus")),
-    SeedCase("jackknife-bootstrap", lambda: JackknifeBootstrap(n_bootstraps=3)),
-)
-
-
-@pytest.mark.parametrize("case", SEED_CASES, ids=lambda c: c.name)
-def test_strategy_runs_are_reproducible(simple_dataset, case):
-    """Same seed should give identical p-values per strategy."""
-    x_train, x_test, _ = simple_dataset(n_train=32, n_test=12, n_features=3)
-
-    det_one = _build_detector(case.factory())
-    det_two = _build_detector(case.factory())
-
-    det_one.fit(x_train)
-    det_two.fit(x_train)
-
-    preds_one = det_one.compute_p_values(x_test)
-    preds_two = det_two.compute_p_values(x_test)
-
-    np.testing.assert_allclose(preds_one, preds_two, atol=1e-8)

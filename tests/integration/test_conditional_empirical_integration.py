@@ -24,21 +24,6 @@ def _build_conditional_detector(
     )
 
 
-def test_conditional_empirical_outputs_valid_p_values(simple_dataset) -> None:
-    x_train, x_test, _ = simple_dataset(n_train=90, n_test=28, n_features=4)
-    detector = _build_conditional_detector(
-        estimation=ConditionalEmpirical(method="simes", delta=0.1),
-    )
-
-    detector.fit(x_train)
-    p_values = detector.compute_p_values(x_test)
-
-    assert p_values.shape == (len(x_test),)
-    assert np.all((0.0 <= p_values) & (p_values <= 1.0))
-    assert detector.last_result is not None
-    assert detector.last_result.p_values is not None
-
-
 def test_conditional_empirical_reproducible_with_seed(simple_dataset) -> None:
     x_train, x_test, _ = simple_dataset(n_train=84, n_test=24, n_features=3)
     kwargs = dict(

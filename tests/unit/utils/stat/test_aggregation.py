@@ -1,127 +1,78 @@
 import numpy as np
 import pytest
 
+import nonconform._internal.math_utils as math_utils
 from nonconform.metrics import aggregate
 
 
-class TestMeanAggregation:
-    def test_mean_aggregation(self, sample_2d_scores):
-        scores = sample_2d_scores()
-        result = aggregate("mean", scores)
-        expected = np.mean(scores, axis=0)
-        np.testing.assert_array_almost_equal(result, expected)
+@pytest.mark.parametrize(
+    ("method", "reducer", "known_scores", "expected"),
+    [
+        ("mean", np.mean, [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [2.5, 3.5, 4.5]),
+        ("median", np.median, [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], [3.0, 4.0]),
+        ("minimum", np.min, [[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]], [1.0, 2.0, 3.0]),
+        ("maximum", np.max, [[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]], [4.0, 5.0, 6.0]),
+    ],
+)
+def test_aggregation_reduces_over_models(
+    sample_2d_scores, method, reducer, known_scores, expected
+):
+    scores = sample_2d_scores(n_models=5, n_samples=10)
 
-    def test_mean_aggregation_shape(self, sample_2d_scores):
-        scores = sample_2d_scores(n_models=5, n_samples=10)
-        result = aggregate("mean", scores)
-        assert result.shape == (10,)
+    result = aggregate(method, scores)
 
-    def test_mean_with_different_values(self):
-        scores = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-        result = aggregate("mean", scores)
-        expected = np.array([2.5, 3.5, 4.5])
-        np.testing.assert_array_almost_equal(result, expected)
-
-
-class TestMedianAggregation:
-    def test_median_aggregation(self, sample_2d_scores):
-        scores = sample_2d_scores()
-        result = aggregate("median", scores)
-        expected = np.median(scores, axis=0)
-        np.testing.assert_array_almost_equal(result, expected)
-
-    def test_median_aggregation_shape(self, sample_2d_scores):
-        scores = sample_2d_scores(n_models=5, n_samples=10)
-        result = aggregate("median", scores)
-        assert result.shape == (10,)
-
-    def test_median_with_odd_number_of_models(self):
-        scores = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
-        result = aggregate("median", scores)
-        expected = np.array([3.0, 4.0])
-        np.testing.assert_array_almost_equal(result, expected)
+    assert result.shape == (10,)
+    np.testing.assert_array_almost_equal(result, reducer(scores, axis=0))
+    np.testing.assert_array_almost_equal(
+        aggregate(method, np.array(known_scores)), expected
+    )
+    np.testing.assert_array_equal(aggregate(f" {method.upper()} ", scores), result)
 
 
-class TestMinimumAggregation:
-    def test_minimum_aggregation(self, sample_2d_scores):
-        scores = sample_2d_scores()
-        result = aggregate("minimum", scores)
-        expected = np.min(scores, axis=0)
-        np.testing.assert_array_almost_equal(result, expected)
-
-    def test_minimum_aggregation_shape(self, sample_2d_scores):
-        scores = sample_2d_scores(n_models=5, n_samples=10)
-        result = aggregate("minimum", scores)
-        assert result.shape == (10,)
-
-    def test_minimum_with_known_values(self):
-        scores = np.array([[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]])
-        result = aggregate("minimum", scores)
-        expected = np.array([1.0, 2.0, 3.0])
-        np.testing.assert_array_almost_equal(result, expected)
+@pytest.mark.parametrize(
+    ("scores", "expected"),
+    [
+        ([[1.0, 2.0, 3.0]], [1.0, 2.0, 3.0]),
+        ([[1.0], [2.0], [3.0]], [2.0]),
+        ([[5.0, 5.0, 5.0], [5.0, 5.0, 5.0]], [5.0, 5.0, 5.0]),
+    ],
+    ids=["single-model", "single-sample", "constant"],
+)
+def test_mean_aggregation_handles_degenerate_shapes(scores, expected):
+    np.testing.assert_array_equal(aggregate("mean", np.array(scores)), expected)
 
 
-class TestMaximumAggregation:
-    def test_maximum_aggregation(self, sample_2d_scores):
-        scores = sample_2d_scores()
-        result = aggregate("maximum", scores)
-        expected = np.max(scores, axis=0)
-        np.testing.assert_array_almost_equal(result, expected)
+@pytest.mark.parametrize(
+    ("dtype", "expected_dtype"),
+    [(np.float32, np.float32), (np.float64, np.float64), (np.int64, np.float64)],
+)
+def test_mean_aggregation_result_dtype(dtype, expected_dtype):
+    result = aggregate("mean", np.array([[1, 2, 3], [4, 5, 6]], dtype=dtype))
 
-    def test_maximum_aggregation_shape(self, sample_2d_scores):
-        scores = sample_2d_scores(n_models=5, n_samples=10)
-        result = aggregate("maximum", scores)
-        assert result.shape == (10,)
-
-    def test_maximum_with_known_values(self):
-        scores = np.array([[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]])
-        result = aggregate("maximum", scores)
-        expected = np.array([4.0, 5.0, 6.0])
-        np.testing.assert_array_almost_equal(result, expected)
+    assert result.dtype == expected_dtype
 
 
-class TestEdgeCases:
-    def test_single_row_input(self):
-        scores = np.array([[1.0, 2.0, 3.0]])
-        result = aggregate("mean", scores)
-        expected = np.array([1.0, 2.0, 3.0])
-        np.testing.assert_array_almost_equal(result, expected)
-
-    def test_single_column_input(self):
-        scores = np.array([[1.0], [2.0], [3.0]])
-        result = aggregate("mean", scores)
-        assert result.shape == (1,)
-        assert result[0] == 2.0
-
-    def test_all_same_values(self):
-        scores = np.array([[5.0, 5.0, 5.0], [5.0, 5.0, 5.0]])
-        result = aggregate("mean", scores)
-        expected = np.array([5.0, 5.0, 5.0])
-        np.testing.assert_array_almost_equal(result, expected)
-
-    def test_integer_array_conversion(self):
-        scores = np.array([[1, 2, 3], [4, 5, 6]])
-        result = aggregate("mean", scores)
-        assert isinstance(result[0], np.floating | float)
-
-    def test_invalid_method_raises(self):
-        scores = np.array([[1.0, 2.0], [3.0, 4.0]])
-        with pytest.raises(ValueError, match="Unsupported aggregation method"):
-            aggregate("invalid", scores)
-
-    def test_non_string_method_raises(self):
-        scores = np.array([[1.0, 2.0], [3.0, 4.0]])
-        with pytest.raises(TypeError, match="aggregation method must be a string"):
-            aggregate(1, scores)  # type: ignore[arg-type]
+@pytest.mark.parametrize(
+    ("method", "error", "match"),
+    [
+        ("invalid", ValueError, "Unsupported aggregation method"),
+        (1, TypeError, "aggregation method must be a string"),
+    ],
+)
+def test_invalid_aggregation_method_raises(method, error, match):
+    with pytest.raises(error, match=match):
+        aggregate(method, np.array([[1.0, 2.0], [3.0, 4.0]]))
 
 
-class TestDataTypes:
-    def test_float32_input(self):
-        scores = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
-        result = aggregate("mean", scores)
-        assert result.dtype == np.float32
+def test_normalize_bootstrap_aggregation_method_rejects_minimum() -> None:
+    with pytest.raises(ValueError, match="Unsupported bootstrap aggregation method"):
+        math_utils.normalize_bootstrap_aggregation_method("minimum")
 
-    def test_float64_input(self):
-        scores = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float64)
-        result = aggregate("mean", scores)
-        assert result.dtype == np.float64
+
+def test_aggregate_assert_never_guard(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _invalid_normalizer(method: str) -> str:
+        return "invalid"  # pragma: no cover - runtime-only guard injection
+
+    monkeypatch.setattr(math_utils, "normalize_aggregation_method", _invalid_normalizer)
+    with pytest.raises(AssertionError):
+        math_utils.aggregate("mean", np.array([[1.0, 2.0]]))

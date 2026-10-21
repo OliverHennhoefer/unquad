@@ -3,6 +3,7 @@ import sys
 
 import pytest
 
+import nonconform._internal.tuning as tuning
 from nonconform._internal.tuning import tune_kde_hyperparameters
 from nonconform.enums import Kernel
 from nonconform.scoring import Probabilistic
@@ -49,6 +50,14 @@ def test_tuning_raises_helpful_error_without_optuna(
     data = sample_calibration_data(n_samples=60)
     with pytest.raises(ImportError, match=r"nonconform\[probabilistic\]"):
         tune_kde_hyperparameters(data, [Kernel.GAUSSIAN], n_trials=1, cv_folds=2)
+
+
+def test_kde_fitting_raises_helpful_error_without_kdepy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _block_import(monkeypatch, "KDEpy")
+    with pytest.raises(ImportError, match=r"nonconform\[probabilistic\]"):
+        tuning._require_kdepy_fftkde()
 
 
 def test_probabilistic_raises_helpful_error_without_kdepy(

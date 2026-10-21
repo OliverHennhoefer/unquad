@@ -262,6 +262,10 @@ def test_conformal_e_values_without_valid_threshold_are_zero():
         (np.array([1.0]), np.array([]), "calib_scores"),
         (np.array([[1.0]]), np.array([2.0]), "same dimension"),
         (np.ones((2, 3)), np.ones((3, 4)), "same number of repetitions"),
+        (np.empty((0, 2)), np.empty((0, 3)), "at least one repetition"),
+        (np.ones((1, 2)), np.empty((1, 0)), "calib_scores must contain"),
+        (np.ones((1, 1, 1)), np.ones((1, 1, 1)), "1D or 2D"),
+        (np.array(["x"], dtype=object), np.array([2.0]), "numeric array"),
         (np.array([1.0, np.inf]), np.array([2.0]), "finite"),
     ],
 )
@@ -468,6 +472,7 @@ def test_select_conformal_e_values_validates_probabilities(parameter, value):
         ),
         ([_result(test_weights=np.ones(2))], ValueError, "weighted scores"),
         ([_result(test_scores=(np.nan, 1.0))], ValueError, "finite"),
+        ([_result(calib_scores=())], ValueError, "calib_scores must contain"),
     ],
 )
 def test_select_conformal_e_values_rejects_unverifiable_results(

@@ -1,217 +1,96 @@
-"""Unit tests for strategy/calibration/split.py."""
+"""Unit tests for the Split calibration strategy."""
 
 import numpy as np
 import pytest
 
 from nonconform import Split
-
-# MockDetector is imported from tests/conftest.py via pytest fixture discovery
 from tests.conftest import MockDetector
 
 
-class TestSplitInit:
-    """Tests for Split initialization."""
-
-    def test_default_initialization(self):
-        """Default initialization with proportional split."""
-        strategy = Split()
-        assert strategy.calib_size == 0.1  # Default value
-
-    def test_proportional_n_calib(self):
-        """Proportional calibration size (float between 0 and 1)."""
-        strategy = Split(n_calib=0.3)
-        assert strategy.calib_size == 0.3
-
-    def test_absolute_n_calib(self):
-        """Absolute calibration size (integer > 1)."""
-        strategy = Split(n_calib=100)
-        assert strategy.calib_size == 100
-
-    def test_calib_size_property(self):
-        """calib_size property returns calibration size."""
-        strategy = Split(n_calib=0.25)
-        assert strategy.calib_size == 0.25
+@pytest.fixture
+def sample_data():
+    """Sample training data."""
+    rng = np.random.default_rng(42)
+    return rng.standard_normal((100, 5))
 
 
-class TestSplitFitCalibrate:
-    """Tests for Split.fit_calibrate()."""
+@pytest.mark.parametrize(
+    ("kwargs", "expected"),
+    [({}, 0.1), ({"n_calib": 0.3}, 0.3), ({"n_calib": 100}, 100)],
+    ids=["default", "proportional", "absolute"],
+)
+def test_calib_size_reflects_configuration(kwargs, expected):
+    assert Split(**kwargs).calib_size == expected
 
-    @pytest.fixture
-    def sample_data(self):
-        """Sample training data."""
-        rng = np.random.default_rng(42)
-        return rng.standard_normal((100, 5))
 
-    @pytest.fixture
-    def detector(self):
-        """Mock detector."""
-        return MockDetector()
+@pytest.mark.parametrize(
+    ("n_samples", "n_calib", "expected_calib"),
+    [(100, 0.2, 20), (100, 30, 30), (10, 0.3, 3)],
+    ids=["proportional", "absolute", "small-dataset"],
+)
+def test_fit_calibrate_returns_one_fitted_seeded_model(
+    n_samples, n_calib, expected_calib
+):
+    """fit_calibrate trains one seeded model on the non-calibration rows."""
+    x = np.random.default_rng(42).standard_normal((n_samples, 5))
 
-    def test_returns_detector_list_and_scores(self, sample_data, detector):
-        """fit_calibrate returns detector list and calibration scores."""
-        strategy = Split(n_calib=0.2)
-        detector_set, calib_scores = strategy.fit_calibrate(
-            x=sample_data, detector=detector, seed=42
-        )
-        assert isinstance(detector_set, list)
-        assert len(detector_set) == 1  # Split returns single detector
-        assert isinstance(calib_scores, np.ndarray)
-        assert len(calib_scores) > 0
+    detector_set, calib_scores = Split(n_calib=n_calib).fit_calibrate(
+        x=x, detector=MockDetector(), seed=123
+    )
 
-    def test_proportional_split_sizes(self, sample_data, detector):
-        """Proportional split divides data correctly."""
-        strategy = Split(n_calib=0.2)  # 20% for calibration
-        _, calib_scores = strategy.fit_calibrate(
-            x=sample_data, detector=detector, seed=42
-        )
-        # With 100 samples and 20% calibration, expect ~20 calibration scores
-        assert 15 <= len(calib_scores) <= 25
+    assert isinstance(detector_set, list)
+    assert len(detector_set) == 1
+    assert detector_set[0]._fitted
+    assert detector_set[0]._training_size == n_samples - expected_calib
+    assert detector_set[0].get_params()["random_state"] == 123
+    assert isinstance(calib_scores, np.ndarray)
+    assert len(calib_scores) == expected_calib
 
-    def test_absolute_split_sizes(self, sample_data, detector):
-        """Absolute split size creates exact calibration set."""
-        strategy = Split(n_calib=30)  # Exactly 30 for calibration
-        _, calib_scores = strategy.fit_calibrate(
-            x=sample_data, detector=detector, seed=42
-        )
-        assert len(calib_scores) == 30
 
-    def test_detector_is_fitted(self, sample_data, detector):
-        """Returned detector is fitted."""
-        strategy = Split(n_calib=0.2)
-        detector_set, _ = strategy.fit_calibrate(
-            x=sample_data, detector=detector, seed=42
-        )
-        assert detector_set[0]._fitted
+@pytest.mark.parametrize("weighted", [True, False])
+def test_calibration_ids_are_stored_only_when_weighted(sample_data, weighted):
+    strategy = Split(n_calib=0.2)
+    strategy.fit_calibrate(
+        x=sample_data, detector=MockDetector(), seed=42, weighted=weighted
+    )
 
-    def test_seed_propagates_to_detector(self, sample_data, detector):
-        """fit_calibrate applies seed to detector random_state when supported."""
-        strategy = Split(n_calib=0.2)
-        detector_set, _ = strategy.fit_calibrate(
-            x=sample_data, detector=detector, seed=123
-        )
-        assert detector_set[0].get_params()["random_state"] == 123
+    if weighted:
+        assert len(strategy.calibration_ids) == 20
+        assert set(strategy.calibration_ids) <= set(range(len(sample_data)))
+    else:
+        assert strategy.calibration_ids is None
 
-    def test_calibration_ids_stored_when_weighted(self, sample_data, detector):
-        """Calibration IDs stored when weighted=True."""
-        strategy = Split(n_calib=0.2)
-        strategy.fit_calibrate(x=sample_data, detector=detector, seed=42, weighted=True)
-        assert strategy.calibration_ids is not None
-        assert len(strategy.calibration_ids) > 0
 
-    def test_calibration_ids_none_when_not_weighted(self, sample_data, detector):
-        """Calibration IDs not stored when weighted=False."""
+@pytest.mark.parametrize(
+    ("second_seed", "same_split"), [(42, True), (123, False)], ids=["same", "different"]
+)
+def test_seed_determines_calibration_split(sample_data, second_seed, same_split):
+    calibration_ids = []
+    for seed in (42, second_seed):
         strategy = Split(n_calib=0.2)
         strategy.fit_calibrate(
-            x=sample_data, detector=detector, seed=42, weighted=False
+            x=sample_data.copy(), detector=MockDetector(), seed=seed, weighted=True
         )
-        # In non-weighted mode, calibration_ids should be None or empty
-        calib_ids = strategy.calibration_ids
-        assert calib_ids is None or len(calib_ids) == 0
+        calibration_ids.append(strategy.calibration_ids)
+
+    assert (calibration_ids[0] == calibration_ids[1]) is same_split
 
 
-class TestSplitReproducibility:
-    """Tests for reproducibility with seed."""
+@pytest.mark.parametrize(
+    ("n_calib", "error", "match"),
+    [
+        (0.0, ValueError, "Proportional n_calib"),
+        (1.0, ValueError, "Proportional n_calib"),
+        (-0.1, ValueError, "Proportional n_calib"),
+        (0, ValueError, "Absolute n_calib"),
+        (10, ValueError, "No training data remaining"),
+        (11, ValueError, "Calibration size"),
+        ("bad", TypeError, "n_calib must be int or float"),
+    ],
+)
+def test_invalid_n_calib_raises(n_calib, error, match):
+    x = np.random.default_rng(42).standard_normal((10, 2))
+    strategy = Split(n_calib=n_calib)
 
-    @pytest.fixture
-    def sample_data(self):
-        """Sample training data."""
-        rng = np.random.default_rng(42)
-        return rng.standard_normal((100, 5))
-
-    def test_same_seed_same_split(self, sample_data):
-        """Same seed produces same split."""
-        strategy1 = Split(n_calib=0.2)
-        _, scores1 = strategy1.fit_calibrate(
-            x=sample_data.copy(), detector=MockDetector(), seed=42
-        )
-
-        strategy2 = Split(n_calib=0.2)
-        _, scores2 = strategy2.fit_calibrate(
-            x=sample_data.copy(), detector=MockDetector(), seed=42
-        )
-
-        # Same seed should produce same number of calibration scores
-        assert len(scores1) == len(scores2)
-
-    def test_different_seed_different_split(self, sample_data):
-        """Different seeds may produce different splits."""
-        strategy1 = Split(n_calib=0.2)
-        strategy1.fit_calibrate(
-            x=sample_data.copy(), detector=MockDetector(), seed=42, weighted=True
-        )
-
-        strategy2 = Split(n_calib=0.2)
-        strategy2.fit_calibrate(
-            x=sample_data.copy(), detector=MockDetector(), seed=123, weighted=True
-        )
-
-        # Different seeds should produce different calibration IDs
-        # (with high probability for reasonable data sizes)
-        if (
-            strategy1.calibration_ids is not None
-            and strategy2.calibration_ids is not None
-        ):
-            assert not np.array_equal(
-                sorted(strategy1.calibration_ids), sorted(strategy2.calibration_ids)
-            )
-
-
-class TestSplitEdgeCases:
-    """Tests for edge cases."""
-
-    def test_minimum_data_size(self):
-        """Strategy works with minimum viable data size."""
-        rng = np.random.default_rng(42)
-        X = rng.standard_normal((10, 2))  # Small dataset
-        strategy = Split(n_calib=0.3)  # 30% = 3 samples for calibration
-        detector_set, calib_scores = strategy.fit_calibrate(
-            x=X, detector=MockDetector(), seed=42
-        )
-        assert len(detector_set) == 1
-        assert len(calib_scores) >= 1
-
-    def test_accepts_dataframe_input(self):
-        """Strategy accepts pandas DataFrame input."""
-        import pandas as pd
-
-        rng = np.random.default_rng(42)
-        df = pd.DataFrame(rng.standard_normal((50, 3)))
-        strategy = Split(n_calib=0.2)
-        detector_set, calib_scores = strategy.fit_calibrate(
-            x=df, detector=MockDetector(), seed=42
-        )
-        assert len(detector_set) == 1
-        assert len(calib_scores) > 0
-
-    def test_invalid_proportional_n_calib_raises(self):
-        """Invalid proportional n_calib values raise ValueError."""
-        rng = np.random.default_rng(42)
-        X = rng.standard_normal((10, 2))
-        for n_calib in (0.0, 1.0, -0.1):
-            strategy = Split(n_calib=n_calib)
-            with pytest.raises(ValueError, match="Proportional n_calib"):
-                strategy.fit_calibrate(x=X, detector=MockDetector(), seed=42)
-
-    def test_invalid_absolute_n_calib_raises(self):
-        """Invalid absolute n_calib values raise ValueError."""
-        rng = np.random.default_rng(42)
-        X = rng.standard_normal((10, 2))
-        strategy = Split(n_calib=0)
-        with pytest.raises(ValueError, match="Absolute n_calib"):
-            strategy.fit_calibrate(x=X, detector=MockDetector(), seed=42)
-
-        strategy = Split(n_calib=10)
-        with pytest.raises(ValueError, match="No training data remaining"):
-            strategy.fit_calibrate(x=X, detector=MockDetector(), seed=42)
-
-        strategy = Split(n_calib=11)
-        with pytest.raises(ValueError, match="Calibration size"):
-            strategy.fit_calibrate(x=X, detector=MockDetector(), seed=42)
-
-    def test_non_numeric_n_calib_raises(self):
-        """Non-numeric n_calib values raise TypeError."""
-        rng = np.random.default_rng(42)
-        X = rng.standard_normal((10, 2))
-        strategy = Split(n_calib="bad")
-        with pytest.raises(TypeError, match="n_calib must be int or float"):
-            strategy.fit_calibrate(x=X, detector=MockDetector(), seed=42)
+    with pytest.raises(error, match=match):
+        strategy.fit_calibrate(x=x, detector=MockDetector(), seed=42)

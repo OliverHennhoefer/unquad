@@ -41,22 +41,18 @@ class TestCrossValidationFitCalibrate:
         rng = np.random.default_rng(42)
         return rng.standard_normal((50, 4))
 
-    def test_plus_mode_returns_k_detectors(self, sample_data):
-        """mode='plus' returns k trained detectors."""
-        strategy = CrossValidation(k=5, mode="plus", shuffle=True)
+    @pytest.mark.parametrize(
+        ("mode", "n_models"),
+        [("plus", 5), (ConformalMode.PLUS, 5), ("single_model", 1)],
+        ids=["plus", "plus-enum", "single-model"],
+    )
+    def test_mode_controls_number_of_models(self, sample_data, mode, n_models):
+        """Plus mode keeps all fold models; single-model mode refits one."""
+        strategy = CrossValidation(k=5, mode=mode, shuffle=True)
         detector_set, calib_scores = strategy.fit_calibrate(
             x=sample_data, detector=MockDetector(), seed=123
         )
-        assert len(detector_set) == 5
-        assert len(calib_scores) == len(sample_data)
-
-    def test_single_model_mode_returns_single_detector(self, sample_data):
-        """mode='single_model' returns a single trained detector."""
-        strategy = CrossValidation(k=5, mode="single_model", shuffle=True)
-        detector_set, calib_scores = strategy.fit_calibrate(
-            x=sample_data, detector=MockDetector(), seed=123
-        )
-        assert len(detector_set) == 1
+        assert len(detector_set) == n_models
         assert len(calib_scores) == len(sample_data)
 
     def test_calibration_ids_cover_all_samples(self, sample_data):
@@ -80,33 +76,23 @@ class TestCrossValidationFitCalibrate:
         assert len(detector_set) == len(sample_data)
         assert len(calib_scores) == len(sample_data)
 
-    def test_accepts_enum_mode(self, sample_data):
-        strategy = CrossValidation(k=5, mode=ConformalMode.PLUS, shuffle=True)
-        detector_set, _ = strategy.fit_calibrate(
-            x=sample_data, detector=MockDetector(), seed=123
-        )
-        assert len(detector_set) == 5
+    @pytest.mark.parametrize(
+        ("kwargs", "error", "match"),
+        [
+            ({"mode": "invalid"}, ValueError, "mode must be one of"),
+            ({"shuffle": 1}, TypeError, "shuffle must be a boolean value"),
+        ],
+    )
+    def test_invalid_configuration_raises(self, kwargs, error, match):
+        with pytest.raises(error, match=match):
+            CrossValidation(**({"k": 5, "mode": "plus"} | kwargs))
 
-    def test_invalid_mode_raises(self):
-        with pytest.raises(ValueError, match="mode must be one of"):
-            CrossValidation(k=5, mode="invalid")  # type: ignore[arg-type]
-
-    def test_non_boolean_shuffle_raises(self):
-        with pytest.raises(TypeError, match="shuffle must be a boolean value"):
-            CrossValidation(k=5, mode="plus", shuffle=1)  # type: ignore[arg-type]
-
-    def test_k_below_two_raises_with_diagnostic_notes(self, sample_data):
-        strategy = CrossValidation(k=1, mode="plus", shuffle=True)
-        with pytest.raises(ValueError, match="k must be at least 2"):
-            strategy.fit_calibrate(
-                x=sample_data,
-                detector=MockDetector(),
-                seed=123,
-            )
-
-    def test_k_above_sample_size_raises_with_diagnostic_notes(self, sample_data):
-        strategy = CrossValidation(k=len(sample_data) + 1, mode="plus", shuffle=True)
-        with pytest.raises(ValueError, match="Not enough samples"):
+    @pytest.mark.parametrize(
+        ("k", "match"), [(1, "k must be at least 2"), (51, "Not enough samples")]
+    )
+    def test_invalid_fold_count_raises(self, sample_data, k, match):
+        strategy = CrossValidation(k=k, mode="plus", shuffle=True)
+        with pytest.raises(ValueError, match=match):
             strategy.fit_calibrate(
                 x=sample_data,
                 detector=MockDetector(),

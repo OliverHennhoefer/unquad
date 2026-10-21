@@ -1,5 +1,4 @@
 import importlib
-from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -142,78 +141,39 @@ def test_star_import_exposes_only_curated_symbols():
     assert exported == set(CURATED_ROOT_EXPORTS)
 
 
-def test_removed_root_symbols_are_not_attributes():
-    for symbol in REMOVED_ROOT_SYMBOLS:
-        assert not hasattr(nonconform, symbol)
-
-
-@pytest.mark.parametrize("symbol", REMOVED_ROOT_SYMBOLS)
-def test_removed_root_import_raises_import_error(symbol: str):
+@pytest.mark.parametrize(
+    ("module_name", "symbol"),
+    [("nonconform", symbol) for symbol in REMOVED_ROOT_SYMBOLS]
+    + [
+        ("nonconform.enums", "Aggregation"),
+        ("nonconform.fdr", "conformal_e_value_selection"),
+        ("nonconform._internal.constants", "Dataset"),
+    ],
+)
+def test_removed_symbol_is_neither_attribute_nor_importable(
+    module_name: str, symbol: str
+):
+    assert not hasattr(importlib.import_module(module_name), symbol)
     with pytest.raises(ImportError, match=symbol):
-        exec(f"from nonconform import {symbol}", {})
+        exec(f"from {module_name} import {symbol}", {})
 
 
 @pytest.mark.parametrize(
     ("module_name", "expected_exports"),
     PUBLIC_MODULE_EXPORTS.items(),
 )
-def test_public_module_all_is_exact_contract(
+def test_public_module_exports_match_contract(
     module_name: str, expected_exports: list[str]
 ):
     module = importlib.import_module(module_name)
+    namespace: dict[str, object] = {}
+    exec(f"from {module_name} import *", namespace)
 
     assert module.__all__ == expected_exports
     for symbol in expected_exports:
         assert hasattr(module, symbol)
-
-
-@pytest.mark.parametrize(
-    ("module_name", "expected_exports"),
-    PUBLIC_MODULE_EXPORTS.items(),
-)
-def test_public_module_star_import_matches_contract(
-    module_name: str, expected_exports: list[str]
-):
-    namespace: dict[str, object] = {}
-    exec(f"from {module_name} import *", namespace)
-
     exported = {name for name in namespace if not name.startswith("__")}
     assert exported == set(expected_exports)
-
-
-def test_enums_module_exports_expected_symbols():
-    from nonconform.enums import (
-        Distribution,
-        Kernel,
-        Pruning,
-        ScorePolarity,
-    )
-
-    assert issubclass(Distribution, Enum)
-    assert issubclass(Kernel, Enum)
-    assert issubclass(Pruning, Enum)
-    assert issubclass(ScorePolarity, Enum)
-
-
-def test_aggregation_removed_from_enums_module():
-    with pytest.raises(ImportError, match="Aggregation"):
-        exec("from nonconform.enums import Aggregation", {})
-
-
-def test_unreleased_e_value_selection_name_is_absent():
-    module = importlib.import_module("nonconform.fdr")
-
-    assert not hasattr(module, "conformal_e_value_selection")
-    with pytest.raises(ImportError, match="conformal_e_value_selection"):
-        exec("from nonconform.fdr import conformal_e_value_selection", {})
-
-
-def test_metrics_module_exports_expected_symbols():
-    from nonconform.metrics import aggregate, false_discovery_rate, statistical_power
-
-    assert callable(aggregate)
-    assert callable(false_discovery_rate)
-    assert callable(statistical_power)
 
 
 def test_conditional_empirical_import_contract():

@@ -41,6 +41,8 @@ def _bounds(
         ({"beta": np.nextafter(1.0, np.inf)}, ValueError, "beta"),
         ({"beta": 3.0}, ValueError, "beta"),
         ({"method": "marginal_mc"}, ValueError, "method"),
+        ({"method": 1}, TypeError, "method"),
+        ({"boost": "yes"}, TypeError, "boost must be a boolean"),
     ],
 )
 def test_conformal_fdp_upper_bound_validates_inputs(kwargs, error_type, match):
@@ -54,11 +56,6 @@ def test_conformal_fdp_upper_bound_validates_inputs(kwargs, error_type, match):
     params.update(kwargs)
     with pytest.raises(error_type, match=match):
         FDPCertificate.from_p_values(**params)
-
-
-def test_conformal_fdp_upper_bound_rejects_non_string_method():
-    with pytest.raises(TypeError, match="method"):
-        _bounds(method=1)
 
 
 def test_thc_accepts_the_supported_beta_upper_boundary():
@@ -122,6 +119,8 @@ def test_certificate_isolates_source_and_returned_state():
     for name in ["method", "confidence", "boost", "seed", "lower"]:
         with pytest.raises(AttributeError):
             setattr(result, name, None)
+    with pytest.raises(AttributeError, match="immutable"):
+        del result.method
     # Read-only NumPy bytes still allow shape/dtype metadata edits on a returned
     # array. Those edits must never touch the certificate's owned array object.
     for name in ["p_values", "thresholds", "rejection_counts"]:

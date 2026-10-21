@@ -1,104 +1,77 @@
+from enum import Enum
+
 import pytest
 
-from nonconform.enums import Distribution, Kernel, Pruning, ScorePolarity
+from nonconform.enums import (
+    ConformalMode,
+    Distribution,
+    Kernel,
+    Pruning,
+    ScorePolarity,
+    TieBreakMode,
+)
 
 
-class TestDistribution:
-    def test_has_expected_members(self):
-        members = [Distribution.BETA_BINOMIAL, Distribution.UNIFORM, Distribution.GRID]
-        assert len(members) == 3
-        assert {member.name for member in Distribution} == {
-            "BETA_BINOMIAL",
-            "UNIFORM",
-            "GRID",
-        }
-
-    def test_member_values_unique(self):
-        values = [member.value for member in Distribution]
-        assert len(values) == len(set(values))
-
-
-class TestDataset:
-    def test_dataset_enum_removed(self):
-        import importlib
-
-        constants = importlib.import_module("nonconform._internal.constants")
-        with pytest.raises(AttributeError):
-            getattr(constants, "Dataset")
-
-
-class TestAggregation:
-    def test_aggregation_enum_removed_from_public_api(self):
-        import importlib
-
-        enums = importlib.import_module("nonconform.enums")
-        assert not hasattr(enums, "Aggregation")
-
-
-class TestPruning:
-    def test_has_expected_members(self):
-        members = [
-            Pruning.HETEROGENEOUS,
-            Pruning.HOMOGENEOUS,
-            Pruning.DETERMINISTIC,
-        ]
-        assert len(members) == 3
-        assert {member.name for member in Pruning} == {
-            "HETEROGENEOUS",
-            "HOMOGENEOUS",
-            "DETERMINISTIC",
-        }
-
-    def test_member_values_unique(self):
-        values = [member.value for member in Pruning]
-        assert len(values) == len(set(values))
+@pytest.mark.parametrize(
+    ("enum_cls", "expected_names"),
+    [
+        (Distribution, {"BETA_BINOMIAL", "UNIFORM", "GRID"}),
+        (Pruning, {"HETEROGENEOUS", "HOMOGENEOUS", "DETERMINISTIC"}),
+        (ScorePolarity, {"AUTO", "HIGHER_IS_ANOMALOUS", "HIGHER_IS_NORMAL"}),
+        (ConformalMode, {"PLUS", "SINGLE_MODEL"}),
+        (TieBreakMode, {"CLASSICAL", "RANDOMIZED"}),
+        (
+            Kernel,
+            {
+                "GAUSSIAN",
+                "EXPONENTIAL",
+                "BOX",
+                "TRIANGULAR",
+                "EPANECHNIKOV",
+                "BIWEIGHT",
+                "TRIWEIGHT",
+                "TRICUBE",
+                "COSINE",
+            },
+        ),
+    ],
+    ids=[
+        "Distribution",
+        "Pruning",
+        "ScorePolarity",
+        "ConformalMode",
+        "TieBreakMode",
+        "Kernel",
+    ],
+)
+def test_public_enum_has_exact_members_with_unique_values(enum_cls, expected_names):
+    assert issubclass(enum_cls, Enum)
+    assert set(enum_cls.__members__) == expected_names
+    # Duplicate values would become aliases that iteration skips.
+    assert len(enum_cls) == len(expected_names)
 
 
-class TestKernel:
-    def test_has_expected_members(self):
-        kernels = [
-            Kernel.GAUSSIAN,
-            Kernel.EXPONENTIAL,
-            Kernel.BOX,
-            Kernel.TRIANGULAR,
-            Kernel.EPANECHNIKOV,
-            Kernel.BIWEIGHT,
-            Kernel.TRIWEIGHT,
-            Kernel.TRICUBE,
-            Kernel.COSINE,
-        ]
-        assert len(kernels) == 9
-        assert {kernel.name for kernel in Kernel} == {
-            "GAUSSIAN",
-            "EXPONENTIAL",
-            "BOX",
-            "TRIANGULAR",
-            "EPANECHNIKOV",
-            "BIWEIGHT",
-            "TRIWEIGHT",
-            "TRICUBE",
-            "COSINE",
-        }
-
-    def test_member_values_unique(self):
-        values = [member.value for member in Kernel]
-        assert len(values) == len(set(values))
-
-
-class TestScorePolarity:
-    def test_has_expected_members(self):
-        members = [
-            ScorePolarity.AUTO,
-            ScorePolarity.HIGHER_IS_ANOMALOUS,
-            ScorePolarity.HIGHER_IS_NORMAL,
-        ]
-        assert len(members) == 3
-        assert {member.name for member in ScorePolarity} == {
-            "AUTO",
-            "HIGHER_IS_ANOMALOUS",
-            "HIGHER_IS_NORMAL",
-        }
-
-    def test_member_values_unique(self):
-        values = [member.value for member in ScorePolarity]
-        assert len(values) == len(set(values))
+@pytest.mark.parametrize(
+    ("enum_cls", "expected_values"),
+    [
+        (ConformalMode, {"PLUS": "plus", "SINGLE_MODEL": "single_model"}),
+        (TieBreakMode, {"CLASSICAL": "classical", "RANDOMIZED": "randomized"}),
+        (
+            Kernel,
+            {
+                "GAUSSIAN": "gaussian",
+                "EXPONENTIAL": "exponential",
+                "BOX": "box",
+                "TRIANGULAR": "tri",
+                "EPANECHNIKOV": "epa",
+                "BIWEIGHT": "biweight",
+                "TRIWEIGHT": "triweight",
+                "TRICUBE": "tricube",
+                "COSINE": "cosine",
+            },
+        ),
+    ],
+    ids=["ConformalMode", "TieBreakMode", "Kernel"],
+)
+def test_string_valued_enum_values_are_stable(enum_cls, expected_values):
+    assert {member.name: member.value for member in enum_cls} == expected_values

@@ -59,6 +59,33 @@ class ContinuousDistanceDetector(RoundedDistanceDetector):
         return np.linalg.norm(X - self.center_, axis=1)
 
 
+def _fit_continuous_detector(x_train, **overrides):
+    kwargs = {
+        "detector": ContinuousDistanceDetector(),
+        "strategy": Split(n_calib=0.25),
+        "score_polarity": "higher_is_anomalous",
+        "seed": 1,
+    } | overrides
+    return ConformalDetector(**kwargs).fit(x_train)
+
+
+def _repeated_split_results(make_detector, x_train, x_test, *, seeds, polarity):
+    """Score one batch with independently seeded Split detectors."""
+    results = []
+    for seed in seeds:
+        detector = ConformalDetector(
+            detector=make_detector(seed),
+            strategy=Split(n_calib=0.3),
+            score_polarity=polarity,
+            seed=seed,
+        ).fit(x_train)
+        detector.score_samples(x_test)
+        result = detector.last_result
+        assert result is not None
+        results.append(result)
+    return results
+
+
 @pytest.mark.parametrize("model_type", [IsolationForest, IForest])
 def test_derandomized_strategy_real_detector_matches_manual_splits(
     simple_dataset, model_type
@@ -141,20 +168,14 @@ def test_repeated_split_results_feed_select_conformal_e_values(simple_dataset):
     x_train, x_test, _ = simple_dataset(n_train=120, n_test=40, n_features=4)
 
     def collect_result():
-        results = []
-        for seed in range(4):
-            detector = ConformalDetector(
-                detector=IsolationForest(n_estimators=20, random_state=seed),
-                strategy=Split(n_calib=0.3),
-                score_polarity="auto",
-                seed=seed,
-            )
-            detector.fit(x_train)
-            detector.score_samples(x_test)
-            result = detector.last_result
-            assert result is not None
-            assert result.metadata == {}
-            results.append(result)
+        results = _repeated_split_results(
+            lambda seed: IsolationForest(n_estimators=20, random_state=seed),
+            x_train,
+            x_test,
+            seeds=range(4),
+            polarity="auto",
+        )
+        assert all(result.metadata == {} for result in results)
 
         return select_conformal_e_values(
             results,
@@ -176,18 +197,13 @@ def test_repeated_split_results_feed_select_conformal_e_values(simple_dataset):
 
 def test_discrete_detector_requires_seeded_randomized_score_ties(simple_dataset):
     x_train, x_test, _ = simple_dataset(n_train=120, n_test=40, n_features=4)
-    results = []
-    for seed in range(3):
-        detector = ConformalDetector(
-            detector=RoundedDistanceDetector(random_state=seed),
-            strategy=Split(n_calib=0.3),
-            score_polarity="higher_is_anomalous",
-            seed=seed,
-        ).fit(x_train)
-        detector.score_samples(x_test)
-        result = detector.last_result
-        assert result is not None
-        results.append(result)
+    results = _repeated_split_results(
+        RoundedDistanceDetector,
+        x_train,
+        x_test,
+        seeds=range(3),
+        polarity="higher_is_anomalous",
+    )
 
     with pytest.raises(ValueError, match="tied scores"):
         select_conformal_e_values(results, alpha=0.2)
@@ -209,18 +225,13 @@ def test_discrete_detector_requires_seeded_randomized_score_ties(simple_dataset)
 
 def test_continuous_detector_uses_default_strict_score_policy(simple_dataset):
     x_train, x_test, _ = simple_dataset(n_train=100, n_test=30, n_features=4)
-    results = []
-    for seed in range(3):
-        detector = ConformalDetector(
-            detector=ContinuousDistanceDetector(random_state=seed),
-            strategy=Split(n_calib=0.3),
-            score_polarity="higher_is_anomalous",
-            seed=seed,
-        ).fit(x_train)
-        detector.score_samples(x_test)
-        result = detector.last_result
-        assert result is not None
-        results.append(result)
+    results = _repeated_split_results(
+        ContinuousDistanceDetector,
+        x_train,
+        x_test,
+        seeds=range(3),
+        polarity="higher_is_anomalous",
+    )
 
     selection = select_conformal_e_values(results, alpha=0.2)
 
@@ -274,12 +285,7 @@ def test_split_subclass_is_accepted_by_native_provenance(simple_dataset):
         pass
 
     x_train, x_test, _ = simple_dataset(n_train=80, n_test=12, n_features=3)
-    detector = ConformalDetector(
-        detector=ContinuousDistanceDetector(),
-        strategy=CustomSplit(n_calib=0.25),
-        score_polarity="higher_is_anomalous",
-        seed=1,
-    ).fit(x_train)
+    detector = _fit_continuous_detector(x_train, strategy=CustomSplit(n_calib=0.25))
     detector.score_samples(x_test)
     result = detector.last_result
 
@@ -291,12 +297,7 @@ def test_split_subclass_is_accepted_by_native_provenance(simple_dataset):
 def test_unrelated_strategy_named_split_is_rejected(simple_dataset):
     fake_split_type = type("Split", (CrossValidation,), {})
     x_train, x_test, _ = simple_dataset(n_train=80, n_test=12, n_features=3)
-    detector = ConformalDetector(
-        detector=ContinuousDistanceDetector(),
-        strategy=fake_split_type(k=3),
-        score_polarity="higher_is_anomalous",
-        seed=1,
-    ).fit(x_train)
+    detector = _fit_continuous_detector(x_train, strategy=fake_split_type(k=3))
     detector.score_samples(x_test)
     result = detector.last_result
 
@@ -309,14 +310,14 @@ def test_unrelated_strategy_named_split_is_rejected(simple_dataset):
 @pytest.mark.parametrize("mutation", ["changed", "reordered"])
 def test_result_selection_verifies_test_batch_identity(simple_dataset, mutation):
     x_train, x_test, _ = simple_dataset(n_train=80, n_test=12, n_features=3)
-    detector = ConformalDetector(
-        detector=ContinuousDistanceDetector(),
-        strategy=Split(n_calib=0.25),
-        score_polarity="higher_is_anomalous",
-        seed=1,
-    ).fit(x_train)
+    detector = _fit_continuous_detector(x_train)
     detector.score_samples(x_test)
     first = detector.last_result.copy()
+
+    # An identical copy of the test batch is accepted.
+    detector.score_samples(x_test.copy())
+    selection = select_conformal_e_values([first, detector.last_result], tie_seed=1)
+    assert selection.n_repetitions == 2
 
     changed_test = x_test.copy()
     if mutation == "changed":
@@ -329,24 +330,6 @@ def test_result_selection_verifies_test_batch_identity(simple_dataset, mutation)
     assert second is not None
     with pytest.raises(ValueError, match=r"identical test batch.*same row order"):
         select_conformal_e_values([first, second], tie_seed=1)
-
-
-def test_result_selection_accepts_identical_test_batch_copy(simple_dataset):
-    x_train, x_test, _ = simple_dataset(n_train=80, n_test=12, n_features=3)
-    detector = ConformalDetector(
-        detector=ContinuousDistanceDetector(),
-        strategy=Split(n_calib=0.25),
-        score_polarity="higher_is_anomalous",
-        seed=1,
-    ).fit(x_train)
-    detector.score_samples(x_test)
-    first = detector.last_result.copy()
-    detector.score_samples(x_test.copy())
-    second = detector.last_result
-
-    assert second is not None
-    selection = select_conformal_e_values([first, second], tie_seed=1)
-    assert selection.n_repetitions == 2
 
 
 @pytest.mark.parametrize("dtype", ["Float64", "Int64"])
@@ -379,16 +362,10 @@ def test_result_selection_verifies_nullable_dataframe_batches(
 
 def test_result_selection_does_not_depend_on_p_value_estimator(simple_dataset):
     x_train, x_test, _ = simple_dataset(n_train=80, n_test=12, n_features=3)
+    probabilistic = Probabilistic(kernel=[Kernel.GAUSSIAN], n_trials=0)
     results = []
-    for estimation in (None, Probabilistic(kernel=[Kernel.GAUSSIAN], n_trials=0)):
-        kwargs = {} if estimation is None else {"estimation": estimation}
-        detector = ConformalDetector(
-            detector=ContinuousDistanceDetector(),
-            strategy=Split(n_calib=0.25),
-            score_polarity="higher_is_anomalous",
-            seed=1,
-            **kwargs,
-        ).fit(x_train)
+    for overrides in ({}, {"estimation": probabilistic}):
+        detector = _fit_continuous_detector(x_train, **overrides)
         detector.score_samples(x_test)
         result = detector.last_result
         assert result is not None

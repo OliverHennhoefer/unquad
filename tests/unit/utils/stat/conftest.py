@@ -42,20 +42,6 @@ def sample_p_values():
 
 
 @pytest.fixture
-def sample_binary_labels():
-    """Create sample binary labels for metrics testing."""
-
-    def _create(n=100, anomaly_rate=0.1, seed=42):
-        rng = np.random.default_rng(seed)
-        n_anomalies = int(n * anomaly_rate)
-        labels = np.array([0] * (n - n_anomalies) + [1] * n_anomalies)
-        rng.shuffle(labels)
-        return labels
-
-    return _create
-
-
-@pytest.fixture
 def conformal_result():
     """Create ConformalResult instances for testing."""
 
