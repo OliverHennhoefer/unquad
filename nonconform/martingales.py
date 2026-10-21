@@ -129,8 +129,8 @@ class AlarmConfig:
 
     def __post_init__(self) -> None:
         """Validate optional threshold values after dataclass initialization."""
-        # Every field is an optional alarm threshold.
-        for threshold_field in fields(self):
+        # Only AlarmConfig's own fields are thresholds; subclasses may add more.
+        for threshold_field in fields(AlarmConfig):
             name = threshold_field.name
             object.__setattr__(
                 self, name, _validate_positive_threshold(name, getattr(self, name))
