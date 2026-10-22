@@ -344,9 +344,11 @@ def test_select_returns_empty_mask_for_empty_batch(fdr_records, method):
     detector = _detector(strategy=Split(n_calib=49)).fit(x_reference)
 
     selected = detector.select(np.empty((0, 3)), alpha=0.05, method=method)
+    adjusted = detector.last_result.adjusted_p_values(method=method)
 
     assert selected.shape == (0,)
     assert selected.dtype == bool
+    assert adjusted.shape == (0,)
     assert fdr_records == []
 
 

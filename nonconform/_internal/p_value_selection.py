@@ -205,8 +205,6 @@ def validate_result_scope(
     p_values = as_1d_numeric("result.p_values", result.p_values).astype(
         float, copy=True
     )
-    if p_values.size == 0:
-        raise ValueError("result.p_values must contain at least one p-value.")
     validate_p_values(p_values)
     calib_scores = as_1d_numeric("result.calib_scores", result.calib_scores)
     if calib_scores.size == 0:
