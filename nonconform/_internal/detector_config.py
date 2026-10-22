@@ -6,12 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
-from nonconform.adapters import (
-    adapt,
-    apply_score_polarity,
-    resolve_implicit_score_polarity,
-    resolve_score_polarity,
-)
+from nonconform.adapters import _adapt_with_score_polarity
 from nonconform.scoring import Empirical
 from nonconform.weighting import IdentityWeightEstimator
 
@@ -94,13 +89,9 @@ def prepare_configuration(
             "verify_prepared_batch_content": verify_prepared_batch_content,
         }
     )
-    adapted_detector = adapt(detector)
-    resolved_polarity = (
-        resolve_implicit_score_polarity(adapted_detector)
-        if score_polarity is None
-        else resolve_score_polarity(adapted_detector, score_polarity)
+    normalized_detector, resolved_polarity = _adapt_with_score_polarity(
+        detector, score_polarity
     )
-    normalized_detector = apply_score_polarity(adapted_detector, resolved_polarity)
     runtime_detector = set_params(deepcopy(normalized_detector), seed)
     runtime_strategy = deepcopy(strategy)
     runtime_estimation = estimation if estimation is not None else Empirical()

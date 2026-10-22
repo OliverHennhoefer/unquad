@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 import numpy as np
 import pytest
@@ -98,6 +99,18 @@ class TestValidation:
 
         assert config.cusum_threshold is None
         assert config.shiryaev_roberts_threshold is None
+
+    def test_alarm_config_subclass_fields_are_not_validated_as_thresholds(self):
+        @dataclass(frozen=True)
+        class LabeledAlarmConfig(AlarmConfig):
+            label: str = "drift"
+
+        config = LabeledAlarmConfig(ville_threshold=20)
+
+        assert config.label == "drift"
+        assert config.ville_threshold == 20.0
+        with pytest.raises(ValueError, match="cusum_threshold"):
+            LabeledAlarmConfig(cusum_threshold=-1.0)
 
     def test_invalid_p_values_raise(self):
         martingale = PowerMartingale(epsilon=0.5)

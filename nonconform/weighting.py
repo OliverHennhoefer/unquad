@@ -112,7 +112,7 @@ class BaseWeightEstimator(ABC):
             NotFittedError: If fit() has not been called.
             ValueError: If only one of calibration_samples/test_samples is provided.
         """
-        if not hasattr(self, "_is_fitted") or not self._is_fitted:
+        if not getattr(self, "_is_fitted", False):
             raise NotFittedError("This weight estimator instance is not fitted yet.")
 
         if (calibration_samples is None) != (test_samples is None):
@@ -123,8 +123,7 @@ class BaseWeightEstimator(ABC):
 
         if calibration_samples is None:
             return self._get_stored_weights()
-        else:
-            return self._score_new_data(calibration_samples, test_samples)
+        return self._score_new_data(calibration_samples, test_samples)
 
     @abstractmethod
     def _get_stored_weights(self) -> tuple[np.ndarray, np.ndarray]:
@@ -564,17 +563,13 @@ class BootstrapBaggedWeightEstimator(BaseWeightEstimator):
         w_calib_final = np.exp(sum_log_weights_calib / self.n_bootstraps)
         w_test_final = np.exp(sum_log_weights_test / self.n_bootstraps)
 
-        # Apply clipping after aggregation (use base class static method)
-        clip_bounds = BaseWeightEstimator._compute_clip_bounds(
+        # Clip after aggregation so the bounds come from the bagged weights.
+        clip_bounds = self._compute_clip_bounds(
             w_calib_final, w_test_final, self.clip_quantile
         )
-        if clip_bounds is None:
-            self._w_calib = w_calib_final
-            self._w_test = w_test_final
-        else:
-            clip_min, clip_max = clip_bounds
-            self._w_calib = np.clip(w_calib_final, clip_min, clip_max)
-            self._w_test = np.clip(w_test_final, clip_min, clip_max)
+        self._w_calib, self._w_test = self._clip_weights(
+            w_calib_final, w_test_final, clip_bounds
+        )
 
         self._calibration_signature = batch_signature(calibration_samples)
         self._test_signature = batch_signature(test_samples)
@@ -625,7 +620,7 @@ class BootstrapBaggedWeightEstimator(BaseWeightEstimator):
 
 
 # -----------------------------------------------------------------------------
-# Factory functions for behavioral equivalence with old API
+# Factory functions for common classifier-based estimators
 # -----------------------------------------------------------------------------
 
 

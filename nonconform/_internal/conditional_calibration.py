@@ -35,7 +35,7 @@ def normalize_conditional_calibration_method(
     return cast(ConditionalCalibrationMethod, normalized)
 
 
-def _validate_delta(delta: float) -> float:
+def validate_delta(delta: float) -> float:
     """Validate calibration confidence level."""
     try:
         delta_value = float(delta)
@@ -77,7 +77,7 @@ def _validate_p_values(p_values: np.ndarray) -> np.ndarray:
 
 def compute_cn(delta: float, n_calibration: int) -> float:
     """Compute iterated-log correction constant from CCCPV reference code."""
-    delta_value = _validate_delta(delta)
+    delta_value = validate_delta(delta)
     n_cal = _validate_n_calibration(n_calibration)
     if n_cal < _MIN_ASYMPTOTIC_N_CAL:
         raise ValueError(
@@ -104,7 +104,7 @@ def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
 def compute_aseq(n_calibration: int, k: int, delta: float) -> np.ndarray:
     """Compute the Simes calibration sequence."""
     n_cal = _validate_n_calibration(n_calibration)
-    delta_value = _validate_delta(delta)
+    delta_value = validate_delta(delta)
     if not isinstance(k, int):
         raise TypeError("k must be an integer.")
     if k < 1:
@@ -188,7 +188,7 @@ def estimate_fs_correction(
     rng: np.random.Generator | None = None,
 ) -> float:
     """Estimate finite-sample correction used by MC conditional calibration."""
-    delta_value = _validate_delta(delta)
+    delta_value = validate_delta(delta)
     n_cal = _validate_n_calibration(n_calibration)
     if n_cal < _MIN_ASYMPTOTIC_N_CAL:
         return 0.0
@@ -259,7 +259,7 @@ def calibrate_conditional_p_values(
         return p_vals.copy(), fs_correction
 
     n_cal = _validate_n_calibration(n_calibration)
-    delta_value = _validate_delta(delta)
+    delta_value = validate_delta(delta)
     normalized_method = normalize_conditional_calibration_method(method)
 
     if normalized_method in {"mc", "asymptotic"} and n_cal < _MIN_ASYMPTOTIC_N_CAL:
@@ -322,4 +322,5 @@ __all__ = [
     "compute_hybrid_bound",
     "estimate_fs_correction",
     "normalize_conditional_calibration_method",
+    "validate_delta",
 ]

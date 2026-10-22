@@ -184,8 +184,7 @@ def resolve_implicit_score_polarity(detector: Any) -> ScorePolarity:
     """
     if _is_known_sklearn_normality_detector(detector):
         return ScorePolarity.HIGHER_IS_NORMAL
-    if isinstance(detector, PyODAdapter) or _looks_like_pyod(detector):
-        return ScorePolarity.HIGHER_IS_ANOMALOUS
+    # PyOD and unknown custom detectors share the anomalous-higher default.
     return ScorePolarity.HIGHER_IS_ANOMALOUS
 
 
@@ -257,6 +256,27 @@ def apply_score_polarity(
     if parsed is ScorePolarity.HIGHER_IS_ANOMALOUS:
         return detector
     return ScorePolarityAdapter(detector=detector, score_polarity=parsed)
+
+
+def _adapt_with_score_polarity(
+    detector: Any,
+    score_polarity: ScorePolarityInput | None,
+) -> tuple[AnomalyDetector, ScorePolarity]:
+    """Adapt a detector and normalize its scores to anomalous-higher.
+
+    ``None`` applies the implicit default policy; explicit values, including
+    ``"auto"``, are resolved strictly.
+
+    Returns:
+        The normalized detector and its resolved non-auto score polarity.
+    """
+    adapted = adapt(detector)
+    resolved = (
+        resolve_implicit_score_polarity(adapted)
+        if score_polarity is None
+        else resolve_score_polarity(adapted, score_polarity)
+    )
+    return apply_score_polarity(adapted, resolved), resolved
 
 
 def _looks_like_pyod(detector: Any) -> bool:
