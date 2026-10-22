@@ -135,6 +135,7 @@ def test_blocked_pyod_detectors_raise_on_initialization(name, factory):
         _split_detector(factory(seed=17))
 
 
+@pytest.mark.skipif(not HAS_PYOD, reason="PyOD not installed")
 def test_auto_encoder_detector(simple_dataset):
     """Neural detectors should also integrate when optional deps are installed."""
     pytest.importorskip("torch")
