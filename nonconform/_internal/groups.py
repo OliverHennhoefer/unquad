@@ -16,7 +16,17 @@ _MAX_LISTED_LABELS = 5
 
 def as_group_labels(groups: Any, *, n_rows: int) -> np.ndarray:
     """Return one non-missing group label per row as an object array."""
-    labels = np.asarray(groups, dtype=object)
+    if isinstance(groups, list | tuple):
+        # Fill item by item so tuple-valued labels stay single labels.
+        labels = np.empty(len(groups), dtype=object)
+        for row, label in enumerate(groups):
+            if isinstance(label, list | np.ndarray):
+                raise ValueError(
+                    "groups must be one-dimensional with one label per row of x."
+                )
+            labels[row] = label
+    else:
+        labels = np.asarray(groups, dtype=object)
     if labels.ndim != 1 or labels.shape[0] != n_rows:
         raise ValueError(
             "groups must be one-dimensional with one label per row of x; "

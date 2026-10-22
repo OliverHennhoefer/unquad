@@ -195,8 +195,9 @@ def test_select_applies_bh_to_group_conditional_p_values():
         pd.Series,
         pd.Categorical,
         lambda labels: np.where(labels == "a", 0, 1),
+        lambda labels: [(str(label), 1) for label in labels],
     ],
-    ids=["list", "series", "categorical", "integers"],
+    ids=["list", "series", "categorical", "integers", "tuples"],
 )
 def test_label_containers_give_identical_p_values(as_labels):
     x_reference, g_reference = _reference()
@@ -410,11 +411,12 @@ def test_detached_calibration_rejects_unsupported_groups_before_reset():
     [
         (lambda g: g[:-1], "one label per row"),
         (lambda g: np.c_[g, g], "one-dimensional"),
+        (lambda g: np.c_[g, g].tolist(), "one-dimensional"),
         (lambda g: np.r_[g[:-1], [None]], "missing labels"),
         (lambda g: np.r_[np.zeros(g.size - 1), [np.nan]], "missing labels"),
         (lambda g: "a", "one-dimensional"),
     ],
-    ids=["short", "two-dimensional", "none", "nan", "scalar"],
+    ids=["short", "two-dimensional", "nested-list", "none", "nan", "scalar"],
 )
 def test_invalid_reference_labels_are_rejected(labels, match):
     x_reference, g_reference = _reference()
