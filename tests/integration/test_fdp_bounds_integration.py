@@ -26,6 +26,7 @@ from nonconform.resampling import (
 )
 from nonconform.scoring import ConditionalEmpirical, Probabilistic
 from nonconform.structures import ConformalResult
+from nonconform.weighting import SklearnWeightEstimator
 
 
 def test_fdp_bounds_do_not_change_existing_unweighted_selection(simple_dataset):
@@ -184,24 +185,29 @@ def test_native_scope_cannot_be_overridden_by_metadata(fitted_batch, change, mat
 
 
 @pytest.mark.parametrize(
-    "strategy,estimation,match",
+    "strategy,options,match",
     [
-        (CrossValidation(k=2), None, "split"),
-        (JackknifeBootstrap(n_bootstraps=2), None, "split"),
-        (DerandomizedSplits(n_repetitions=1), None, "split"),
-        (Split(), Probabilistic(), "empirical"),
-        (Split(), ConditionalEmpirical(), "empirical"),
+        (CrossValidation(k=2), {}, "split"),
+        (JackknifeBootstrap(n_bootstraps=2), {}, "split"),
+        (DerandomizedSplits(n_repetitions=1), {}, "split"),
+        (Split(), {"estimation": Probabilistic()}, "empirical"),
+        (Split(), {"estimation": ConditionalEmpirical()}, "empirical"),
+        (
+            Split(n_calib=25),
+            {"weight_estimator": SklearnWeightEstimator()},
+            "unweighted",
+        ),
     ],
 )
 def test_detector_rejects_unsupported_scope_before_scoring(
-    fitted_batch, monkeypatch, strategy, estimation, match
+    fitted_batch, monkeypatch, strategy, options, match
 ):
     _, reference, batch = fitted_batch
     detector = ConformalDetector(
         IsolationForest(n_estimators=5),
         strategy=strategy,
-        estimation=estimation,
         seed=4,
+        **options,
     ).fit(reference)
 
     def forbidden(*args, **kwargs):
@@ -244,25 +250,6 @@ def test_certificate_seed_is_independent_of_fitting_seed(fitted_batch, monkeypat
     assert all(a is b for a, b in zip(models, detector.detector_set, strict=True))
     np.testing.assert_array_equal(calibration, detector.calibration_set)
     np.testing.assert_array_equal(fresh.p_values, seeded.p_values)
-
-
-def test_weighted_detector_rejected_before_scoring(fitted_batch, monkeypatch):
-    from nonconform.weighting import SklearnWeightEstimator
-
-    _, reference, batch = fitted_batch
-    detector = ConformalDetector(
-        IsolationForest(n_estimators=5),
-        strategy=Split(n_calib=25),
-        weight_estimator=SklearnWeightEstimator(),
-        seed=4,
-    ).fit(reference)
-
-    def forbidden(*args, **kwargs):
-        pytest.fail("weighted certification scored the batch")
-
-    monkeypatch.setattr(detector, "compute_p_values", forbidden)
-    with pytest.raises(ValueError, match="unweighted"):
-        detector.fdp_bounds(batch)
 
 
 def test_native_api_exposes_only_confidence(fitted_batch):

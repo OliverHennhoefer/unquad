@@ -1,14 +1,13 @@
-"""Shared test fixtures and utilities for nonconform tests.
+"""Shared test utilities for nonconform tests.
 
-This module provides reusable test fixtures including mock detectors that
-implement the AnomalyDetector protocol for unit testing.
+This module provides a mock detector that implements the AnomalyDetector
+protocol for unit testing.
 """
 
 from copy import deepcopy
 from typing import Any, Self
 
 import numpy as np
-import pytest
 
 
 class MockDetector:
@@ -109,23 +108,3 @@ class MockDetector:
         new._fitted = self._fitted
         new._training_size = self._training_size
         return new
-
-
-@pytest.fixture
-def mock_detector() -> MockDetector:
-    """Provide a fresh MockDetector instance for testing.
-
-    Returns:
-        A new MockDetector with default configuration.
-    """
-    return MockDetector()
-
-
-@pytest.fixture
-def mock_detector_with_scores() -> MockDetector:
-    """Provide a MockDetector with fixed scores for deterministic testing.
-
-    Returns:
-        A MockDetector configured to return fixed scores [0.1, 0.5, 0.9].
-    """
-    return MockDetector(scores=np.array([0.1, 0.5, 0.9]))

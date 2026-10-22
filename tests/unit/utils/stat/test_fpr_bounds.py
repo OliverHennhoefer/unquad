@@ -48,6 +48,24 @@ def test_fpr_certificate_validates_inputs(kwargs, error_type, match):
         FPRCertificate.from_scores(**params)
 
 
+@pytest.mark.parametrize(
+    ("result", "match"),
+    [
+        (ConformalResult(), "missing calib_scores"),
+        (
+            ConformalResult(
+                calib_scores=np.array([0.1, 0.2]), calib_weights=np.ones(2)
+            ),
+            "only unweighted",
+        ),
+    ],
+    ids=["missing-calibration-scores", "weighted-calibration"],
+)
+def test_result_certificate_requires_unweighted_calibration_scores(result, match):
+    with pytest.raises(ValueError, match=match):
+        result.fpr_bounds()
+
+
 @pytest.mark.parametrize("confidence", [0.01, 0.5, 0.95, np.nextafter(1.0, 0.0)])
 def test_one_score_ks_cutoff_matches_uniform_distribution(confidence):
     # With one uniform observation U, D+ = 1 - U is uniform too.
@@ -438,6 +456,11 @@ def test_construction_and_queries_use_no_randomness_or_repeated_preparation(
 def test_constructor_requires_factory():
     with pytest.raises(TypeError, match="from_scores"):
         FPRCertificate()
+
+
+def test_to_frame_requires_a_threshold_vector():
+    with pytest.raises(ValueError, match="thresholds must be a 1D array"):
+        _certificate().to_frame(0.5)
 
 
 @pytest.mark.parametrize("threshold", [np.nan, [[0.1]], "invalid"])

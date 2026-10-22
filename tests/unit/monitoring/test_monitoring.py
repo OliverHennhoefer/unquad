@@ -37,6 +37,11 @@ class FailingScoreDetector(BaseEstimator):
         return np.asarray([np.nan if row[0] > 0 else 0.0 for row in X])
 
 
+class TwoScoresPerRowDetector(DistanceFromMeanDetector):
+    def decision_function(self, X: np.ndarray) -> np.ndarray:
+        return np.repeat(super().decision_function(X), 2)
+
+
 class NonCopyableConformalizer(SequentialRankConformalizer):
     def __deepcopy__(self, memo):
         _ = memo
@@ -53,6 +58,12 @@ class NonCopyableMartingale(PowerMartingale):
     def __deepcopy__(self, memo):
         _ = memo
         raise RuntimeError("copy disabled")
+
+
+def _updated_martingale() -> PowerMartingale:
+    martingale = PowerMartingale(epsilon=0.5)
+    martingale.update(0.5)
+    return martingale
 
 
 class TestSequentialRankConformalizer:
@@ -100,7 +111,7 @@ class TestSequentialRankConformalizer:
     def test_prime_many_merges_with_existing_history(self):
         conformalizer = SequentialRankConformalizer().prime_many([1.0, 3.0])
 
-        returned = conformalizer.prime_many([3.0, 2.0, 1.0])
+        returned = conformalizer.prime_many([3.0, 2.0, 1.0]).prime_many([])
 
         assert returned is conformalizer
         np.testing.assert_array_equal(conformalizer.scores, [1.0, 1.0, 2.0, 3.0, 3.0])
@@ -176,12 +187,19 @@ class TestSequentialRankConformalizer:
         with pytest.raises(ValueError, match="score"):
             SequentialRankConformalizer().update(score)  # type: ignore[arg-type]
 
-    def test_multidimensional_score_input_raises(self):
+    @pytest.mark.parametrize("method", ["update_many", "prime_many"])
+    @pytest.mark.parametrize(
+        ("scores", "match"),
+        [
+            (np.ones((2, 1)), "one-dimensional"),
+            ([0.0, np.inf], "scores must be finite"),
+        ],
+        ids=["multidimensional", "non-finite"],
+    )
+    def test_invalid_score_batches_raise(self, method, scores, match):
         conformalizer = SequentialRankConformalizer()
-        with pytest.raises(ValueError, match="one-dimensional"):
-            conformalizer.update_many(np.ones((2, 1)))
-        with pytest.raises(ValueError, match="one-dimensional"):
-            conformalizer.prime_many(np.ones((2, 1)))
+        with pytest.raises(ValueError, match=match):
+            getattr(conformalizer, method)(scores)
 
 
 class TestExchangeabilityMonitor:
@@ -214,6 +232,7 @@ class TestExchangeabilityMonitor:
         assert state.log_e_value == state.martingale_state.log_e_value
         assert state.martingale == state.martingale_state.martingale
         assert state.restarted_martingale == state.martingale_state.restarted_martingale
+        assert state.triggered_alarms == state.martingale_state.triggered_alarms == ()
         assert monitor.state is state
 
     def test_update_many_matches_iterative_updates(self, data):
@@ -358,6 +377,12 @@ class TestExchangeabilityMonitor:
             monitor.prime(np.ones(3))
         with pytest.raises(ValueError, match="finite"):
             monitor.update(np.array([0.0, np.nan, 0.0]))
+        with pytest.raises(ValueError, match="at least one sample and one feature"):
+            monitor.prime(np.empty((0, 3)))
+        with pytest.raises(ValueError, match="must be finite"):
+            monitor.prime(np.array([[0.0, np.inf, 0.0]]))
+        with pytest.raises(ValueError, match="has 2 features, but the fitted scorer"):
+            monitor.prime(np.ones((2, 2)))
 
     def test_nonnumeric_feature_inputs_raise_value_error(self, data):
         x_train, _, _ = data
@@ -394,14 +419,69 @@ class TestExchangeabilityMonitor:
         assert state.rank_step == 1
         assert state.evidence_step == 1
 
-    def test_rejects_nonempty_components(self):
-        conformalizer = SequentialRankConformalizer().prime(1.0)
-        with pytest.raises(ValueError, match="empty history"):
+    @pytest.mark.parametrize(
+        ("components", "error", "match"),
+        [
+            (
+                {"conformalizer": SequentialRankConformalizer().prime(1.0)},
+                ValueError,
+                "empty history",
+            ),
+            (
+                {"martingale": _updated_martingale()},
+                ValueError,
+                "martingale must be reset",
+            ),
+            (
+                {"conformalizer": object()},
+                TypeError,
+                "conformalizer must be a SequentialRankConformalizer",
+            ),
+            (
+                {"martingale": object()},
+                TypeError,
+                "martingale must be a BaseMartingale",
+            ),
+        ],
+        ids=[
+            "primed-conformalizer",
+            "updated-martingale",
+            "conformalizer-type",
+            "martingale-type",
+        ],
+    )
+    def test_rejects_invalid_components(self, components, error, match):
+        with pytest.raises(error, match=match):
             ExchangeabilityMonitor(
                 DistanceFromMeanDetector(),
-                conformalizer=conformalizer,
                 score_polarity="higher_is_anomalous",
+                **components,
             )
+
+    @pytest.mark.parametrize(
+        ("score_polarity", "sign"),
+        [(None, 1.0), ("higher_is_anomalous", 1.0), ("higher_is_normal", -1.0)],
+        ids=["implicit-default", "anomalous", "normal"],
+    )
+    def test_score_polarity_orients_monitored_scores(self, data, score_polarity, sign):
+        x_train, _, x_stream = data
+        kwargs = {} if score_polarity is None else {"score_polarity": score_polarity}
+        monitor = ExchangeabilityMonitor(DistanceFromMeanDetector(), **kwargs)
+
+        state = monitor.fit(x_train).update(x_stream[0])
+
+        distance = np.linalg.norm(x_stream[0] - x_train.mean(axis=0))
+        assert state.score == pytest.approx(sign * distance)
+
+    def test_detector_must_return_one_score_per_observation(self, data):
+        x_train, _, x_stream = data
+        monitor = ExchangeabilityMonitor(
+            TwoScoresPerRowDetector(),
+            score_polarity="higher_is_anomalous",
+        ).fit(x_train)
+
+        with pytest.raises(ValueError, match="exactly one score per observation"):
+            monitor.update(x_stream[0])
 
 
 class TestSplitDetectorBridge:

@@ -205,32 +205,22 @@ class TestBaseWeightEstimatorHelpers:
 
 
 class TestIdentityWeightEstimator:
-    def test_identity_returns_unit_weights(self):
+    def test_identity_returns_unit_weight_copies_for_stored_and_new_data(self):
         calib, test = _simple_data(4, 3)
         estimator = IdentityWeightEstimator()
         estimator.fit(calib, test)
-        w_calib, w_test = estimator.get_weights()
-        assert np.allclose(w_calib, 1.0)
-        assert np.allclose(w_test, 1.0)
-        assert len(w_calib) == len(calib)
-        assert len(w_test) == len(test)
 
-    def test_identity_scores_new_data_and_returns_copies(self):
-        calib, test = _simple_data(2, 2)
-        estimator = IdentityWeightEstimator()
-        estimator.fit(calib, test)
+        stored = estimator.get_weights()
+        scored = estimator.get_weights(np.ones((5, 1)), np.ones((6, 1)))
 
-        new_calib = np.ones((5, 1))
-        new_test = np.ones((6, 1))
-        w_calib, w_test = estimator.get_weights(new_calib, new_test)
-        assert w_calib.shape[0] == 5
-        assert w_test.shape[0] == 6
-        assert np.allclose(w_calib, 1.0)
-        assert np.allclose(w_test, 1.0)
-
-        w_calib[0] = 5.0
-        fresh_calib, _ = estimator.get_weights()
-        assert fresh_calib[0] == 1.0
+        for (w_calib, w_test), sizes in zip(
+            (stored, scored), ((4, 3), (5, 6)), strict=True
+        ):
+            assert (len(w_calib), len(w_test)) == sizes
+            assert np.allclose(w_calib, 1.0)
+            assert np.allclose(w_test, 1.0)
+        stored[0][0] = 5.0
+        assert estimator.get_weights()[0][0] == 1.0
 
 
 class TestSklearnWeightEstimator:
@@ -267,9 +257,17 @@ class TestSklearnWeightEstimator:
         assert np.all(w_calib <= upper + 1e-12)
         assert np.all(w_test <= upper + 1e-12)
 
-    def test_init_without_predict_proba_raises(self):
-        with pytest.raises(ValueError):
-            SklearnWeightEstimator(base_estimator=NoPredictProbaEstimator())
+    @pytest.mark.parametrize(
+        ("kwargs", "match"),
+        [
+            ({"base_estimator": NoPredictProbaEstimator()}, "predict_proba"),
+            ({"clip_quantile": 0.5}, r"clip_quantile must be in \(0, 0\.5\)"),
+        ],
+        ids=["no-predict-proba", "clip-quantile"],
+    )
+    def test_invalid_constructor_args_raise(self, kwargs, match):
+        with pytest.raises(ValueError, match=match):
+            SklearnWeightEstimator(**kwargs)
 
     def test_fit_with_empty_calibration_raises(self):
         estimator = SklearnWeightEstimator()
@@ -365,29 +363,25 @@ class TestBootstrapBaggedWeightEstimator:
         bagged.fit(np.ones((5, 2)), np.ones((3, 2)))
         assert recorder == [(3, 3), (3, 3), (3, 3)]
 
-    def test_score_new_data_shape_mismatch_raises(self):
+    @pytest.mark.parametrize(
+        ("calib_factor", "n_calib"),
+        [(1.0, 5), (2.0, 4)],
+        ids=["shape-mismatch", "value-mismatch"],
+    )
+    def test_frozen_mode_rejects_new_samples(self, calib_factor, n_calib):
+        """Frozen scoring mode rejects new samples, even with matching shapes."""
         bagged = BootstrapBaggedWeightEstimator(
             base_estimator=IdentityWeightEstimator(), n_bootstraps=2
         )
         bagged.fit(np.ones((4, 1)), np.ones((2, 1)))
-        with pytest.raises(NotImplementedError):
-            bagged.get_weights(np.ones((5, 1)), np.ones((2, 1)))
-
-    def test_score_new_data_value_mismatch_raises(self):
-        """Frozen scoring mode rejects new samples even when shapes match."""
-        bagged = BootstrapBaggedWeightEstimator(
-            base_estimator=IdentityWeightEstimator(), n_bootstraps=2
-        )
-        calib = np.ones((4, 1))
-        test = np.ones((2, 1))
-        bagged.fit(calib, test)
         with pytest.raises(NotImplementedError, match="scoring_mode='frozen'"):
-            bagged.get_weights(calib * 2.0, test * 3.0)
+            bagged.get_weights(np.full((n_calib, 1), calib_factor), np.ones((2, 1)))
 
     def test_weight_counts_and_copy(self):
         bagged = BootstrapBaggedWeightEstimator(
             base_estimator=IdentityWeightEstimator(), n_bootstraps=2
         )
+        assert bagged.weight_counts == "Not fitted yet"
         bagged.fit(np.ones((3, 1)), np.ones((3, 1)))
         w_calib, _ = bagged.get_weights()
         w_calib[0] = 10.0

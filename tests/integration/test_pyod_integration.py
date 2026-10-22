@@ -1,12 +1,15 @@
-"""Integration tests that exercise ConformalDetector with several PyOD models."""
+"""Integration tests that exercise ConformalDetector with PyOD and custom models."""
 
 from __future__ import annotations
 
+import logging
 import sys
 from collections import namedtuple
 
 import numpy as np
 import pytest
+
+from nonconform import ConformalDetector, Split
 
 try:
     from pyod.models.abod import ABOD
@@ -23,64 +26,8 @@ except ImportError:
     HAS_PYOD = False
     ABOD = COPOD = ECOD = IForest = INNE = KNN = LOF = PCA = None
 
-try:  # TensorFlow-backed detector is optional/heavy
-    from pyod.models.auto_encoder import AutoEncoder
-
-    HAS_AUTO_ENCODER = True
-except Exception:  # pragma: no cover - optional dependency missing
-    HAS_AUTO_ENCODER = True
-
-    class AutoEncoder:
-        """Lightweight fallback to exercise integration when TF backend is missing."""
-
-        def __init__(
-            self,
-            contamination=0.05,
-            random_state=None,
-            n_jobs=1,
-            epoch_num: int | None = None,
-            batch_size: int | None = None,
-            hidden_neuron_list: list[int] | None = None,
-            verbose: int = 0,
-            **_: object,
-        ) -> None:
-            self.contamination = contamination
-            self.random_state = random_state
-            self.n_jobs = n_jobs
-            self.epoch_num = epoch_num
-            self.batch_size = batch_size
-            self.hidden_neuron_list = hidden_neuron_list
-            self.verbose = verbose
-            self._mean = None
-            self._std = None
-
-        def fit(self, X, y=None):
-            rng = np.random.default_rng(self.random_state)
-            self._mean = np.mean(X, axis=0) + rng.normal(0, 0.01, X.shape[1])
-            self._std = np.std(X, axis=0)
-            return self
-
-        def decision_function(self, X):
-            return np.linalg.norm((X - self._mean) / (self._std + 1e-8), axis=1)
-
-        def get_params(self, deep=True):
-            return {
-                "contamination": self.contamination,
-                "random_state": self.random_state,
-                "n_jobs": self.n_jobs,
-                "epoch_num": self.epoch_num,
-                "batch_size": self.batch_size,
-                "hidden_neuron_list": self.hidden_neuron_list,
-                "verbose": self.verbose,
-            }
-
-        def set_params(self, **params):
-            for key, value in params.items():
-                setattr(self, key, value)
-            return self
-
-
-from nonconform import ConformalDetector, Split
+SEED = 5
+MIN_CONTAMINATION = sys.float_info.min
 
 DetectorCase = namedtuple(
     "DetectorCase", "name factory expects_random_state expects_n_jobs"
@@ -90,14 +37,14 @@ DetectorCase = namedtuple(
 def _split_detector(detector, *, score_polarity="auto"):
     # Coverage intent:
     # - default "auto" validates polarity inference for real PyOD detectors
-    # - explicit polarity is used in custom/fallback detector tests where inference
+    # - explicit polarity is used in custom detector tests where inference
     #   is intentionally not expected to work
     return ConformalDetector(
         detector=detector,
         strategy=Split(n_calib=0.2),
         aggregation="mean",
         score_polarity=score_polarity,
-        seed=5,
+        seed=SEED,
     )
 
 
@@ -159,6 +106,8 @@ def test_pyod_detectors_end_to_end(simple_dataset, case):
 
     fitted = detector.detector_set[0]
     assert fitted is not base_detector  # Defensive copy
+    # Contamination is set to float min for compatibility, also when given.
+    assert np.isclose(fitted.contamination, MIN_CONTAMINATION)
 
     if case.expects_random_state and hasattr(fitted, "random_state"):
         assert fitted.random_state == detector.seed
@@ -187,25 +136,11 @@ def test_blocked_pyod_detectors_raise_on_initialization(name, factory):
 
 
 @pytest.mark.skipif(not HAS_PYOD, reason="PyOD not installed")
-def test_contamination_parameter_overridden(simple_dataset):
-    """Contamination must be set to float min for compatibility."""
-    x_train, x_test, _ = simple_dataset(n_train=50, n_test=20, n_features=3)
-    base = IForest(contamination=0.15, random_state=0)
-    detector = _split_detector(base)
-
-    detector.fit(x_train)
-    detector.compute_p_values(x_test)
-
-    fitted = detector.detector_set[0]
-    assert hasattr(fitted, "contamination")
-    assert np.isclose(fitted.contamination, sys.float_info.min)
-
-
-@pytest.mark.skipif(
-    not HAS_AUTO_ENCODER, reason="AutoEncoder dependencies not available"
-)
 def test_auto_encoder_detector(simple_dataset):
     """Neural detectors should also integrate when optional deps are installed."""
+    pytest.importorskip("torch")
+    from pyod.models.auto_encoder import AutoEncoder
+
     x_train, x_test, _ = simple_dataset(n_train=60, n_test=24, n_features=3)
     base = AutoEncoder(
         epoch_num=1,
@@ -289,82 +224,64 @@ class CustomDetectorWithAliases:
         return self
 
 
-def test_custom_sklearn_detector(simple_dataset):
-    """Custom detector with sklearn-style parameters should work."""
+class DeterministicDetector:
+    """Deterministic detector without any seed parameter."""
+
+    def fit(self, X, y=None):
+        return self
+
+    def decision_function(self, X):
+        return np.ones(len(X))
+
+    def get_params(self, deep=True):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+@pytest.mark.parametrize(
+    ("make_detector", "expected_params"),
+    [
+        (
+            lambda: CustomSklearnDetector(
+                contamination=0.05, random_state=42, n_jobs=1
+            ),
+            {"contamination": MIN_CONTAMINATION, "random_state": SEED, "n_jobs": -1},
+        ),
+        (
+            lambda: CustomDetectorWithAliases(seed=42, n_threads=1),
+            {"seed": SEED, "n_threads": -1},
+        ),
+    ],
+    ids=["sklearn-style-names", "parameter-aliases"],
+)
+def test_custom_detector_parameters_are_configured(
+    simple_dataset, make_detector, expected_params
+):
+    """Custom detectors with sklearn-style names or aliases should work."""
     x_train, x_test, _ = simple_dataset(n_train=64, n_test=30, n_features=4)
-    base = CustomSklearnDetector(contamination=0.05, random_state=42, n_jobs=1)
-    detector = _split_detector(base, score_polarity="higher_is_anomalous")
+    detector = _split_detector(make_detector(), score_polarity="higher_is_anomalous")
 
     detector.fit(x_train)
     p_values = detector.compute_p_values(x_test)
 
     assert p_values.shape == (len(x_test),)
     assert np.all((0.0 <= p_values) & (p_values <= 1.0))
-
-    fitted = detector.detector_set[0]
-    assert fitted.random_state == detector.seed
-    assert fitted.n_jobs == -1
-    assert np.isclose(fitted.contamination, sys.float_info.min)
+    assert detector.detector_set[0].get_params() == expected_params
 
 
-def test_custom_detector_with_aliases(simple_dataset):
-    """Custom detector with parameter aliases should work."""
-    x_train, x_test, _ = simple_dataset(n_train=64, n_test=30, n_features=4)
-    base = CustomDetectorWithAliases(seed=42, n_threads=1)
-    detector = _split_detector(base, score_polarity="higher_is_anomalous")
-
-    detector.fit(x_train)
-    p_values = detector.compute_p_values(x_test)
-
-    assert p_values.shape == (len(x_test),)
-    assert np.all((0.0 <= p_values) & (p_values <= 1.0))
-
-    fitted = detector.detector_set[0]
-    assert fitted.seed == detector.seed
-    assert fitted.n_threads == -1
-
-
-def test_detector_missing_random_state(caplog, capfd):
+def test_detector_missing_random_state(caplog, monkeypatch):
     """Detector without random_state param should warn when seed provided."""
-    import logging
+    monkeypatch.setattr(logging.getLogger("nonconform"), "propagate", True)
 
-    # Ensure logger propagates to caplog by temporarily enabling it
-    logger = logging.getLogger("nonconform")
-    original_propagate = logger.propagate
-    logger.propagate = True
+    with caplog.at_level(logging.WARNING, logger="nonconform"):
+        ConformalDetector(
+            detector=DeterministicDetector(),
+            strategy=Split(n_calib=0.2),
+            score_polarity="higher_is_anomalous",
+            seed=42,
+        )
 
-    class DeterministicDetector:
-        """Deterministic detector without random_state parameter."""
-
-        def fit(self, X, y=None):
-            return self
-
-        def decision_function(self, X):
-            return np.ones(len(X))
-
-        def get_params(self, deep=True):
-            return {}
-
-        def set_params(self, **params):
-            return self
-
-    try:
-        detector = DeterministicDetector()
-        with caplog.at_level(logging.WARNING, logger="nonconform"):
-            ConformalDetector(
-                detector=detector,
-                strategy=Split(n_calib=0.2),
-                score_polarity="higher_is_anomalous",
-                seed=42,
-            )
-
-        # Check caplog records, stderr, and caplog.text for warning
-        captured = capfd.readouterr()
-        all_output = caplog.text + captured.err
-        record_messages = " ".join(r.message for r in caplog.records)
-        all_output += record_messages
-
-        assert "random_state" in all_output
-        assert "Reproducibility cannot be guaranteed" in all_output
-    finally:
-        logger.propagate = original_propagate
+    assert "random_state" in caplog.text
+    assert "Reproducibility cannot be guaranteed" in caplog.text

@@ -323,6 +323,7 @@ def test_no_discoveries_and_default_configuration():
         "alpha_bh": None,
         "tie_seed": None,
     }
+    assert DerandomizedSplits().calibration_ids is None
     detector = make_detector().fit(np.zeros((120, 2)))
     mask = detector.select(np.zeros((5, 2)), alpha=0.001)
     assert not mask.any()
@@ -408,6 +409,12 @@ def test_strategy_isolation_and_invalid_updates(batches):
 def test_invalid_tie_seed_is_rejected(seed):
     with pytest.raises((TypeError, ValueError)):
         DerandomizedSplits(tie_seed=seed)
+
+
+@pytest.mark.parametrize("reference", [np.zeros(5), np.zeros((20, 0))])
+def test_fit_calibrate_requires_two_dimensional_reference(reference):
+    with pytest.raises(ValueError, match="two-dimensional reference batch"):
+        DerandomizedSplits().fit_calibrate(reference, RecordingDetector())
 
 
 def test_refit_rejects_malformed_reference_and_parallelism(batches):

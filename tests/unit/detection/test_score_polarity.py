@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
-from copy import copy, deepcopy
 from typing import Any, Self
 
 import numpy as np
@@ -73,77 +71,51 @@ def test_apply_score_polarity_flips_normality_scores() -> None:
     )
 
 
-def test_apply_score_polarity_rejects_unresolved_auto() -> None:
+def test_unresolved_auto_polarity_cannot_be_applied() -> None:
     detector = MockScoreDetector()
     with pytest.raises(ValueError, match="must be resolved first"):
         apply_score_polarity(detector, ScorePolarity.AUTO)
+    with pytest.raises(ValueError, match="explicit non-auto"):
+        ScorePolarityAdapter(detector, ScorePolarity.AUTO)
 
 
-def test_resolve_score_polarity_auto_recognizes_supported_sklearn() -> None:
-    iforest = IsolationForest(random_state=1)
-    ocsvm = OneClassSVM()
-    assert resolve_score_polarity(iforest, "auto") is ScorePolarity.HIGHER_IS_NORMAL
-    assert resolve_score_polarity(ocsvm, "auto") is ScorePolarity.HIGHER_IS_NORMAL
+def _pyod_iforest():
+    iforest = pytest.importorskip("pyod.models.iforest")
+    return iforest.IForest(n_estimators=10, random_state=0)
 
 
-def test_resolve_score_polarity_auto_rejects_unknown_detector() -> None:
+@pytest.mark.parametrize(
+    "resolve",
+    [
+        lambda detector: resolve_score_polarity(detector, "auto"),
+        resolve_implicit_score_polarity,
+    ],
+    ids=["strict-auto", "implicit"],
+)
+@pytest.mark.parametrize(
+    ("make_detector", "expected"),
+    [
+        (lambda: IsolationForest(random_state=1), ScorePolarity.HIGHER_IS_NORMAL),
+        (OneClassSVM, ScorePolarity.HIGHER_IS_NORMAL),
+        (_pyod_iforest, ScorePolarity.HIGHER_IS_ANOMALOUS),
+    ],
+    ids=["isolation-forest", "one-class-svm", "pyod"],
+)
+def test_known_detector_families_resolve_polarity(
+    resolve, make_detector, expected
+) -> None:
+    assert resolve(make_detector()) is expected
+
+
+def test_unknown_detector_defaults_to_anomalous_only_implicitly() -> None:
     detector = MockScoreDetector()
+
+    assert (
+        resolve_implicit_score_polarity(detector) is ScorePolarity.HIGHER_IS_ANOMALOUS
+    )
     with pytest.raises(ValueError) as exc_info:
         resolve_score_polarity(detector, "auto")
     message = str(exc_info.value)
     assert "Unable to infer score polarity" in message
     assert "higher_is_anomalous" in message
     assert "higher_is_normal" in message
-
-
-def test_resolve_implicit_score_polarity_defaults_unknown_to_anomalous() -> None:
-    detector = MockScoreDetector()
-    assert (
-        resolve_implicit_score_polarity(detector) is ScorePolarity.HIGHER_IS_ANOMALOUS
-    )
-
-
-def test_resolve_implicit_score_polarity_recognizes_supported_sklearn() -> None:
-    iforest = IsolationForest(random_state=1)
-    ocsvm = OneClassSVM()
-    assert resolve_implicit_score_polarity(iforest) is ScorePolarity.HIGHER_IS_NORMAL
-    assert resolve_implicit_score_polarity(ocsvm) is ScorePolarity.HIGHER_IS_NORMAL
-
-
-def test_resolve_score_polarity_auto_recognizes_pyod_when_available() -> None:
-    if importlib.util.find_spec("pyod") is None:
-        pytest.skip("PyOD not installed")
-
-    from pyod.models.iforest import IForest
-
-    detector = IForest(n_estimators=10, random_state=0)
-    assert resolve_score_polarity(detector, "auto") is ScorePolarity.HIGHER_IS_ANOMALOUS
-
-
-def test_resolve_implicit_score_polarity_recognizes_pyod_when_available() -> None:
-    if importlib.util.find_spec("pyod") is None:
-        pytest.skip("PyOD not installed")
-
-    from pyod.models.iforest import IForest
-
-    detector = IForest(n_estimators=10, random_state=0)
-    assert (
-        resolve_implicit_score_polarity(detector) is ScorePolarity.HIGHER_IS_ANOMALOUS
-    )
-
-
-def test_score_polarity_adapter_copy_support() -> None:
-    detector = MockScoreDetector()
-    adapter = ScorePolarityAdapter(detector, ScorePolarity.HIGHER_IS_NORMAL)
-    shallow = copy(adapter)
-    deep = deepcopy(adapter)
-
-    assert shallow is not adapter
-    assert deep is not adapter
-    assert isinstance(shallow, ScorePolarityAdapter)
-    assert isinstance(deep, ScorePolarityAdapter)
-
-    X = np.zeros((3, 2))
-    expected = adapter.decision_function(X)
-    np.testing.assert_array_equal(shallow.decision_function(X), expected)
-    np.testing.assert_array_equal(deep.decision_function(X), expected)

@@ -31,7 +31,7 @@ def _build_weighted_detector(weight_estimator):
     ids=["logistic", "forest"],
 )
 def test_weight_estimators_attach_weights(shifted_dataset, estimator_factory):
-    """Both estimators should populate weights in the conformal result."""
+    """Both estimators should populate clipped weights in the conformal result."""
     x_train, x_test, _ = shifted_dataset(n_train=180, n_test=60, n_features=4)
     estimator = estimator_factory(clip_quantile=0.1)
     detector = _build_weighted_detector(estimator)
@@ -49,6 +49,12 @@ def test_weight_estimators_attach_weights(shifted_dataset, estimator_factory):
     # Ensure the estimator actually fitted and produced non-constant weights
     assert getattr(estimator, "_is_fitted", False) is True
     assert not np.allclose(result.test_weights, result.test_weights[0])
+    # Estimator clipping bounds constrain the stored weights.
+    assert estimator._clip_bounds is not None
+    lower, upper = estimator._clip_bounds
+    for weights in (result.test_weights, result.calib_weights):
+        assert np.all(weights <= upper + 1e-9)
+        assert np.all(weights >= lower - 1e-9)
 
 
 def test_weighted_vs_unweighted_predictions_differ(shifted_dataset):
@@ -70,25 +76,3 @@ def test_weighted_vs_unweighted_predictions_differ(shifted_dataset):
     standard_p = standard.compute_p_values(x_test)
 
     assert not np.allclose(weighted_p, standard_p)
-
-
-def test_weight_clipping_bounds_propagate(shifted_dataset):
-    """Verify estimator clipping bounds constrain stored weights."""
-    estimator = logistic_weight_estimator(clip_quantile=0.2)
-    detector = _build_weighted_detector(estimator)
-
-    x_train, x_test, _ = shifted_dataset(n_train=160, n_test=64, n_features=3)
-    detector.fit(x_train)
-    detector.compute_p_values(x_test)
-
-    assert estimator._clip_bounds is not None
-    lower, upper = estimator._clip_bounds
-
-    result = detector.last_result
-    assert result is not None
-    assert result.test_weights is not None
-    assert result.calib_weights is not None
-    assert np.all(result.test_weights <= upper + 1e-9)
-    assert np.all(result.test_weights >= lower - 1e-9)
-    assert np.all(result.calib_weights <= upper + 1e-9)
-    assert np.all(result.calib_weights >= lower - 1e-9)

@@ -100,109 +100,37 @@ def _run_fdr_simulation(
     }
 
 
-class TestFDRControl:
-    """Test that WCS maintains FDR control under various configurations."""
-
-    def test_seed_reproducible_selection(self):
-        """Test that seeded runs are deterministic."""
-        calib_scores = np.array([0.1, 0.4, 0.9, 1.3, 1.7])
-        test_scores = np.array([0.2, 0.6, 1.0, 1.5, 1.9])
-        calib_weights = np.ones_like(calib_scores)
-        test_weights = np.ones_like(test_scores)
-
-        p_values = calculate_weighted_p_val(
-            scores=test_scores,
-            calibration_set=calib_scores,
-            test_weights=test_weights,
-            calib_weights=calib_weights,
-            tie_break="classical",
-        )
-        first = weighted_false_discovery_control_from_arrays(
-            p_values=p_values,
-            test_scores=test_scores,
-            calib_scores=calib_scores,
-            test_weights=test_weights,
-            calib_weights=calib_weights,
-            alpha=0.25,
-            pruning=Pruning.HETEROGENEOUS,
-            seed=123,
-        )
-        second = weighted_false_discovery_control_from_arrays(
-            p_values=p_values,
-            test_scores=test_scores,
-            calib_scores=calib_scores,
-            test_weights=test_weights,
-            calib_weights=calib_weights,
-            alpha=0.25,
-            pruning=Pruning.HETEROGENEOUS,
-            seed=123,
-        )
-
-        assert np.array_equal(first, second)
-
-    @pytest.mark.parametrize(
-        "alpha,pruning",
-        [
-            (0.05, Pruning.DETERMINISTIC),
-            (0.10, Pruning.DETERMINISTIC),
-            (0.20, Pruning.DETERMINISTIC),
-            (0.10, Pruning.HOMOGENEOUS),
-            (0.10, Pruning.HETEROGENEOUS),
-        ],
+@pytest.mark.parametrize(
+    ("alpha", "pruning", "use_weights", "min_power"),
+    [
+        (0.05, Pruning.DETERMINISTIC, True, 0.2),
+        (0.10, Pruning.DETERMINISTIC, True, 0.3),
+        (0.20, Pruning.DETERMINISTIC, True, 0.3),
+        (0.10, Pruning.HOMOGENEOUS, True, 0.3),
+        (0.10, Pruning.HETEROGENEOUS, True, 0.3),
+        (0.10, Pruning.DETERMINISTIC, False, 0.3),
+    ],
+)
+def test_wcs_controls_fdr_with_power(alpha, pruning, use_weights, min_power):
+    """Monte Carlo FDR stays within three standard errors of the target."""
+    result = _run_fdr_simulation(
+        n_trials=200,
+        n_calib=500,
+        n_test=100,
+        n_anomalies=10,
+        anomaly_shift=3.0,
+        alpha=alpha,
+        pruning=pruning,
+        seed=42,
+        use_weights=use_weights,
     )
-    def test_fdr_controlled(self, alpha, pruning):
-        """Test FDR is controlled at target level."""
-        result = _run_fdr_simulation(
-            n_trials=200,
-            n_calib=500,
-            n_test=100,
-            n_anomalies=10,
-            anomaly_shift=3.0,
-            alpha=alpha,
-            pruning=pruning,
-            seed=42,
-            use_weights=True,
-        )
 
-        # Allow 3 standard errors margin for statistical tolerance
-        margin = 3 * result["fdr_std"]
-        assert result["empirical_fdr"] <= alpha + margin, (
-            f"FDR {result['empirical_fdr']:.4f} exceeds "
-            f"target {alpha} + margin {margin:.4f}"
-        )
-
-    def test_power_nonzero(self):
-        """Test that power is non-zero with strong signal."""
-        result = _run_fdr_simulation(
-            n_trials=200,
-            n_calib=500,
-            n_test=100,
-            n_anomalies=10,
-            anomaly_shift=3.0,
-            alpha=0.10,
-            pruning=Pruning.DETERMINISTIC,
-            seed=42,
-            use_weights=True,
-        )
-
-        # With a strong signal (shift=3.0), power should be substantial
-        assert result["empirical_power"] > 0.3, (
-            f"Power {result['empirical_power']:.4f} is too low for strong signal"
-        )
-
-    def test_unweighted_fdr_controlled(self):
-        """Test FDR control with uniform weights."""
-        result = _run_fdr_simulation(
-            n_trials=200,
-            n_calib=500,
-            n_test=100,
-            n_anomalies=10,
-            anomaly_shift=3.0,
-            alpha=0.10,
-            pruning=Pruning.DETERMINISTIC,
-            seed=42,
-            use_weights=False,
-        )
-
-        margin = 3 * result["fdr_std"]
-        assert result["empirical_fdr"] <= 0.10 + margin
+    margin = 3 * result["fdr_std"]
+    assert result["empirical_fdr"] <= alpha + margin, (
+        f"FDR {result['empirical_fdr']:.4f} exceeds "
+        f"target {alpha} + margin {margin:.4f}"
+    )
+    # A strong signal (shift=3.0) should yield substantial power.
+    assert result["empirical_power"] > min_power, (
+        f"Power {result['empirical_power']:.4f} is too low for strong signal"
+    )

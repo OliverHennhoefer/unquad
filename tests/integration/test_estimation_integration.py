@@ -31,25 +31,8 @@ ESTIMATION_FACTORIES = [
 ]
 
 
-@pytest.mark.parametrize(
-    ("name", "factory"),
-    ESTIMATION_FACTORIES,
-    ids=[case[0] for case in ESTIMATION_FACTORIES],
-)
-def test_estimation_methods_return_unit_interval(simple_dataset, name, factory):
-    """Both estimation strategies should output valid p-values."""
-    x_train, x_test, _ = simple_dataset(n_train=72, n_test=24, n_features=4)
-    detector = _build_detector(factory())
-
-    detector.fit(x_train)
-    p_values = detector.compute_p_values(x_test)
-
-    assert p_values.shape == (len(x_test),)
-    assert np.all((0.0 <= p_values) & (p_values <= 1.0))
-
-
 def test_empirical_and_probabilistic_differ(simple_dataset):
-    """Discrete vs smooth estimators should not be identical."""
+    """Discrete vs smooth estimators should give different valid p-values."""
     x_train, x_test, _ = simple_dataset(n_train=80, n_test=30, n_features=5)
 
     empirical = _build_detector(Empirical())
@@ -65,6 +48,9 @@ def test_empirical_and_probabilistic_differ(simple_dataset):
     emp_vals = empirical.compute_p_values(x_test)
     prob_vals = probabilistic.compute_p_values(x_test)
 
+    for p_values in (emp_vals, prob_vals):
+        assert p_values.shape == (len(x_test),)
+        assert np.all((0.0 <= p_values) & (p_values <= 1.0))
     assert not np.allclose(emp_vals, prob_vals)
 
 
@@ -74,7 +60,10 @@ def test_empirical_and_probabilistic_differ(simple_dataset):
     ids=[case[0] for case in ESTIMATION_FACTORIES],
 )
 def test_weighted_estimation_populates_metadata(shifted_dataset, name, factory):
-    """Weighted conformal runs should store weights and (for KDE) metadata."""
+    """Weighted conformal runs should store weights and (for KDE) metadata.
+
+    The KDE metadata total weight equals the sum of calibration weights.
+    """
     x_train, x_test, _ = shifted_dataset(n_train=120, n_test=40, n_features=4)
     detector = ConformalDetector(
         detector=IForest(n_estimators=25, max_samples=0.8, random_state=0),
@@ -94,5 +83,7 @@ def test_weighted_estimation_populates_metadata(shifted_dataset, name, factory):
     if name == "probabilistic":
         assert "kde" in result.metadata
         assert "eval_grid" in result.metadata["kde"]
+        total_weight = result.metadata["kde"]["total_weight"]
+        assert np.isclose(total_weight, np.sum(result.calib_weights))
     else:
         assert "kde" not in result.metadata

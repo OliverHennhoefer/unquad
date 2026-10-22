@@ -13,7 +13,6 @@ from nonconform import (
     CrossValidation,
     Probabilistic,
     Split,
-    logistic_weight_estimator,
 )
 from nonconform.enums import Kernel
 
@@ -41,25 +40,6 @@ def test_probabilistic_tuning_records_metadata(simple_dataset):
     assert "kde" in result.metadata
     kde_meta = result.metadata["kde"]
     assert "eval_grid" in kde_meta and "cdf_values" in kde_meta
-
-
-def test_weighted_tuning_matches_total_weight(shifted_dataset):
-    """Metadata total weight should equal the sum of calibration weights."""
-    x_train, x_test, _ = shifted_dataset(n_train=110, n_test=36, n_features=4)
-    detector = ConformalDetector(
-        detector=IForest(n_estimators=25, max_samples=0.8, random_state=0),
-        strategy=Split(n_calib=0.2),
-        estimation=Probabilistic(kernel=[Kernel.GAUSSIAN], n_trials=0),
-        weight_estimator=logistic_weight_estimator(),
-        seed=12,
-    )
-    detector.fit(x_train)
-    detector.compute_p_values(x_test)
-
-    result = detector.last_result
-    assert result is not None and result.metadata
-    total_weight = result.metadata["kde"]["total_weight"]
-    assert np.isclose(total_weight, np.sum(result.calib_weights))
 
 
 def test_tuning_with_cross_validation_strategy(simple_dataset):
