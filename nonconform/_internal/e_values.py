@@ -184,6 +184,11 @@ def _native_test_batch_signature(
             f"{label} is weighted; only unweighted results are supported."
             f"{_RAW_ARRAY_GUIDANCE}"
         )
+    if provenance.grouped:
+        raise ValueError(
+            f"{label} uses group-conditional calibration, which is unsupported."
+            f"{_RAW_ARRAY_GUIDANCE}"
+        )
     if provenance.strategy_family is not StrategyFamily.SPLIT:
         raise ValueError(
             f"{label} is not an integrated Split result.{_RAW_ARRAY_GUIDANCE}"

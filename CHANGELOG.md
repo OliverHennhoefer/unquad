@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added group-conditional (Mondrian) calibration. Pass `groups=` with one label
+  per row to `ConformalDetector.fit()` or `calibrate()`, and the test labels to
+  `compute_p_values()`, `select()`, or `compute_p_value(group=...)`. Each test
+  point is then ranked only among calibration scores from its own group. With
+  `Split` or detached calibration and exchangeable data within each group,
+  p-values stay valid within each group when the test batch has a different
+  group mix than the reference data. `select()` applies BH once to the whole
+  batch. `ConformalDetector.calibration_groups` returns the group of each
+  calibration score. Supported for unweighted `Split`, detached `Split`,
+  `CrossValidation`, and `JackknifeBootstrap` with classical `Empirical`
+  p-values; as without groups, `CrossValidation` and `JackknifeBootstrap`
+  carry no finite-sample guarantee. Randomized, conditional, and KDE p-values, weighted mode,
+  `DerandomizedSplits`, `method="storey"`, FDP and FPR certificates, and
+  result-aware e-values reject grouped calibration. Behavior without `groups=`
+  is unchanged.
+
 ## [2.0.0] - 2026-10-19
 
 ### Added

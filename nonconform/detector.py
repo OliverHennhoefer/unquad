@@ -25,7 +25,7 @@ import pandas as pd
 from sklearn.exceptions import NotFittedError
 from tqdm import tqdm
 
-from nonconform.resampling import Split
+from nonconform.resampling import CrossValidation, JackknifeBootstrap, Split
 from nonconform.scoring import ConditionalEmpirical, Empirical
 from nonconform.structures import AnomalyDetector, ConformalResult
 from nonconform.weighting import BaseWeightEstimator
@@ -33,6 +33,7 @@ from nonconform.weighting import BaseWeightEstimator
 from ._internal import (
     Pruning,
     ScorePolarity,
+    TieBreakMode,
     aggregate,
     ensure_numpy_array,
 )
@@ -45,6 +46,11 @@ from ._internal.detector_state import (
     FittedCalibration,
     PreparedWeights,
     as_feature_batch,
+)
+from ._internal.groups import (
+    CalibrationGroups,
+    as_group_labels,
+    group_conditional_p_values,
 )
 from ._internal.p_value_selection import (
     adjusted_p_values,
@@ -224,6 +230,11 @@ class ConformalDetector(BaseConformalDetector):
     uses weighted conformalized selection. Its validity requires the applicable
     covariate-shift assumptions, support overlap, and adequate weights; the class
     cannot verify those scientific assumptions from data alone.
+
+    Passing ``groups`` to ``fit()`` or ``calibrate()`` makes p-values
+    group-conditional (Mondrian): each test point is ranked only among
+    calibration scores from its own group, and p-value methods then require the
+    test labels. ``select()`` still applies BH once to the whole batch.
 
     With ``DerandomizedSplits``, ``fit()`` retains repeated model/calibration
     pairs and ``select()`` uniformly aggregates per-split e-values before e-BH.
@@ -415,6 +426,7 @@ class ConformalDetector(BaseConformalDetector):
         *,
         n_features: int,
         mode: CalibrationMode,
+        groups: CalibrationGroups | None = None,
     ) -> None:
         """Own and commit all fitted facts only after calibration succeeds."""
         scores = np.asarray(scores)
@@ -426,6 +438,7 @@ class ConformalDetector(BaseConformalDetector):
             samples=samples.copy(),
             n_features=n_features,
             mode=mode,
+            groups=groups,
         )
 
     def _configure(
@@ -532,6 +545,7 @@ class ConformalDetector(BaseConformalDetector):
         x: pd.DataFrame | np.ndarray,
         y: np.ndarray | None = None,
         *,
+        groups: Any = None,
         n_jobs: int | None = None,
     ) -> Self:
         """Fit detector model(s) and compute calibration scores.
@@ -546,6 +560,14 @@ class ConformalDetector(BaseConformalDetector):
         Args:
             x: The dataset used for fitting and calibration.
             y: Ignored. Present for sklearn API compatibility.
+            groups: Optional group label for each row of ``x``, matched by
+                position. With labels, p-values are group-conditional
+                (Mondrian): each test point is ranked only among calibration
+                scores from its own group, and p-value methods then require
+                the test labels. Supported for unweighted ``Split``,
+                ``CrossValidation``, and ``JackknifeBootstrap`` with
+                ``Empirical(tie_break="classical")``. The base detector is
+                still fitted on all groups together.
             n_jobs: Optional strategy-specific parallelism hint. Supported by
                 strategies whose ``fit_calibrate`` signature includes ``n_jobs``
                 (for example, ``JackknifeBootstrap``).
@@ -556,10 +578,16 @@ class ConformalDetector(BaseConformalDetector):
         _ = y
         self._reset_fit_state()
         x = as_feature_batch(x)
+        labels = None
+        if groups is not None:
+            self._require_group_scope()
+            labels = as_group_labels(groups, n_rows=len(x))
+        # Split records calibration rows only on request; groups need them.
+        record_ids = self._is_weighted_mode or labels is not None
         fit_kwargs: dict[str, Any] = {
             "x": x,
             "detector": self.detector,
-            "weighted": self._is_weighted_mode,
+            "weighted": record_ids,
             "seed": self.seed,
         }
         if n_jobs is not None:
@@ -572,14 +600,24 @@ class ConformalDetector(BaseConformalDetector):
                 )
             fit_kwargs["n_jobs"] = n_jobs
         models, scores = self.strategy.fit_calibrate(**fit_kwargs)
-        ids = self.strategy.calibration_ids if self._is_weighted_mode else None
+        ids = self.strategy.calibration_ids if record_ids else None
         samples = x[ids] if self._is_weighted_mode and ids else np.array([])
+        calibration_groups = None
+        if labels is not None:
+            rows = np.asarray(ids if ids is not None else [], dtype=np.intp)
+            if rows.shape != np.shape(scores):
+                raise RuntimeError(
+                    "Internal error: calibration rows do not match the "
+                    "calibration scores."
+                )
+            calibration_groups = CalibrationGroups.from_rows(labels, rows)
         self._publish_calibration(
             models,
             scores,
             samples,
             n_features=x.shape[1],
             mode=CalibrationMode.INTEGRATED,
+            groups=calibration_groups,
         )
         return self
 
@@ -588,6 +626,8 @@ class ConformalDetector(BaseConformalDetector):
         self,
         x: pd.DataFrame | np.ndarray,
         y: np.ndarray | None = None,
+        *,
+        groups: Any = None,
     ) -> Self:
         """Calibrate a pre-fitted detector on separate calibration data.
 
@@ -600,6 +640,9 @@ class ConformalDetector(BaseConformalDetector):
         Args:
             x: Calibration dataset used to compute calibration scores.
             y: Ignored. Present for sklearn API compatibility.
+            groups: Optional group label for each row of ``x``, matched by
+                position, for group-conditional (Mondrian) p-values. See
+                :meth:`fit`.
 
         Returns:
             The calibrated detector instance (for method chaining).
@@ -616,8 +659,11 @@ class ConformalDetector(BaseConformalDetector):
                 f"Got {type(self.strategy).__name__}. "
                 "Use fit(x_reference) for integrated calibration."
             )
+        if groups is not None:
+            self._require_group_scope()
         self._reset_fit_state()
         x = as_feature_batch(x)
+        labels = None if groups is None else as_group_labels(groups, n_rows=len(x))
         try:
             scores = np.asarray(self.detector.decision_function(x), dtype=float).ravel()
         except Exception as exc:
@@ -643,6 +689,11 @@ class ConformalDetector(BaseConformalDetector):
             x if self._is_weighted_mode else np.array([]),
             n_features=x.shape[1],
             mode=CalibrationMode.DETACHED,
+            groups=(
+                None
+                if labels is None
+                else CalibrationGroups.from_rows(labels, np.arange(len(x)))
+            ),
         )
         return self
 
@@ -706,6 +757,9 @@ class ConformalDetector(BaseConformalDetector):
                 getattr(self.estimation, "_tie_break", None)
                 if isinstance(self.estimation, Empirical)
                 else None
+            ),
+            grouped=(
+                self._calibration is not None and self._calibration.groups is not None
             ),
         )
 
@@ -776,6 +830,7 @@ class ConformalDetector(BaseConformalDetector):
         *,
         alpha: float = 0.05,
         method: Literal["bh", "storey"] = "bh",
+        groups: Any = None,
         pruning: Pruning = Pruning.DETERMINISTIC,
         seed: int | None = None,
         refit_weights: bool = True,
@@ -798,7 +853,8 @@ class ConformalDetector(BaseConformalDetector):
         ``n`` calibration scores. When a standard selection with such p-values
         is empty and that floor exceeds the first step-up threshold, a warning
         on the ``nonconform.fdr`` logger reports the calibration size needed to
-        discover a single isolated anomaly.
+        discover a single isolated anomaly. With groups, ``n`` is the size of
+        the largest calibration group among the test points.
 
         Args:
             x: New data instances for anomaly estimation.
@@ -814,6 +870,11 @@ class ConformalDetector(BaseConformalDetector):
                 or ``ConditionalEmpirical`` with ``tie_break="classical"``) and
                 a p-value strategy. Weighted mode uses WCS and
                 DerandomizedSplits uses e-BH regardless. Defaults to ``"bh"``.
+            groups: Group label for each row of ``x`` when the detector was
+                fitted or calibrated with groups; required then and rejected
+                otherwise. BH runs once over the whole batch of
+                group-conditional p-values. ``"storey"`` does not support
+                groups.
             pruning: Pruning strategy for weighted FDR control. Ignored in
                 standard (unweighted) mode. Defaults to
                 ``Pruning.DETERMINISTIC``.
@@ -891,6 +952,11 @@ class ConformalDetector(BaseConformalDetector):
 
         x_array, index = _as_numpy_with_index(x)
         if self.strategy._uses_e_values:
+            if groups is not None:
+                raise ValueError(
+                    "groups= is unavailable with DerandomizedSplits, which "
+                    "selects with e-values."
+                )
             scores = self._score_models(x_array)
             selection = self.strategy._select_e_values(
                 scores, self._require_calibration().scores, alpha=alpha
@@ -901,7 +967,9 @@ class ConformalDetector(BaseConformalDetector):
                 return pd.Series(mask, index=index, name="selected")
             return mask
 
-        self.compute_p_values(x_array, refit_weights=refit_weights)
+        # Pass groups only when given, so overrides without the keyword still work.
+        group_kwargs = {} if groups is None else {"groups": groups}
+        self.compute_p_values(x_array, refit_weights=refit_weights, **group_kwargs)
         result = self._last_result
         if result is None or result.p_values is None:
             raise RuntimeError(
@@ -918,17 +986,28 @@ class ConformalDetector(BaseConformalDetector):
             )
         else:
             p_values = np.asarray(result.p_values, dtype=float)
-            n_calibration = self._require_calibration().scores.shape[-1]
+            calibration = self._require_calibration()
+            n_calibration = calibration.scores.shape[-1]
             mask = (
                 adjusted_p_values(p_values, method=method, n_calibration=n_calibration)
                 <= alpha
             )
-            if not mask.any() and has_classical_floor(result._provenance):
+            if (
+                p_values.size
+                and not mask.any()
+                and has_classical_floor(result._provenance)
+            ):
+                if calibration.groups is not None:
+                    # The smallest attainable p-value comes from the largest
+                    # calibration group among the test points.
+                    test_codes = calibration.groups.encode(groups, n_rows=p_values.size)
+                    n_calibration = int(calibration.groups.counts[test_codes].max())
                 warn_if_floor_blocks_discovery(
                     p_values,
                     alpha=alpha,
                     method=method,
                     n_calibration=n_calibration,
+                    grouped=calibration.groups is not None,
                 )
 
         if index is not None:
@@ -1017,7 +1096,12 @@ class ConformalDetector(BaseConformalDetector):
             return pd.Series(estimates, index=index, name="score")
         return estimates
 
-    def compute_p_value(self, x: pd.Series | np.ndarray) -> float:
+    def compute_p_value(
+        self,
+        x: pd.Series | np.ndarray,
+        *,
+        group: Any = None,
+    ) -> float:
         """Return one value from the configured estimation strategy.
 
         Unavailable for DerandomizedSplits; use select() on a fixed test batch
@@ -1033,6 +1117,8 @@ class ConformalDetector(BaseConformalDetector):
         Args:
             x: One-dimensional feature vector with the same number of features
                 used during fitting or detached calibration.
+            group: The observation's group label. Required when the detector
+                was fitted or calibrated with groups, and rejected otherwise.
 
         Returns:
             The observation's p-value or score-tail estimate as a Python float.
@@ -1073,13 +1159,19 @@ class ConformalDetector(BaseConformalDetector):
                 f"was fitted with {expected_features} features."
             )
 
-        p_values = self.compute_p_values(x_array[np.newaxis, :])
+        group_kwargs: dict[str, Any] = {}
+        if group is not None:
+            labels = np.empty(1, dtype=object)
+            labels[0] = group
+            group_kwargs["groups"] = labels
+        p_values = self.compute_p_values(x_array[np.newaxis, :], **group_kwargs)
         return float(np.asarray(p_values).item())
 
     def compute_p_values(
         self,
         x: pd.DataFrame | pd.Series | np.ndarray,
         *,
+        groups: Any = None,
         refit_weights: bool = True,
     ) -> np.ndarray | pd.Series:
         """Return values from the configured estimation strategy for new data.
@@ -1089,6 +1181,12 @@ class ConformalDetector(BaseConformalDetector):
 
         Args:
             x: New data instances for anomaly estimation.
+            groups: Group label for each row of ``x``, matched by position.
+                Required when the detector was fitted or calibrated with
+                groups, and rejected otherwise. Each p-value then ranks the
+                test score only among calibration scores from its group, so
+                every label needs calibration scores. The snapshot's
+                ``calib_scores`` still holds the scores of all groups.
             refit_weights: Whether to refit the weight estimator for this batch
                 in weighted mode. Defaults to True.
 
@@ -1098,6 +1196,7 @@ class ConformalDetector(BaseConformalDetector):
         """
         self._require_p_value_strategy()
         x_array, index = _as_numpy_with_index(x)
+        test_codes = self._test_group_codes(x_array, groups)
         test_batch_signature = batch_signature(x_array)
         estimates = self._aggregate_scores(x_array)
         weights = self._resolve_weights(
@@ -1107,10 +1206,20 @@ class ConformalDetector(BaseConformalDetector):
         )
         calib_weights, test_weights = weights if weights else (None, None)
 
-        calibration_scores = self._require_calibration().scores
-        p_values = self.estimation.compute_p_values(
-            estimates, calibration_scores, weights
-        )
+        calibration = self._require_calibration()
+        calibration_scores = calibration.scores
+        if calibration.groups is None:
+            p_values = self.estimation.compute_p_values(
+                estimates, calibration_scores, weights
+            )
+        else:
+            p_values = group_conditional_p_values(
+                self.estimation,
+                estimates,
+                test_codes,
+                calibration_scores,
+                calibration.groups.codes,
+            )
 
         metadata = self._result_metadata()
         if hasattr(self.estimation, "get_metadata"):
@@ -1236,6 +1345,18 @@ class ConformalDetector(BaseConformalDetector):
         )
 
     @property
+    def calibration_groups(self) -> np.ndarray | None:
+        """Return the group label of each calibration score, or None.
+
+        Labels align with ``calibration_set`` for detectors fitted or
+        calibrated with ``groups``; otherwise this is None.
+        """
+        calibration = self._calibration
+        if calibration is None or calibration.groups is None:
+            return None
+        return calibration.groups.calibration_labels()
+
+    @property
     def last_result(self) -> ConformalResult | None:
         """Return the most recent raw-score or p-value snapshot.
 
@@ -1271,6 +1392,48 @@ class ConformalDetector(BaseConformalDetector):
                 "select() uses weighted conformalized selection instead."
             )
         validate_storey_scope(self._result_provenance(None))
+
+    def _require_group_scope(self) -> None:
+        """Reject group-conditional calibration outside its supported scope."""
+        if self._is_weighted_mode:
+            raise ValueError("groups= is unavailable in weighted mode.")
+        if self.strategy._uses_e_values:
+            raise ValueError(
+                "groups= is unavailable with DerandomizedSplits, which selects "
+                "with e-values."
+            )
+        if not isinstance(self.strategy, Split | CrossValidation | JackknifeBootstrap):
+            raise ValueError(
+                "groups= requires Split, CrossValidation, or JackknifeBootstrap; "
+                f"got {type(self.strategy).__name__}."
+            )
+        if (
+            not isinstance(self.estimation, Empirical)
+            or isinstance(self.estimation, ConditionalEmpirical)
+            or self.estimation._tie_break is not TieBreakMode.CLASSICAL
+        ):
+            raise ValueError(
+                "groups= requires Empirical() p-values with "
+                "tie_break='classical'. Randomized, conditional, and KDE-based "
+                "p-values do not support groups."
+            )
+
+    def _test_group_codes(self, x: np.ndarray, groups: Any) -> np.ndarray | None:
+        """Validate test labels against the calibration groups, if any."""
+        calibration = self._require_calibration()
+        if calibration.groups is None:
+            if groups is not None:
+                raise ValueError(
+                    "groups= requires a detector fitted or calibrated with groups."
+                )
+            return None
+        if groups is None:
+            raise ValueError(
+                "This detector was calibrated by group. Pass the test group "
+                "labels with groups= (group= for compute_p_value())."
+            )
+        x = as_feature_batch(x, n_features=calibration.n_features)
+        return calibration.groups.encode(groups, n_rows=len(x))
 
     def _require_p_value_strategy(self) -> None:
         """Reject p-value operations for a strategy that constructs e-values."""

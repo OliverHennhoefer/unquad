@@ -127,6 +127,26 @@ def test_adaptive_bh_notebook_smoke():
     assert 0.0 < namespace["pi0_hat"] < 1.0
 
 
+def test_group_conditional_notebook_smoke():
+    example_path = Path(__file__).parents[2] / "examples" / "group_conditional.ipynb"
+    notebook = json.loads(example_path.read_text(encoding="utf-8"))
+    namespace = {"__name__": "__main__"}
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            source = "".join(cell["source"])
+            exec(compile(source, str(example_path), "exec"), namespace)
+
+    pooled = namespace["results"]["pooled"]
+    grouped = namespace["results"]["group-conditional"]
+    assert grouped["false_site_b"] < pooled["false_site_b"]
+    assert grouped["power"] >= pooled["power"]
+    detector = namespace["detectors"]["group-conditional"]
+    labels, counts = np.unique_counts(detector.calibration_groups)
+    assert labels.tolist() == ["a", "b"]
+    assert counts.sum() == detector.calibration_set.size == 1_500
+    assert namespace["detectors"]["pooled"].calibration_groups is None
+
+
 def test_fdp_notebook_smoke(monkeypatch, capsys):
     """Execute the real detector and certificate against a labeled fixture."""
     rng = np.random.default_rng(42)

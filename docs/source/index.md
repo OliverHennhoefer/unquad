@@ -162,6 +162,7 @@ by 0.05 on one valid null stream. It does not control FDR across streams.
 | Fixed raw-score false-alarm target | [FDR Control](user_guide/fdr_control.md#raw-score-false-alarm-control) | A simultaneous FPR curve and target-driven threshold |
 | Ordered stream monitored for change | [Exchangeability Martingales](user_guide/exchangeability_martingales.md) | Sequential p-values, e-values, evidence statistics, and configured alarms |
 | Covariate shift between calibration and test | [Weighted Conformal](user_guide/weighted_conformal.md) | Weighted p-values and WCS selections |
+| Groups with different normal behavior, or a shifted group mix | [Group-conditional p-values](user_guide/conformal_inference.md#group-conditional-mondrian-p-values) | Per-group conformal p-values and one BH selection |
 | Custom or third-party detector | [Detector Compatibility](user_guide/detector_compatibility.md) | A validated, anomaly-oriented score interface |
 
 ## Installation

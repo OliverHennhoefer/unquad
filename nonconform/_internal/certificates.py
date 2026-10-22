@@ -42,6 +42,10 @@ def validate_scope(
         )
     if provenance.weighted:
         raise ValueError(f"{procedure}() supports only unweighted {weighted_evidence}.")
+    if provenance.grouped:
+        raise ValueError(
+            f"{procedure}() does not support group-conditional calibration."
+        )
     if (
         procedure == "fdp_bounds"
         and provenance.estimation_family is not EstimationFamily.EMPIRICAL

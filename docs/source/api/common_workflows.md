@@ -51,6 +51,12 @@ p-values whose `<= alpha` mask reproduces the selection. See
 [Adaptive BH with Storey's estimator](../user_guide/fdr_control.md#adaptive-bh-with-storeys-estimator)
 for its scope.
 
+When groups such as sites or sensors have different normal score levels, fit
+with `fit(x_reference, groups=site_labels)` and pass the test labels to
+`compute_p_values(..., groups=...)` or `select(..., groups=...)`. Each test
+point is then ranked only among calibration scores from its own group. See
+[Group-conditional (Mondrian) p-values](../user_guide/conformal_inference.md#group-conditional-mondrian-p-values).
+
 ## Raw-score false-alarm control
 
 Use an `FPRCertificate` when the deployment requirement is a per-inlier
