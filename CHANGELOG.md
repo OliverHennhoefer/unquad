@@ -34,6 +34,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   primitives. For unmodified result snapshots, the workflow verifies
   split-conformal provenance and exact test batch identity, rejects score ties
   by default, and supports reproducible randomized tie-breaking through `tie_seed`.
+- Added `method="storey"` to `ConformalDetector.select()` for Storey's adaptive
+  BH, which estimates the null proportion as
+  `(1 + #{p >= lambda}) / (m (1 - lambda))` with `lambda` on the classical
+  p-value grid at or just above 1/2, and applies BH at `alpha` divided by that
+  estimate. For classical `Empirical` p-values from `Split` or detached
+  calibration with exchangeable, continuous scores, it controls FDR at `alpha`.
+  It requires unweighted classical `Empirical` or `ConditionalEmpirical`
+  p-values and rejects randomized, KDE-based, weighted, and `DerandomizedSplits`
+  selection. The default `method="bh"` is unchanged.
+- Added `ConformalResult.adjusted_p_values(method="bh" | "storey")` for native
+  unweighted p-value snapshots. Thresholding the adjusted values at `alpha`
+  reproduces the corresponding `select()` mask.
+- `select()` now logs a warning on the `nonconform.fdr` logger when a standard
+  selection of classical `Empirical` p-values is empty and the p-value floor
+  `1 / (n_calibration + 1)` exceeds the first step-up threshold, so a single
+  anomaly could not have been discovered. The warning states the calibration
+  size needed. Selections are unchanged.
 
 ### Changed
 

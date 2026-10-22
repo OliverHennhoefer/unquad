@@ -20,7 +20,9 @@ a separate `ConformalDetector(verbose=...)` switch.
 
 Warnings use the same logger hierarchy. `verbose=False` does not suppress
 warnings, and changing the logger level does not disable an aggregation bar
-explicitly requested with `verbose=True`.
+explicitly requested with `verbose=True`. For example, `nonconform.fdr` warns
+when an empty standard `select(...)` was limited by the classical p-value
+floor `1 / (n_cal + 1)`.
 
 ## Set the package level explicitly
 

@@ -111,6 +111,22 @@ def test_fpr_bounds_notebook_smoke():
     np.testing.assert_array_equal(mask, certificate.select(scores, threshold=threshold))
 
 
+def test_adaptive_bh_notebook_smoke():
+    example_path = Path(__file__).parents[2] / "examples" / "adaptive_bh.ipynb"
+    notebook = json.loads(example_path.read_text(encoding="utf-8"))
+    namespace = {"__name__": "__main__"}
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            source = "".join(cell["source"])
+            exec(compile(source, str(example_path), "exec"), namespace)
+
+    bh_selected = namespace["bh_selected"]
+    storey_selected = namespace["storey_selected"]
+    assert np.all(storey_selected[bh_selected])
+    assert storey_selected.sum() > bh_selected.sum()
+    assert 0.0 < namespace["pi0_hat"] < 1.0
+
+
 def test_fdp_notebook_smoke(monkeypatch, capsys):
     """Execute the real detector and certificate against a labeled fixture."""
     rng = np.random.default_rng(42)

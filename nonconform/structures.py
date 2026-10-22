@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Protocol, Self, runtime_checkable
+from typing import TYPE_CHECKING, Any, Literal, Protocol, Self, runtime_checkable
 
 import numpy as np
 
@@ -168,6 +168,72 @@ class ConformalResult:
             f"test_weights={_array_summary(self.test_weights)}, "
             f"calib_weights={_array_summary(self.calib_weights)}, "
             f"metadata_keys={metadata_repr})"
+        )
+
+    def adjusted_p_values(
+        self,
+        *,
+        method: Literal["bh", "storey"] = "bh",
+    ) -> np.ndarray:
+        """Return multiplicity-adjusted p-values for this snapshot's family.
+
+        For the snapshot recorded by an unweighted ``select(x, alpha=a,
+        method=m)`` call, ``adjusted_p_values(method=m) <= a`` reproduces the
+        returned mask. The values are in original observation order and treat
+        the complete snapshot as one testing family. Choose the FDR target
+        before inspecting them.
+
+        ``"bh"`` returns Benjamini-Hochberg adjusted p-values. ``"storey"``
+        multiplies them by Storey's null-proportion estimate and caps them at
+        one; it requires classical conformal p-values from ``Empirical`` or
+        ``ConditionalEmpirical`` with ``tie_break="classical"``.
+
+        Requires an unmodified native snapshot of unweighted p-values. Weighted
+        selection uses WCS, which has no adjusted p-values. For external
+        p-values, use ``scipy.stats.false_discovery_control``.
+
+        Args:
+            method: ``"bh"`` or ``"storey"``. Defaults to ``"bh"``.
+
+        Returns:
+            A new array of adjusted p-values in ``[0, 1]``.
+
+        Raises:
+            ValueError: If the snapshot has no p-values, is weighted, lacks
+                native provenance, or is outside the Storey scope.
+
+        Examples:
+            ```python
+            import numpy as np
+            from sklearn.ensemble import IsolationForest
+
+            from nonconform import ConformalDetector, Split
+
+            rng = np.random.default_rng(1)
+            x_reference = rng.normal(size=(1_000, 2))
+            x_test = np.vstack(
+                [rng.normal(size=(40, 2)), rng.normal(loc=5.0, size=(10, 2))]
+            )
+            detector = ConformalDetector(
+                detector=IsolationForest(random_state=1),
+                strategy=Split(n_calib=0.5),
+                seed=1,
+            ).fit(x_reference)
+            detector.compute_p_values(x_test)
+            adjusted = detector.last_result.adjusted_p_values(method="storey")
+            print(np.flatnonzero(adjusted <= 0.1))
+            ```
+        """
+        from nonconform._internal.p_value_selection import (
+            adjusted_p_values,
+            normalize_method,
+            validate_result_scope,
+        )
+
+        normalized = normalize_method(method)
+        p_values, n_calibration = validate_result_scope(self, method=normalized)
+        return adjusted_p_values(
+            p_values, method=normalized, n_calibration=n_calibration
         )
 
     def fdp_bounds(self, *, confidence: float = 0.95) -> FDPCertificate:

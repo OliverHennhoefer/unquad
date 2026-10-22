@@ -110,7 +110,10 @@ print("grid step:", 1 / (len(calibration_scores) + 1))
 ```
 
 A coarse grid can limit power in a large multiple-testing family. It does not
-make the p-values invalid.
+make the p-values invalid. BH can discover a single isolated anomaly among `m`
+tests only when `n + 1 >= m / alpha`; an empty `select(...)` that this floor
+explains logs a warning. See
+[Calibration size and the p-value floor](fdr_control.md#calibration-size-and-the-p-value-floor).
 
 ## Randomized tie handling
 

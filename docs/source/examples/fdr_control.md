@@ -4,11 +4,12 @@ description: "Compare naive thresholding, BH, BY, and a simultaneous post-hoc FD
 
 # FDR control and FDP certification
 
-This example starts from one fixed test family and compares three decision
+This example starts from one fixed test family and compares four decision
 rules:
 
 - unadjusted pointwise thresholding;
-- Benjamini-Hochberg (BH), used by standard `select(...)`; and
+- Benjamini-Hochberg (BH), used by standard `select(...)`;
+- Storey's adaptive BH, read from the same snapshot's adjusted p-values; and
 - Benjamini-Yekutieli (BY), applied manually through SciPy.
 
 It then constructs a simultaneous post-hoc upper bound for realized FDP over a
@@ -49,12 +50,14 @@ assert result.p_values is not None
 p_values = result.p_values
 
 pointwise_selected = p_values <= alpha
+storey_selected = result.adjusted_p_values(method="storey") <= alpha
 by_adjusted = false_discovery_control(p_values, method="by")
 by_selected = by_adjusted <= alpha
 
 for name, selected in {
     "pointwise": pointwise_selected,
     "BH": bh_selected,
+    "Storey-BH": storey_selected,
     "BY": by_selected,
 }.items():
     print(
@@ -78,6 +81,13 @@ The pointwise rule does not account for the 200 simultaneous tests. BH is less
 conservative than BY when its independence or positive-dependence conditions
 apply. BY supports a broader dependence class, but neither procedure repairs
 invalid p-values or adaptive family construction.
+
+Storey-BH estimates the share of true nulls and runs BH at a correspondingly
+higher level. `storey_selected` equals
+`detector.select(x_family, alpha=alpha, method="storey")` for this snapshot
+without scoring again. Choose one procedure before inspecting the family; see
+[Adaptive BH with Storey's estimator](../user_guide/fdr_control.md#adaptive-bh-with-storeys-estimator)
+for its scope.
 
 The labeled `realized_fdp` is the FDP of this one family. FDR is the expected
 FDP over repetitions. Do not interpret one low realized FDP as validation of

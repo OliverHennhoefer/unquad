@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING, Any, Literal, Self
 
 import numpy as np
 import pandas as pd
-from scipy.stats import false_discovery_control
 from sklearn.exceptions import NotFittedError
 from tqdm import tqdm
 
@@ -46,6 +45,13 @@ from ._internal.detector_state import (
     FittedCalibration,
     PreparedWeights,
     as_feature_batch,
+)
+from ._internal.p_value_selection import (
+    adjusted_p_values,
+    has_classical_floor,
+    normalize_method,
+    validate_storey_scope,
+    warn_if_floor_blocks_discovery,
 )
 from ._internal.provenance import (
     BatchSignature,
@@ -696,6 +702,11 @@ class ConformalDetector(BaseConformalDetector):
                 None if self._calibration is None else self._calibration.mode
             ),
             test_batch_signature=test_batch_signature,
+            tie_break=(
+                getattr(self.estimation, "_tie_break", None)
+                if isinstance(self.estimation, Empirical)
+                else None
+            ),
         )
 
     def _fit_weights_for_batch(
@@ -764,6 +775,7 @@ class ConformalDetector(BaseConformalDetector):
         x: pd.DataFrame | pd.Series | np.ndarray,
         *,
         alpha: float = 0.05,
+        method: Literal["bh", "storey"] = "bh",
         pruning: Pruning = Pruning.DETERMINISTIC,
         seed: int | None = None,
         refit_weights: bool = True,
@@ -771,19 +783,37 @@ class ConformalDetector(BaseConformalDetector):
         """Construct evidence and select anomalies from one fixed test batch.
 
         This is the single-call batch workflow. It combines
-        ``compute_p_values()`` with Benjamini-Hochberg in standard mode or
-        weighted conformalized selection in weighted mode. Validity still
-        depends on the assumptions of both the p-value construction and the
-        selected multiple-testing procedure.
+        ``compute_p_values()`` with Benjamini-Hochberg, or Storey's adaptive
+        BH with ``method="storey"``, in standard mode, and with weighted
+        conformalized selection in weighted mode. Validity still depends on the
+        assumptions of both the p-value construction and the selected
+        multiple-testing procedure.
 
         With DerandomizedSplits, this instead constructs per-split e-values,
         averages them uniformly, and applies e-BH once. Configure alpha_bh and
         tie_seed on that strategy. Automatic ties use a separate fitting-derived
         seed. Selection populates last_selection_result and clears last_result.
 
+        Classical empirical p-values cannot fall below ``1 / (n + 1)`` for
+        ``n`` calibration scores. When a standard selection with such p-values
+        is empty and that floor exceeds the first step-up threshold, a warning
+        on the ``nonconform.fdr`` logger reports the calibration size needed to
+        discover a single isolated anomaly.
+
         Args:
             x: New data instances for anomaly estimation.
             alpha: Nominal FDR target in ``(0, 1)``. Defaults to ``0.05``.
+            method: Multiple-testing rule for standard p-value selection.
+                ``"bh"`` applies Benjamini-Hochberg. ``"storey"`` applies
+                Storey's adaptive BH: it estimates the null proportion from the
+                p-values at or above ``lambda``, the smallest calibration-grid
+                point ``k / (n + 1)`` not below 1/2, then runs BH at ``alpha``
+                divided by that estimate. This can select more when anomalies
+                are common and slightly less when they are rare. ``"storey"``
+                requires unweighted classical conformal p-values (``Empirical``
+                or ``ConditionalEmpirical`` with ``tie_break="classical"``) and
+                a p-value strategy. Weighted mode uses WCS and
+                DerandomizedSplits uses e-BH regardless. Defaults to ``"bh"``.
             pruning: Pruning strategy for weighted FDR control. Ignored in
                 standard (unweighted) mode. Defaults to
                 ``Pruning.DETERMINISTIC``.
@@ -853,6 +883,9 @@ class ConformalDetector(BaseConformalDetector):
             self._last_result = None
         if not (0.0 < alpha < 1.0):
             raise ValueError(f"alpha must be in (0, 1), got {alpha}")
+        method = normalize_method(method)
+        if method == "storey":
+            self._require_storey_scope()
 
         from nonconform.fdr import weighted_false_discovery_control
 
@@ -885,7 +918,18 @@ class ConformalDetector(BaseConformalDetector):
             )
         else:
             p_values = np.asarray(result.p_values, dtype=float)
-            mask = false_discovery_control(p_values, method="bh") <= alpha
+            n_calibration = self._require_calibration().scores.shape[-1]
+            mask = (
+                adjusted_p_values(p_values, method=method, n_calibration=n_calibration)
+                <= alpha
+            )
+            if not mask.any() and has_classical_floor(result._provenance):
+                warn_if_floor_blocks_discovery(
+                    p_values,
+                    alpha=alpha,
+                    method=method,
+                    n_calibration=n_calibration,
+                )
 
         if index is not None:
             return pd.Series(mask, index=index, name="selected")
@@ -1213,6 +1257,20 @@ class ConformalDetector(BaseConformalDetector):
         from dataclasses import replace
 
         return replace(self._last_selection_result)
+
+    def _require_storey_scope(self) -> None:
+        """Reject Storey selection outside unweighted classical p-value scope."""
+        if self.strategy._uses_e_values:
+            raise ValueError(
+                "method='storey' is unavailable with DerandomizedSplits, "
+                "which selects with e-BH."
+            )
+        if self._is_weighted_mode:
+            raise ValueError(
+                "method='storey' supports only unweighted p-values. Weighted "
+                "select() uses weighted conformalized selection instead."
+            )
+        validate_storey_scope(self._result_provenance(None))
 
     def _require_p_value_strategy(self) -> None:
         """Reject p-value operations for a strategy that constructs e-values."""

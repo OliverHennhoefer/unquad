@@ -70,6 +70,10 @@ The input to one `select(...)` call is one testing family. Calling it separately
 on several chunks applies separate procedures. It does not reproduce BH on the
 combined p-values.
 
+`select(..., method="storey")` replaces BH with Storey's adaptive BH, which can
+make more discoveries when anomalies are a sizable share of the family. See
+[Adaptive BH with Storey's estimator](#adaptive-bh-with-storeys-estimator).
+
 ## Raw-score false-alarm control
 
 Sometimes the operational question is simpler than FDR: “How high should the
@@ -191,11 +195,146 @@ result requires matching its exchangeability and score-construction conditions.
     repairs leakage, a changing score map, a misspecified null population, or a
     calibration-to-test shift outside its model.
 
+### Calibration size and the p-value floor
+
+Classical empirical p-values cannot fall below `1 / (n + 1)` for `n`
+calibration scores, while BH needs `p <= alpha / m` to discover a single
+isolated anomaly among `m` tests. A lone anomaly can therefore be discovered
+only when
+
+$$
+n+1\ge\frac{m}{\alpha}.
+$$
+
+With fewer calibration scores, any discovery requires at least
+`ceil(m / (alpha * (n + 1)))` test points that all attain the floor, and nothing
+can be selected when `n + 1 < 1 / alpha`. For example, 600 calibration scores
+are too few for a single discovery among 100 tests at `alpha=0.1`; 999 suffice.
+
+When a standard `select(...)` with classical `Empirical` p-values returns no
+discoveries and the floor exceeds the first step-up threshold (`alpha / m` for
+BH, `alpha / (m * pi0_hat)` for Storey-BH), it logs a warning on the
+`nonconform.fdr` logger that states the calibration size needed for a single
+discovery. The warning does not change the selection. Randomized, conditional,
+KDE-based, and weighted values have different floors and are not checked.
+
+## Adaptive BH with Storey's estimator
+
+Under its assumptions, BH keeps the FDR at most `pi0 * alpha`, where `pi0` is
+the unknown share of true nulls in the family. When anomalies are common, BH is
+therefore conservative.
+`select(..., method="storey")` estimates `pi0` and applies BH at
+`alpha / pi0_hat`, using
+
+$$
+\hat\pi_0=\frac{1+\#\{j:p_j\ge\lambda\}}{m(1-\lambda)},
+\qquad
+\lambda=\frac{\lceil (n+1)/2\rceil}{n+1}.
+$$
+
+`lambda` is the smallest point of the classical p-value grid `k / (n + 1)` that
+is not below one half. The leading `1` and the uncapped estimate are part of
+the finite-sample guarantee. When anomalies are rare, `pi0_hat` can exceed one,
+and Storey-BH then selects slightly less than BH.
+
+```python
+import numpy as np
+from sklearn.ensemble import IsolationForest
+
+from nonconform import ConformalDetector, Split
+
+rng = np.random.default_rng(42)
+x_reference = rng.normal(size=(3_000, 4))
+x_family = np.vstack(
+    [rng.normal(size=(140, 4)), rng.normal(loc=1.75, size=(60, 4))]
+)
+
+detector = ConformalDetector(
+    detector=IsolationForest(random_state=42),
+    strategy=Split(n_calib=1_000),
+    seed=42,
+).fit(x_reference)
+
+bh = detector.select(x_family, alpha=0.1)
+storey = detector.select(x_family, alpha=0.1, method="storey")
+print("BH discoveries:", int(bh.sum()))
+print("Storey-BH discoveries:", int(storey.sum()))
+```
+
+Here 30% of the family is anomalous, and Storey-BH adds a few discoveries to
+BH's. The gain grows with the anomaly share; it is small when anomalies are
+rare.
+
+For classical `Empirical` p-values from `Split` or detached calibration, this
+procedure controls FDR at `alpha` when calibration and null test observations
+are exchangeable, the score map is fixed independently of them, and scores
+are continuous (Marandon et al. 2024, Corollary 3.7; Bates et al. 2023,
+Theorem 3, for a strict-inequality variant). Tied scores make classical
+p-values conservative but fall outside these theorems. For
+`ConditionalEmpirical`, conditionally calibrated p-values of independent test
+points are conditionally independent and, on the calibration event of
+probability at least `1 - delta`, super-uniform. Storey's procedure for
+independent p-values (Storey, Taylor, and Siegmund 2004) then keeps the FDR
+conditional on that calibration set at most `alpha`.
+
+`method="storey"` requires classical tie handling, `Empirical` or
+`ConditionalEmpirical`, unweighted mode, and a p-value strategy. Randomized
+p-values leave the classical grid that the conformal result relies on, and KDE
+estimates are not rank-based, so both are rejected. Weighted mode always uses
+WCS and `DerandomizedSplits` always uses e-BH, so both reject `"storey"`.
+`CrossValidation` and `JackknifeBootstrap` are accepted as for BH, without the
+finite-sample guarantee.
+
+Choose the method before inspecting the family. Running both and reporting the
+one with more discoveries is a form of selective inference that neither
+guarantee covers.
+
+## Adjusted p-values
+
+`ConformalResult.adjusted_p_values()` returns BH-adjusted p-values for a
+native, unweighted p-value snapshot, and `adjusted_p_values(method="storey")`
+returns the Storey-BH version, which scales them by `pi0_hat` and caps them at
+one. For the snapshot recorded by `select(x, alpha=a, method=m)`, the mask
+`adjusted_p_values(method=m) <= a` reproduces the returned selection.
+
+```python
+import numpy as np
+from sklearn.ensemble import IsolationForest
+
+from nonconform import ConformalDetector, Split
+
+rng = np.random.default_rng(42)
+x_reference = rng.normal(size=(2_000, 4))
+x_family = np.vstack(
+    [rng.normal(size=(90, 4)), rng.normal(loc=4.0, size=(10, 4))]
+)
+
+detector = ConformalDetector(
+    detector=IsolationForest(random_state=42),
+    strategy=Split(n_calib=1_000),
+    seed=42,
+).fit(x_reference)
+
+selected = detector.select(x_family, alpha=0.1)
+result = detector.last_result
+assert result is not None
+
+adjusted = result.adjusted_p_values()
+assert np.array_equal(adjusted <= 0.1, selected)
+print("smallest adjusted p-values:", np.sort(adjusted)[:5])
+```
+
+Adjusted p-values belong to the complete family of the snapshot. Weighted
+snapshots raise an error because weighted selection uses WCS, which does not
+reduce to adjusted p-values. Manually constructed results also raise an error;
+use SciPy for external p-values.
+
 ## Manual BH or BY adjustment
 
-Use SciPy when you intentionally want adjusted p-values or Benjamini-Yekutieli
-(BY). SciPy documents BH for independent or positively regression-dependent
-p-values and BY as a more conservative option valid under arbitrary dependence.
+Use SciPy for external p-values or when you intentionally want
+Benjamini-Yekutieli (BY). SciPy documents BH for independent or positively
+regression-dependent p-values and BY as a more conservative option valid under
+arbitrary dependence.
 
 ```python
 import numpy as np
@@ -572,7 +711,9 @@ multiple-testing problem.
 | Goal | Use |
 |---|---|
 | Select anomalies in one fixed batch | `detector.select(batch, alpha=...)` |
-| Adjust standard p-values manually | SciPy BH or BY, after checking assumptions |
+| Select more when anomalies are a sizable share of the batch | `detector.select(batch, alpha=..., method="storey")` |
+| Report adjusted p-values for a native unweighted snapshot | `result.adjusted_p_values(method=...)` |
+| Adjust external p-values or apply BY | SciPy BH or BY, after checking assumptions |
 | Select under modeled covariate shift | Weighted `detector.select(...)`, which uses WCS |
 | Aggregate repeated split-conformal evidence | `DerandomizedSplits` with `select(...)` and e-BH |
 | Explore p-value thresholds with a simultaneous realized-FDP certificate | `detector.fdp_bounds(x, ...)` |
@@ -585,6 +726,11 @@ multiple-testing problem.
   introduces BH FDR control.
 - [Benjamini and Yekutieli (2001)](https://doi.org/10.1214/aos/1013699998)
   studies FDR control under dependence.
+- [Storey, Taylor, and Siegmund (2004)](https://doi.org/10.1111/j.1467-9868.2004.00439.x)
+  proves finite-sample FDR control of Storey's adaptive procedure for
+  independent p-values.
+- [Marandon et al. (2024)](https://doi.org/10.1214/23-AOS2338)
+  extends Storey-BH to conformal p-values with exchangeable scores.
 - [Bates et al. (2023)](https://doi.org/10.1214/22-AOS2244)
   analyzes conformal p-values for outlier testing, their dependence, and FDR
   control.
