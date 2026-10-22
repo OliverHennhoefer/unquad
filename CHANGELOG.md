@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-22
+
 ### Added
 
 - Added group-conditional (Mondrian) calibration. Pass `groups=` with one label
@@ -24,11 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `DerandomizedSplits`, `method="storey"`, FDP and FPR certificates, and
   result-aware e-values reject grouped calibration. Behavior without `groups=`
   is unchanged.
-
-## [2.0.0] - 2026-10-19
-
-### Added
-
 - Added `nonconform.fdr.FPRCertificate` with immutable simultaneous raw-score
   false-positive-rate bounds, target-FPR threshold inversion, and native
   `ConformalDetector.fpr_bounds()` / `ConformalResult.fpr_bounds()` integration
