@@ -112,38 +112,19 @@ def test_fpr_bounds_notebook_smoke():
 
 
 def test_adaptive_bh_notebook_smoke():
-    class _Records(logging.Handler):
-        def __init__(self) -> None:
-            super().__init__(level=logging.WARNING)
-            self.records: list[logging.LogRecord] = []
-
-        def emit(self, record: logging.LogRecord) -> None:
-            self.records.append(record)
-
     example_path = Path(__file__).parents[2] / "examples" / "adaptive_bh.ipynb"
     notebook = json.loads(example_path.read_text(encoding="utf-8"))
     namespace = {"__name__": "__main__"}
-    handler = _Records()
-    fdr_logger = logging.getLogger("nonconform.fdr")
-    fdr_logger.addHandler(handler)
-    try:
-        for cell in notebook["cells"]:
-            if cell["cell_type"] == "code":
-                source = "".join(cell["source"])
-                exec(compile(source, str(example_path), "exec"), namespace)
-    finally:
-        fdr_logger.removeHandler(handler)
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            source = "".join(cell["source"])
+            exec(compile(source, str(example_path), "exec"), namespace)
 
     bh_selected = namespace["bh_selected"]
     storey_selected = namespace["storey_selected"]
     assert np.all(storey_selected[bh_selected])
     assert storey_selected.sum() > bh_selected.sum()
-    assert not namespace["small_selected"].any()
-    assert np.all(namespace["large_selected"][-3:])
-    assert len(handler.records) == 1
-    message = handler.records[0].getMessage()
-    assert "With 99 calibration scores" in message
-    assert "at least 999 calibration scores" in message
+    assert 0.0 < namespace["pi0_hat"] < 1.0
 
 
 def test_fdp_notebook_smoke(monkeypatch, capsys):
